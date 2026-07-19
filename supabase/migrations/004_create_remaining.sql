@@ -68,15 +68,12 @@ CREATE TABLE company_questions (
 
 CREATE INDEX idx_compq_company ON company_questions(company_id);
 
-CREATE TABLE company_resources (
-  company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-  resource_id UUID NOT NULL REFERENCES resources(id) ON DELETE CASCADE,
-  PRIMARY KEY (company_id, resource_id)
-);
+
 
 -- ============================================================
 -- Resources
 -- ============================================================
+
 CREATE TABLE resources (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   college_id UUID NOT NULL REFERENCES colleges(id) ON DELETE CASCADE,
@@ -97,17 +94,32 @@ CREATE TABLE resources (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_resources_college ON resources(college_id);
-CREATE INDEX idx_resources_type ON resources(type);
-CREATE INDEX idx_resources_category ON resources(category_id);
-CREATE INDEX idx_resources_global ON resources(is_global);
+CREATE INDEX idx_resources_college
+ON resources(college_id);
+
+CREATE INDEX idx_resources_type
+ON resources(type);
+
+CREATE INDEX idx_resources_category
+ON resources(category_id);
+
+CREATE INDEX idx_resources_global
+ON resources(is_global);
 
 CREATE TRIGGER trigger_resources_updated
-  BEFORE UPDATE ON resources
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+BEFORE UPDATE ON resources
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at();
 
--- Fix: company_resources references resources, so move it after resources table
--- (already declared above, will work since resources is created first in this file)
+-- ============================================================
+-- Company Resources
+-- ============================================================
+
+CREATE TABLE company_resources (
+  company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  resource_id UUID NOT NULL REFERENCES resources(id) ON DELETE CASCADE,
+  PRIMARY KEY (company_id, resource_id)
+);
 
 CREATE TABLE resource_downloads (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

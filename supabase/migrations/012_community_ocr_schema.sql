@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS community_submissions (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   college_id UUID NOT NULL REFERENCES colleges(id) ON DELETE CASCADE,
   title VARCHAR(255) NOT NULL,
+  statement TEXT,
   type VARCHAR(50) NOT NULL CHECK (type IN ('question', 'resource')),
   department VARCHAR(100),
   topic VARCHAR(100),
@@ -91,22 +92,6 @@ CREATE TABLE IF NOT EXISTS review_history (
 
 CREATE INDEX IF NOT EXISTS idx_rh_sub ON review_history(submission_id);
 
--- Question Versions (History)
-CREATE TABLE IF NOT EXISTS question_versions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
-  version INTEGER NOT NULL,
-  statement TEXT NOT NULL,
-  options JSONB DEFAULT '[]',
-  correct_answer VARCHAR(100),
-  explanation TEXT,
-  updated_by UUID REFERENCES users(id) ON DELETE SET NULL,
-  change_summary TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_qv_question ON question_versions(question_id);
-
 -- RLS Policies
 ALTER TABLE community_submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE submission_attachments ENABLE ROW LEVEL SECURITY;
@@ -114,7 +99,6 @@ ALTER TABLE ocr_jobs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ocr_results ENABLE ROW LEVEL SECURITY;
 ALTER TABLE duplicate_checks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE review_history ENABLE ROW LEVEL SECURITY;
-ALTER TABLE question_versions ENABLE ROW LEVEL SECURITY;
 
 -- Select/Update Policies
 CREATE POLICY "Users read own submissions" ON community_submissions FOR SELECT TO authenticated USING (auth.uid() = user_id OR (SELECT role FROM users WHERE id = auth.uid()) IN ('host', 'admin'));
@@ -137,9 +121,6 @@ CREATE POLICY "Users manage duplicate checks" ON duplicate_checks FOR ALL TO aut
 CREATE POLICY "Users read review history" ON review_history FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Users manage review history" ON review_history FOR ALL TO authenticated USING ((SELECT role FROM users WHERE id = auth.uid()) IN ('host', 'admin'));
 
-CREATE POLICY "Users read question versions" ON question_versions FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Users manage question versions" ON question_versions FOR ALL TO authenticated USING ((SELECT role FROM users WHERE id = auth.uid()) IN ('host', 'admin'));
-
 -- Grants
 GRANT ALL ON community_submissions TO authenticated;
 GRANT ALL ON submission_attachments TO authenticated;
@@ -147,4 +128,3 @@ GRANT ALL ON ocr_jobs TO authenticated;
 GRANT ALL ON ocr_results TO authenticated;
 GRANT ALL ON duplicate_checks TO authenticated;
 GRANT ALL ON review_history TO authenticated;
-GRANT ALL ON question_versions TO authenticated;

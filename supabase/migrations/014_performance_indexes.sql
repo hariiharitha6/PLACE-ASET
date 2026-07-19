@@ -37,7 +37,7 @@ CREATE INDEX IF NOT EXISTS idx_users_college_xp
   ON users(college_id, xp DESC);
 
 CREATE INDEX IF NOT EXISTS idx_practice_stats_user_score 
-  ON practice_statistics(user_id, correct_answers DESC);
+  ON practice_statistics(user_id, total_correct_answers DESC);
 
 -- 6. Notifications
 -- Optimizes fetching unread notifications for a user

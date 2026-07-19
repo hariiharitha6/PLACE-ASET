@@ -16,14 +16,13 @@ router.get('/', async (_req: Request, res: Response) => {
   // Check Supabase
   try {
     const supabase = getSupabase();
-    if (supabase) {
-      const { error } = await supabase.from('colleges').select('id').limit(1);
-      health.services.database = error ? 'degraded' : 'healthy';
-    } else {
-      health.services.database = 'not_configured';
-    }
-  } catch {
-    health.services.database = 'unhealthy';
+    const { error } = await supabase.from('colleges').select('id').limit(1);
+    health.services.database = error ? 'degraded' : 'healthy';
+  } catch (err) {
+    const message = err instanceof Error ? err.message : '';
+    health.services.database = message.includes('not initialized')
+      ? 'not_configured'
+      : 'unhealthy';
   }
 
   // Check Redis
@@ -39,7 +38,10 @@ router.get('/', async (_req: Request, res: Response) => {
     health.services.cache = 'unhealthy';
   }
 
-  const statusCode = health.services.database === 'unhealthy' ? 503 : 200;
+  const statusCode =
+    health.services.database === 'unhealthy' || health.services.database === 'degraded'
+      ? 503
+      : 200;
   res.status(statusCode).json({ success: true, data: health });
 });
 
