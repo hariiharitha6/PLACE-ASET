@@ -78,7 +78,7 @@ export default function ForgotPasswordPage() {
               type="email"
               id="email"
               className={styles.input}
-              placeholder="candidate@amity.edu"
+              placeholder="candidate@ahalia.edu"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isSubmitting}
