@@ -11,6 +11,7 @@ import resourcesRoutes from './resources.routes';
 import communityRoutes from './community.routes';
 import logsRoutes from './logs.routes';
 import gamificationRoutes from './gamification.routes';
+import aiRoutes from './ai.routes';
 
 const v1Router = Router();
 
@@ -47,5 +48,8 @@ v1Router.use('/community', communityRoutes);
 
 // Logs routes
 v1Router.use('/logs', logsRoutes);
+
+// AI Engine routes
+v1Router.use('/ai', aiRoutes);
 
 export default v1Router;
