@@ -158,7 +158,7 @@ CREATE TRIGGER trigger_users_updated
 -- Seed default college (ASET)
 -- ============================================================
 INSERT INTO colleges (name, slug, description) VALUES (
-  'Amity School of Engineering & Technology',
+  'Ahalia School of Engineering and Technology',
   'aset',
-  'ASET — the first college on PLACE@ASET'
-);
+  'Ahalia School of Engineering and Technology (ASET)'
+) ON CONFLICT (slug) DO NOTHING;

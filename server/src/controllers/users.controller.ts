@@ -22,11 +22,12 @@ export async function updateProfile(req: AuthenticatedRequest, res: Response, _n
       return errorResponse(res, 'User not authenticated', 401);
     }
 
-    const { fullName, avatarUrl, departmentId, year, section, rollNumber } = req.validated.body;
+    const { fullName, avatarUrl, collegeId, departmentId, year, section, rollNumber } = req.validated.body;
 
     const updatedProfile = await UserService.updateProfile(req.user.id, {
       fullName,
       avatarUrl,
+      collegeId,
       departmentId,
       year,
       section,

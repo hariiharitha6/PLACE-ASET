@@ -46,8 +46,9 @@ BEGIN
     RAISE NOTICE 'Starting Seed Data Generation...';
 
     -- 1. Create College
-    INSERT INTO colleges (name, domain) 
-    VALUES ('Amity School of Engineering and Technology', 'amity.edu') 
+    INSERT INTO colleges (name, slug, website, description) 
+    VALUES ('Ahalia School of Engineering and Technology', 'aset', 'ahalia.ac.in', 'Ahalia School of Engineering and Technology (ASET)') 
+    ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name
     RETURNING id INTO master_college_id;
     RAISE NOTICE 'College Created: %', master_college_id;
 

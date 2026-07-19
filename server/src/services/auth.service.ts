@@ -17,6 +17,18 @@ export class AuthService {
     const supabase = getSupabase();
     const supabaseAdmin = getSupabaseAdmin();
 
+    let resolvedCollegeId = input.collegeId;
+    if (resolvedCollegeId === 'aset') {
+      const { data: col } = await supabaseAdmin
+        .from('colleges')
+        .select('id')
+        .eq('slug', 'aset')
+        .single();
+      if (col) {
+        resolvedCollegeId = col.id;
+      }
+    }
+
     // 1. Sign up the user in Supabase Auth
     const { data, error } = await supabase.auth.signUp({
       email: input.email,
@@ -24,7 +36,7 @@ export class AuthService {
       options: {
         data: {
           full_name: input.fullName,
-          college_id: input.collegeId,
+          college_id: resolvedCollegeId,
           user_role: 'student', // Default role
         },
       },
@@ -45,7 +57,7 @@ export class AuthService {
           id: userId,
           email: input.email,
           full_name: input.fullName,
-          college_id: input.collegeId,
+          college_id: resolvedCollegeId,
           department_id: input.departmentId || null,
           role: 'student',
           year: input.year || null,

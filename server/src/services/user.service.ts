@@ -4,6 +4,7 @@ import logger from '../utils/logger';
 export interface UpdateProfileInput {
   fullName?: string;
   avatarUrl?: string | null;
+  collegeId?: string;
   departmentId?: string | null;
   year?: string | null;
   section?: string | null;
@@ -30,11 +31,28 @@ export class UserService {
 
   static async updateProfile(userId: string, input: UpdateProfileInput) {
     const supabase = getSupabase();
+    const supabaseAdmin = getSupabaseAdmin();
 
     // Map input fields to database snake_case columns
     const updateData: Record<string, any> = {};
     if (input.fullName !== undefined) updateData.full_name = input.fullName;
     if (input.avatarUrl !== undefined) updateData.avatar_url = input.avatarUrl;
+    
+    let resolvedCollegeId = input.collegeId;
+    if (input.collegeId !== undefined) {
+      if (resolvedCollegeId === 'aset') {
+        const { data: col } = await supabaseAdmin
+          .from('colleges')
+          .select('id')
+          .eq('slug', 'aset')
+          .single();
+        if (col) {
+          resolvedCollegeId = col.id;
+        }
+      }
+      updateData.college_id = resolvedCollegeId;
+    }
+
     if (input.departmentId !== undefined) updateData.department_id = input.departmentId;
     if (input.year !== undefined) updateData.year = input.year;
     if (input.section !== undefined) updateData.section = input.section;
@@ -52,11 +70,14 @@ export class UserService {
       throw new Error(error.message || 'Failed to update profile');
     }
 
-    // Also update full_name in auth metadata if changed
-    if (input.fullName) {
-      const supabaseAdmin = getSupabaseAdmin();
+    // Also update full_name / college_id in auth metadata if changed
+    if (input.fullName || input.collegeId) {
+      const metadata: Record<string, any> = {};
+      if (input.fullName) metadata.full_name = input.fullName;
+      if (resolvedCollegeId) metadata.college_id = resolvedCollegeId;
+
       await supabaseAdmin.auth.admin.updateUserById(userId, {
-        user_metadata: { full_name: input.fullName }
+        user_metadata: metadata
       });
     }
 
