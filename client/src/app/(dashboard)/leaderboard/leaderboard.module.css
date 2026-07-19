@@ -1,0 +1,78 @@
+.container { display: flex; flex-direction: column; gap: 24px; }
+.header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+.titleSection h1 { font-size: 24px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px; }
+.titleSection p { font-size: 14px; color: var(--text-secondary); }
+
+.tabBar { display: flex; gap: 4px; border-radius: var(--radius-lg); background: var(--bg-glass); border: 1px solid var(--border-color); padding: 4px; width: fit-content; }
+.tab {
+  padding: 8px 20px; border-radius: var(--radius-md); border: none; background: transparent;
+  color: var(--text-secondary); font-weight: 600; font-size: 13px; cursor: pointer; transition: all var(--transition-fast);
+}
+.tabActive { background: var(--accent-primary); color: #fff; }
+
+.filterRow { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+.podium { display: flex; justify-content: center; align-items: flex-end; gap: 16px; margin: 16px 0 24px; }
+.podiumCard {
+  display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px 16px;
+  background: var(--bg-glass); border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+  min-width: 120px; text-align: center;
+}
+.podiumFirst { border-color: rgba(245,158,11,0.4); background: linear-gradient(180deg, rgba(245,158,11,0.08) 0%, transparent 100%); }
+.podiumSecond { border-color: rgba(148,163,184,0.3); }
+.podiumThird { border-color: rgba(194,120,60,0.3); }
+
+.podiumAvatar {
+  width: 48px; height: 48px; border-radius: 50%; background: var(--bg-secondary);
+  display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px;
+  color: var(--text-secondary); overflow: hidden;
+}
+
+.podiumName { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.podiumDept { font-size: 11px; color: var(--text-muted); }
+.podiumScore { font-size: 18px; font-weight: 800; color: var(--accent-warning); }
+.podiumMedal { font-size: 28px; }
+
+.rankTable { width: 100%; border-collapse: collapse; font-size: 13px; }
+.rankTable th {
+  text-align: left; padding: 10px 12px; font-weight: 600; color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color); font-size: 11px; text-transform: uppercase;
+}
+.rankTable td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.03); color: var(--text-secondary); }
+.rankTable tr:hover td { background: rgba(99,102,241,0.02); }
+
+.rankNum { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; background: var(--bg-secondary); color: var(--text-muted); }
+.rankTop1 { background: rgba(245,158,11,0.12); color: var(--accent-warning); }
+.rankTop2 { background: rgba(148,163,184,0.12); color: var(--text-secondary); }
+.rankTop3 { background: rgba(194,120,60,0.12); color: #c2783c; }
+
+.userCell { display: flex; align-items: center; gap: 12px; }
+.userAvatar {
+  width: 36px; height: 36px; border-radius: 50%; background: var(--bg-secondary);
+  display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;
+  color: var(--text-secondary); overflow: hidden; flex-shrink: 0;
+}
+.userName { font-weight: 600; color: var(--text-primary); font-size: 13px; }
+.userDept { font-size: 11px; color: var(--text-muted); }
+
+.xpBadge {
+  display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px;
+  border-radius: var(--radius-full); font-size: 12px; font-weight: 700;
+  background: rgba(245, 158, 11, 0.1); color: var(--accent-warning); border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.badgeGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+.badgeCard {
+  background: var(--bg-glass); border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+  padding: 20px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px;
+  transition: all var(--transition-fast);
+}
+.badgeCard:hover { border-color: var(--border-color-hover); transform: translateY(-1px); }
+.badgeEarned { border-color: rgba(245,158,11,0.3); background: linear-gradient(180deg, rgba(245,158,11,0.05) 0%, transparent 100%); }
+.badgeLocked { opacity: 0.4; filter: grayscale(1); }
+
+.badgeIcon { font-size: 36px; }
+.badgeName { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.badgeDesc { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+.badgeXP { font-size: 12px; font-weight: 600; color: var(--accent-warning); }
+.badgeDate { font-size: 10px; color: var(--text-muted); }

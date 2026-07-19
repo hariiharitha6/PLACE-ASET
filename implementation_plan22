@@ -1,0 +1,109 @@
+# Implementation Plan - Module 2: Authentication & User Management
+
+This plan outlines the design and implementation for Module 2: Authentication & User Management of the PLACE@ASET platform. It spans the database schema migrations, backend API routes, services, middleware, security practices, and a responsive frontend with auth pages and context.
+
+## User Review Required
+
+> [!IMPORTANT]
+> - **Dual Token Mechanism**: We will implement HttpOnly Secure Cookies for storing the `refresh_token` to protect against XSS-based token theft, while the `access_token` will be returned in the JSON payload (to be kept in-memory by the frontend client) or as an authorization header.
+> - **Role Syncing**: We will sync Supabase Auth's user role metadata with our public schema `user_roles` table. The `role` column in `users` will serve as the cached role, while the `user_roles` junction table will be the source of truth for role and permission checks.
+
+## Open Questions
+
+- None at the moment. We will proceed with implementing TypeScript on the backend and leveraging standard JSX on the frontend to keep it aligned with Next.js 14 App Router conventions.
+
+---
+
+## Proposed Changes
+
+### Database
+
+We will create a new migration file to define the authorization schema (roles, permissions, sessions) and set up the corresponding indexes and RLS policies.
+
+#### [NEW] [006_auth_user_management.sql](file:///c:/Users/harii/Downloads/PLACE@ASET/supabase/migrations/006_auth_user_management.sql)
+- Define `roles`, `permissions`, `role_permissions`, `user_roles`, and `sessions` tables.
+- Seed default roles: `super_admin`, `college_admin`, `host`, `faculty`, `student`.
+- Seed standard permissions (e.g., `users:read`, `users:write`, `challenges:create`, etc.).
+- Enable RLS policies on all new tables.
+- Define helper functions to check permissions in SQL.
+
+---
+
+### Backend
+
+We will build the endpoint controllers, routes, validation schemas, and middlewares in TypeScript. We will also install `cookie-parser` for handling refresh token cookies securely.
+
+#### [MODIFY] [package.json](file:///c:/Users/harii/Downloads/PLACE@ASET/server/package.json)
+- Add `cookie-parser` and `@types/cookie-parser` to dependencies and devDependencies.
+
+#### [NEW] [server.ts](file:///c:/Users/harii/Downloads/PLACE@ASET/server/src/server.ts)
+- Entry point for TypeScript development. Initializes configuration, database, Redis, email clients, and starts the server.
+
+#### [NEW] [app.ts](file:///c:/Users/harii/Downloads/PLACE@ASET/server/src/app.ts)
+- Express App setup in TypeScript, including standard middlewares (CORS, Helmet, Morgan, rate limiters, cookie-parser).
+
+#### [NEW] [index.ts](file:///c:/Users/harii/Downloads/PLACE@ASET/server/src/routes/v1/index.ts)
+- Root router in TypeScript that maps health, auth, and user route files.
+
+#### [MODIFY] [auth.routes.ts](file:///c:/Users/harii/Downloads/PLACE@ASET/server/src/routes/v1/auth.routes.ts)
+- Add `/refresh` endpoint.
+- Connect all validation and controller handlers.
+
+#### [MODIFY] [auth.controller.ts](file:///c:/Users/harii/Downloads/PLACE@ASET/server/src/controllers/auth.controller.ts)
+- Add `/refresh` controller logic.
+- Handle HttpOnly secure cookie creation during login and token clearing during logout.
+
+#### [MODIFY] [auth.service.ts](file:///c:/Users/harii/Downloads/PLACE@ASET/server/src/services/auth.service.ts)
+- Implement `refresh` session via Supabase Client SDK.
+- Update `register` to assign the default `'student'` role to new users in the `user_roles` table.
+
+#### [NEW] [permission.ts](file:///c:/Users/harii/Downloads/PLACE@ASET/server/src/middleware/permission.ts)
+- Implement RBAC permission verification middleware (e.g. checking permission records from `role_permissions` in the DB).
+
+---
+
+### Frontend
+
+We will build the authentication service, context state, and beautiful user interface forms with premium glassmorphism styling, input validation, and user feedback.
+
+#### [NEW] [authService.js](file:///c:/Users/harii/Downloads/PLACE@ASET/client/src/lib/authService.js)
+- API calls wrapper for registration, login, logout, password recovery, reset, verification, and fetching user profiles.
+
+#### [NEW] [AuthContext.jsx](file:///c:/Users/harii/Downloads/PLACE@ASET/client/src/context/AuthContext.jsx)
+- Authentication React Context and hook provider (`useAuth`) that keeps track of the active user, tokens, profile setup status, and loading state.
+
+#### [NEW] [ProtectedRoute.jsx](file:///c:/Users/harii/Downloads/PLACE@ASET/client/src/components/ProtectedRoute.jsx)
+- Wrapper component that redirects unauthenticated users or checks for role permissions.
+
+#### [NEW] [login page](file:///c:/Users/harii/Downloads/PLACE@ASET/client/src/app/login/page.jsx)
+- Beautiful sign-in card layout using glassmorphism, with fields for Email and Password.
+
+#### [NEW] [register page](file:///c:/Users/harii/Downloads/PLACE@ASET/client/src/app/register/page.jsx)
+- Sign-up form with input fields: Full Name, Email, Password, College, Department, Year, Section, Roll Number. Includes dynamic loading of colleges/departments.
+
+#### [NEW] [forgot password page](file:///c:/Users/harii/Downloads/PLACE@ASET/client/src/app/forgot-password/page.jsx)
+- Reset password link request page.
+
+#### [NEW] [reset password page](file:///c:/Users/harii/Downloads/PLACE@ASET/client/src/app/reset-password/page.jsx)
+- Reset page receiving JWT recovery tokens to update passwords.
+
+#### [NEW] [verify email page](file:///c:/Users/harii/Downloads/PLACE@ASET/client/src/app/verify-email/page.jsx)
+- Email confirmation pending feedback screen.
+
+#### [NEW] [profile setup page](file:///c:/Users/harii/Downloads/PLACE@ASET/client/src/app/profile-setup/page.jsx)
+- Profile completion page to specify academic details (college, roll number, department) for users who register via external providers or need onboarding.
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- We will add testing files:
+  - `server/src/controllers/auth.controller.spec.ts` (Unit tests)
+  - `server/src/routes/auth.routes.spec.ts` (API integration tests using supertest)
+- Execute with:
+  - `npm run test` or running mocha/jest if configured (otherwise, we can write a simple test runner script).
+
+### Manual Verification
+- Verify starting the backend server with `npm run dev`.
+- Verify pages visual layout on the client app by loading `http://localhost:3000/login` and trying registration, login, and profile update flows.
