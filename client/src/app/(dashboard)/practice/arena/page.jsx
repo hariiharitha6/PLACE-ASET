@@ -65,8 +65,74 @@ export default function PracticeArenaSessionPage() {
       }
     };
     loadBookmarks();
+  }, [router]);
 
-    // Start clock timer
+  const saveProgressDraft = useCallback(async (showToast = true) => {
+    if (!session || isFinished) return;
+    try {
+      // Save all active selections
+      const promises = Object.entries(answers).map(([qId, oId]) => 
+        practiceService.submitAnswer({
+          sessionId: session.id,
+          question_id: qId,
+          selected_option_id: oId,
+          time_spent: Math.min(timerRef.current, 30)
+        })
+      );
+      if (promises.length > 0) {
+        await Promise.all(promises);
+        if (showToast) {
+          toast.success('Practice progress draft auto-saved!');
+        }
+      }
+    } catch (err) {
+      console.error('Failed to save progress', err);
+    }
+  }, [session, isFinished, answers, toast]);
+
+  const handleFinish = useCallback(async (isAutoSubmit = false) => {
+    if (isFinished) return;
+    if (clockTimer.current) clearInterval(clockTimer.current);
+    if (autoSaveTimer.current) clearInterval(autoSaveTimer.current);
+
+    try {
+      // 1. Submit final answers
+      const promises = Object.entries(answers).map(([qId, oId]) => 
+        practiceService.submitAnswer({
+          sessionId: session.id,
+          question_id: qId,
+          selected_option_id: oId,
+          time_spent: Math.round(totalSecondsRef.current / (questions.length || 1))
+        })
+      );
+      if (promises.length > 0) {
+        await Promise.all(promises);
+      }
+
+      // 2. Call endSession
+      const res = await practiceService.endSession({
+        sessionId: session.id
+      });
+
+      // 3. Compute topic recommendations and metrics locally for presentation
+      const averageTime = Math.round(totalSecondsRef.current / (res.totalAnswered || 1));
+
+      setResults({
+        ...res,
+        timeTakenSeconds: totalSecondsRef.current,
+        averageTimePerQuestion: averageTime
+      });
+      setIsFinished(true);
+      toast.success(isAutoSubmit ? 'Time expired. Practice auto-submitted!' : 'Practice session finalized!');
+    } catch (err) {
+      toast.error('Failed to finalize practice: ' + err.message);
+    }
+  }, [isFinished, answers, session, questions.length, toast]);
+
+  // Start clock and autosave timer
+  useEffect(() => {
+    if (isFinished) return;
+
     clockTimer.current = setInterval(() => {
       if (!isPaused && !isFinished) {
         timerRef.current += 1;
@@ -94,30 +160,7 @@ export default function PracticeArenaSessionPage() {
       if (clockTimer.current) clearInterval(clockTimer.current);
       if (autoSaveTimer.current) clearInterval(autoSaveTimer.current);
     };
-  }, [isPaused, isFinished]);
-
-  const saveProgressDraft = async (showToast = true) => {
-    if (!session || isFinished) return;
-    try {
-      // Save all active selections
-      const promises = Object.entries(answers).map(([qId, oId]) => 
-        practiceService.submitAnswer({
-          sessionId: session.id,
-          question_id: qId,
-          selected_option_id: oId,
-          time_spent: Math.min(timerRef.current, 30)
-        })
-      );
-      if (promises.length > 0) {
-        await Promise.all(promises);
-        if (showToast) {
-          toast.success('Practice progress draft auto-saved!');
-        }
-      }
-    } catch (err) {
-      console.error('Failed to save progress', err);
-    }
-  };
+  }, [isPaused, isFinished, handleFinish, saveProgressDraft]);
 
   const handleSelectOption = (questionId, optionId) => {
     if (isPaused) return;
@@ -152,46 +195,6 @@ export default function PracticeArenaSessionPage() {
       toast.success(res.bookmarked ? 'Question bookmarked!' : 'Bookmark removed.');
     } catch (err) {
       toast.error('Failed to toggle bookmark: ' + err.message);
-    }
-  };
-
-  const handleFinish = async (isAutoSubmit = false) => {
-    if (isFinished) return;
-    if (clockTimer.current) clearInterval(clockTimer.current);
-    if (autoSaveTimer.current) clearInterval(autoSaveTimer.current);
-
-    try {
-      // 1. Submit final answers
-      const promises = Object.entries(answers).map(([qId, oId]) => 
-        practiceService.submitAnswer({
-          sessionId: session.id,
-          question_id: qId,
-          selected_option_id: oId,
-          time_spent: Math.round(totalSecondsRef.current / (questions.length || 1))
-        })
-      );
-      if (promises.length > 0) {
-        await Promise.all(promises);
-      }
-
-      // 2. Call endSession
-      const res = await practiceService.endSession({
-        sessionId: session.id
-      });
-
-      // 3. Compute topic recommendations and metrics locally for presentation
-      const accuracy = res.accuracy;
-      const averageTime = Math.round(totalSecondsRef.current / (res.totalAnswered || 1));
-
-      setResults({
-        ...res,
-        timeTakenSeconds: totalSecondsRef.current,
-        averageTimePerQuestion: averageTime
-      });
-      setIsFinished(true);
-      toast.success(isAutoSubmit ? 'Time expired. Practice auto-submitted!' : 'Practice session finalized!');
-    } catch (err) {
-      toast.error('Failed to finalize practice: ' + err.message);
     }
   };
 

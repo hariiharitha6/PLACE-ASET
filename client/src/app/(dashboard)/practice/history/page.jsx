@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { practiceService } from '../../../../lib/practiceService';
 import { Clock, Target, Zap, ChevronRight } from 'lucide-react';
@@ -14,7 +14,7 @@ export default function PracticeHistoryPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     setIsLoading(true);
     try {
       const res = await practiceService.getHistory({ page, limit: 15 });
@@ -26,9 +26,9 @@ export default function PracticeHistoryPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page]);
 
-  useEffect(() => { loadHistory(); }, [page]);
+  useEffect(() => { loadHistory(); }, [loadHistory]);
 
   const formatDuration = (start, end) => {
     if (!start || !end) return '-';

@@ -9,7 +9,7 @@ import { ArrowLeft, GitMerge, AlertTriangle, ShieldAlert } from 'lucide-react';
 export default function DuplicateComparisonPage() {
   const router = useRouter();
   const params = useParams();
-  const { toast } = useToast();
+  const toast = useToast();
 
   const [duplicates, setDuplicates] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -28,7 +28,7 @@ export default function DuplicateComparisonPage() {
       }
     };
     load();
-  }, [params.id]);
+  }, [params.id, toast]);
 
   const handleMerge = async (duplicateId) => {
     try {

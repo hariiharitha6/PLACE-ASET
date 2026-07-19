@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { communityService } from '../../../../lib/communityService';
 import { useToast } from '../../../../context/ToastContext';
@@ -16,7 +16,7 @@ export default function ReviewQueuePage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const loadQueue = async () => {
+  const loadQueue = useCallback(async () => {
     setIsLoading(true);
     try {
       const res = await communityService.getReviewQueue({ page, limit: 10 });
@@ -28,11 +28,11 @@ export default function ReviewQueuePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, toast]);
 
   useEffect(() => {
     loadQueue();
-  }, [page]);
+  }, [loadQueue]);
 
   const handleReviewAction = async (id, action, notes) => {
     try {

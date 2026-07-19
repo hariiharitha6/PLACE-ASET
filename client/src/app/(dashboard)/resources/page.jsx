@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 import { useConfirm } from '../../../context/ConfirmContext';
@@ -33,7 +33,7 @@ export default function ResourcesPage() {
   const [isGlobal, setIsGlobal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const loadResources = async () => {
+  const loadResources = useCallback(async () => {
     try {
       const res = await resourceService.listResources({
         page, search, type, category_id: categoryId, sortBy, limit: 12
@@ -44,11 +44,11 @@ export default function ResourcesPage() {
     } catch (e) {
       console.error(e);
     }
-  };
+  }, [page, search, type, categoryId, sortBy]);
 
   useEffect(() => {
     loadResources();
-  }, [page, search, type, categoryId, sortBy]);
+  }, [loadResources]);
 
   useEffect(() => {
     const loadCats = async () => {

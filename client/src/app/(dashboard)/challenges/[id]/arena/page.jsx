@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import Image from 'next/image';
 import { challengeService } from '../../../../../lib/challengeService';
 import { useToast } from '../../../../../context/ToastContext';
 import { useConfirm } from '../../../../../context/ConfirmContext';
@@ -38,76 +39,8 @@ export default function ChallengeArenaPage() {
   const tabSwitches = useRef(0);
   const autoSaveTimer = useRef(null);
 
-  // Load challenge metadata and questions list on mount
-  useEffect(() => {
-    const initArena = async () => {
-      try {
-        const res = await challengeService.startChallenge(id);
-        setChallenge(res.challenge);
-        setQuestions(res.questions || []);
-
-        // Load pre-existing partial answers if any from submissions array
-        const initialAnswers = {};
-        if (res.submissions && res.submissions.length > 0) {
-          res.submissions.forEach((s) => {
-            if (s.selected_option_id) {
-              initialAnswers[s.question_id] = s.selected_option_id;
-            }
-          });
-        }
-        setAnswers(initialAnswers);
-
-        // Compute countdown seconds remaining
-        const started = new Date(res.challenge.started_at);
-        const limitSeconds = res.challenge.duration_minutes * 60;
-        const elapsedSeconds = Math.round((new Date().getTime() - started.getTime()) / 1000);
-        const remaining = Math.max(0, limitSeconds - elapsedSeconds);
-        setTimeLeft(remaining);
-
-        if (remaining <= 0) {
-          // Auto submit if time already spent
-          handleFinalize(true);
-        }
-      } catch (err) {
-        console.error('Arena init error', err);
-        toast.error(err.message || 'Failed to start challenge arena.');
-        router.push(`/challenges/${id}`);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    initArena();
-  }, [id]);
-
-  // Periodic progress saving method
-  const handleAutoSave = useCallback(async () => {
-    try {
-      const mappedAnswers = Object.entries(answers).map(([qId, oId]) => ({
-        question_id: qId,
-        selected_option_id: oId,
-        time_spent_seconds: 30
-      }));
-      if (mappedAnswers.length > 0) {
-        await challengeService.saveProgress(id, mappedAnswers);
-        console.log('Progress auto-saved successfully.');
-      }
-    } catch (err) {
-      console.warn('Auto save progress error:', err);
-    }
-  }, [id, answers]);
-
-  // Setup auto-save timer interval (every 30 seconds)
-  useEffect(() => {
-    if (isLoading || isSubmitting || !timeLeft) return;
-
-    autoSaveTimer.current = setInterval(handleAutoSave, 30000);
-    return () => {
-      if (autoSaveTimer.current) clearInterval(autoSaveTimer.current);
-    };
-  }, [isLoading, isSubmitting, timeLeft, handleAutoSave]);
-
   // Finalize Submission
-  const handleFinalize = async (isAutoSubmit = false) => {
+  const handleFinalize = useCallback(async (isAutoSubmit = false) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     if (autoSaveTimer.current) clearInterval(autoSaveTimer.current);
@@ -152,7 +85,75 @@ export default function ChallengeArenaPage() {
       toast.error('Failed to finalize attempt: ' + err.message);
       setIsSubmitting(false);
     }
-  };
+  }, [isSubmitting, answers, confirm, id, toast, router]);
+
+  // Load challenge metadata and questions list on mount
+  useEffect(() => {
+    const initArena = async () => {
+      try {
+        const res = await challengeService.startChallenge(id);
+        setChallenge(res.challenge);
+        setQuestions(res.questions || []);
+
+        // Load pre-existing partial answers if any from submissions array
+        const initialAnswers = {};
+        if (res.submissions && res.submissions.length > 0) {
+          res.submissions.forEach((s) => {
+            if (s.selected_option_id) {
+              initialAnswers[s.question_id] = s.selected_option_id;
+            }
+          });
+        }
+        setAnswers(initialAnswers);
+
+        // Compute countdown seconds remaining
+        const started = new Date(res.challenge.started_at);
+        const limitSeconds = res.challenge.duration_minutes * 60;
+        const elapsedSeconds = Math.round((new Date().getTime() - started.getTime()) / 1000);
+        const remaining = Math.max(0, limitSeconds - elapsedSeconds);
+        setTimeLeft(remaining);
+
+        if (remaining <= 0) {
+          // Auto submit if time already spent
+          handleFinalize(true);
+        }
+      } catch (err) {
+        console.error('Arena init error', err);
+        toast.error(err.message || 'Failed to start challenge arena.');
+        router.push(`/challenges/${id}`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    initArena();
+  }, [id, handleFinalize, toast, router]);
+
+  // Periodic progress saving method
+  const handleAutoSave = useCallback(async () => {
+    try {
+      const mappedAnswers = Object.entries(answers).map(([qId, oId]) => ({
+        question_id: qId,
+        selected_option_id: oId,
+        time_spent_seconds: 30
+      }));
+      if (mappedAnswers.length > 0) {
+        await challengeService.saveProgress(id, mappedAnswers);
+        console.log('Progress auto-saved successfully.');
+      }
+    } catch (err) {
+      console.warn('Auto save progress error:', err);
+    }
+  }, [id, answers]);
+
+  // Setup auto-save timer interval (every 30 seconds)
+  useEffect(() => {
+    if (isLoading || isSubmitting || !timeLeft) return;
+
+    autoSaveTimer.current = setInterval(handleAutoSave, 30000);
+    return () => {
+      if (autoSaveTimer.current) clearInterval(autoSaveTimer.current);
+    };
+  }, [isLoading, isSubmitting, timeLeft, handleAutoSave]);
 
   // Anti-Cheat Audit listener setup
   const auditActivity = useCallback(async (eventType) => {
@@ -166,7 +167,7 @@ export default function ChallengeArenaPage() {
       console.warn('Audit logger warning:', err);
     }
     toast.warning('⚠️ Tab switch detected! Suspicious activity has been logged. Attempting to cheat may lead to disqualification.', 6000);
-  }, [id]);
+  }, [id, toast]);
 
   useEffect(() => {
     if (isLoading || isSubmitting) return;
@@ -201,7 +202,7 @@ export default function ChallengeArenaPage() {
     }, 1000);
 
     return () => clearTimeout(clock);
-  }, [timeLeft, isSubmitting]);
+  }, [timeLeft, isSubmitting, handleFinalize]);
 
   const handleSelectOption = (questionId, optionId) => {
     setAnswers(prev => ({
@@ -290,17 +291,18 @@ export default function ChallengeArenaPage() {
               {activeQuestion.statement}
             </div>
             {activeQuestion.image_url && (
-              <img 
-                src={activeQuestion.image_url} 
-                alt="Question Diagram" 
-                style={{
-                  maxWidth: '100%',
-                  maxHeight: '300px',
-                  borderRadius: 'var(--radius-md)',
-                  border: '1px solid var(--border-color)',
-                  objectFit: 'contain'
-                }}
-              />
+              <div style={{ position: 'relative', width: '100%', height: '300px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+                <Image 
+                  src={activeQuestion.image_url} 
+                  alt="Question Diagram" 
+                  fill
+                  sizes="(max-width: 768px) 100vw, 800px"
+                  unoptimized
+                  style={{
+                    objectFit: 'contain'
+                  }}
+                />
+              </div>
             )}
 
             {/* Options selection List */}

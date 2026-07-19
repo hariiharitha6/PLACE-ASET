@@ -42,6 +42,15 @@ export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
   const counterRef = useRef(0);
 
+  const dismiss = useCallback((id) => {
+    setToasts((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, exiting: true } : t))
+    );
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 320);
+  }, []);
+
   const addToast = useCallback((message, type = 'info', duration = 4000) => {
     const id = ++counterRef.current;
     setToasts((prev) => [...prev, { id, message, type, duration, entering: true }]);
@@ -61,16 +70,7 @@ export function ToastProvider({ children }) {
     }
 
     return id;
-  }, []);
-
-  const dismiss = useCallback((id) => {
-    setToasts((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, exiting: true } : t))
-    );
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 320);
-  }, []);
+  }, [dismiss]);
 
   const toast = {
     success: (msg, duration) => addToast(msg, 'success', duration),

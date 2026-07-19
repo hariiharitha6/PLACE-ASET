@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '../../../../context/AuthContext';
@@ -24,7 +24,7 @@ export default function QuestionDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchDetails = async () => {
+  const fetchDetails = useCallback(async () => {
     try {
       const res = await questionService.getQuestionDetails(id);
       setQuestion(res);
@@ -39,11 +39,11 @@ export default function QuestionDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id, isAdminOrHost]);
 
   useEffect(() => {
     fetchDetails();
-  }, [id]);
+  }, [fetchDetails]);
 
   const handleBack = () => {
     router.push('/questions');

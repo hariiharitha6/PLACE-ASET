@@ -31,7 +31,7 @@ export default function PracticeSessionResultsPage() {
       }
     };
     load();
-  }, [sessionId]);
+  }, [sessionId, toast, router]);
 
   if (isLoading) {
     return <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>Loading session results...</div>;

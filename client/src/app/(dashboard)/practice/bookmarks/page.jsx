@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../../../context/ToastContext';
 import { practiceService } from '../../../../lib/practiceService';
@@ -15,7 +15,7 @@ export default function BookmarksWorkspacePage() {
   const [questions, setQuestions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadBookmarks = async () => {
+  const loadBookmarks = useCallback(async () => {
     setIsLoading(true);
     try {
       const qIds = await practiceService.getBookmarks();
@@ -38,11 +38,11 @@ export default function BookmarksWorkspacePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     loadBookmarks();
-  }, []);
+  }, [loadBookmarks]);
 
   const handleUnbookmark = async (questionId) => {
     try {

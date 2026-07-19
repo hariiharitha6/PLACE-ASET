@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { challengeService } from '../../../../../lib/challengeService';
 import { questionService } from '../../../../../lib/questionService';
@@ -21,7 +21,7 @@ export default function ChallengeQuestionsAssignmentPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       // 1. Fetch challenge details
       const details = await challengeService.getChallengeDetails(id);
@@ -47,11 +47,11 @@ export default function ChallengeQuestionsAssignmentPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     loadData();
-  }, [id]);
+  }, [loadData]);
 
   const handleAssign = (q) => {
     const isAssigned = assignedQuestions.some(aq => aq.question_id === q.id);

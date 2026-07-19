@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
@@ -32,7 +32,7 @@ export default function CommunityPage() {
   const [difficulty, setDifficulty] = useState('medium');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const loadQuestions = async () => {
+  const loadQuestions = useCallback(async () => {
     try {
       const res = await communityService.listQuestions({
         page, limit: 10, status: activeTab
@@ -43,11 +43,11 @@ export default function CommunityPage() {
     } catch (e) {
       console.error(e);
     }
-  };
+  }, [page, activeTab]);
 
   useEffect(() => {
     loadQuestions();
-  }, [page, activeTab]);
+  }, [loadQuestions]);
 
   useEffect(() => {
     const loadCats = async () => {

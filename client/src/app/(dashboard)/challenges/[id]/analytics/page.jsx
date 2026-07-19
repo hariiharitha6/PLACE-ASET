@@ -61,7 +61,7 @@ export default function ChallengeAnalyticsPage() {
       }
     };
     fetchAnalytics();
-  }, [id, isAdminOrHost]);
+  }, [id, isAdminOrHost, router]);
 
   if (isLoading) {
     return (

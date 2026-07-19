@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { challengeService } from '../../../../../lib/challengeService';
 import { useToast } from '../../../../../context/ToastContext';
@@ -28,7 +28,7 @@ export default function ChallengeSolutionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchSolutionsAndComments = async () => {
+  const fetchSolutionsAndComments = useCallback(async () => {
     try {
       // 1. Fetch questions with solutions via authenticated API endpoint
       const solutionsData = await challengeService.getChallengeQuestionsWithSolutions(id);
@@ -43,11 +43,11 @@ export default function ChallengeSolutionsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchSolutionsAndComments();
-  }, [id]);
+  }, [fetchSolutionsAndComments]);
 
   const handlePostComment = async (e) => {
     e.preventDefault();

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
@@ -59,7 +59,7 @@ export default function QuestionsManagementPage() {
     loadMetadata();
   }, []);
 
-  const loadQuestions = async () => {
+  const loadQuestions = useCallback(async () => {
     setIsLoading(true);
     try {
       const params = {
@@ -85,11 +85,11 @@ export default function QuestionsManagementPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, search, category, difficulty, type, department, company, status]);
 
   useEffect(() => {
     loadQuestions();
-  }, [page, category, difficulty, type, department, company, status]);
+  }, [loadQuestions]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
