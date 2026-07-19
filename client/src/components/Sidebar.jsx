@@ -11,7 +11,8 @@ import {
   Users, 
   Award, 
   LogOut,
-  X
+  X,
+  Brain
 } from 'lucide-react';
 import { APP_NAME } from '../lib/constants';
 
@@ -26,6 +27,7 @@ export default function Sidebar({ isOpen, onClose }) {
     { label: 'Challenges', href: '/challenges', icon: Trophy },
     { label: 'Resource Library', href: '/resources', icon: Library },
     { label: 'Community', href: '/community', icon: Users },
+    { label: 'AI Analytics', href: '/ai', icon: Brain },
     { label: 'Achievements', href: '/achievements', icon: Award },
     { label: 'Badges', href: '/badges', icon: Award },
   ];

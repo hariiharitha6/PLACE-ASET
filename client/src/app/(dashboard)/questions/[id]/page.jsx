@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import Image from 'next/image';
 import { useAuth } from '../../../../context/AuthContext';
 import { useToast } from '../../../../context/ToastContext';
 import { useConfirm } from '../../../../context/ConfirmContext';
@@ -110,11 +111,15 @@ export default function QuestionDetailPage() {
               {question.statement}
             </div>
             {question.image_url && (
-              <img 
+              <Image 
                 src={question.image_url} 
                 alt="Question diagram" 
+                width={600}
+                height={400}
+                unoptimized
                 style={{
                   maxWidth: '100%',
+                  height: 'auto',
                   borderRadius: 'var(--radius-md)',
                   border: '1px solid var(--border-color)',
                   marginBottom: '16px'
