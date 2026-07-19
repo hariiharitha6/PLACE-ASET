@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { useRouter } from 'next/navigation';
+import SearchableCollegeSelect from '../../components/SearchableCollegeSelect';
 import styles from '../register/register.module.css';
 
 export default function ProfileSetupPage() {
@@ -51,7 +52,7 @@ export default function ProfileSetupPage() {
       try {
         const { data: cols } = await supabase
           .from('colleges')
-          .select('id, name')
+          .select('id, name, slug')
           .eq('is_active', true);
         
         const { data: depts } = await supabase
@@ -59,14 +60,68 @@ export default function ProfileSetupPage() {
           .select('id, name, code, college_id')
           .eq('is_active', true);
 
-        setColleges(cols || []);
+        let fetchedCols = cols || [];
+        if (!cols || cols.length === 0) {
+          fetchedCols = [
+            {
+              id: 'aset',
+              name: 'ASET',
+              slug: 'aset',
+              full_name: 'Ahalia School of Engineering and Technology'
+            }
+          ];
+        }
+
+        const processedCols = fetchedCols.map(c => {
+          if (c.slug === 'aset' || c.name.toLowerCase().includes('ahalia')) {
+            return {
+              ...c,
+              name: 'ASET',
+              full_name: 'Ahalia School of Engineering and Technology'
+            };
+          }
+          return {
+            ...c,
+            full_name: c.name
+          };
+        });
+
+        const hasAset = processedCols.some(c => c.name === 'ASET');
+        if (!hasAset) {
+          processedCols.unshift({
+            id: 'aset',
+            name: 'ASET',
+            slug: 'aset',
+            full_name: 'Ahalia School of Engineering and Technology'
+          });
+        }
+
+        processedCols.sort((a, b) => {
+          if (a.name === 'ASET') return -1;
+          if (b.name === 'ASET') return 1;
+          return a.name.localeCompare(b.name);
+        });
+
+        setColleges(processedCols);
         setDepartments(depts || []);
 
-        if (cols && cols.length > 0) {
-          setCollegeId(prev => prev || cols[0].id);
+        const asetCollege = processedCols.find(c => c.name === 'ASET');
+        if (asetCollege) {
+          setCollegeId(prev => prev || asetCollege.id);
+        } else if (processedCols.length > 0) {
+          setCollegeId(prev => prev || processedCols[0].id);
         }
       } catch (err) {
         console.error('Failed to load form metadata', err);
+        const fallback = [
+          {
+            id: 'aset',
+            name: 'ASET',
+            full_name: 'Ahalia School of Engineering and Technology'
+          }
+        ];
+        setColleges(fallback);
+        setCollegeId(prev => prev || 'aset');
       }
     };
 
@@ -179,20 +234,12 @@ export default function ProfileSetupPage() {
 
           <div className={styles.formGroup}>
             <label htmlFor="college" className={styles.label}>College *</label>
-            <select
-              id="college"
-              className={styles.select}
-              value={collegeId}
-              onChange={(e) => setCollegeId(e.target.value)}
+            <SearchableCollegeSelect
+              colleges={colleges}
+              selectedId={collegeId}
+              onChange={(val) => setCollegeId(val)}
               disabled={isSubmitting}
-              required
-            >
-              {colleges.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           <div className={styles.formGroup}>
