@@ -1,7 +1,22 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import { APP_NAME, APP_FULL_NAME } from '@/lib/constants';
 
 export default function LandingPage() {
+  const { isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      console.log('[ROOT PAGE TRACE] Authenticated user detected, redirecting to /dashboard');
+      router.replace('/dashboard');
+    }
+  }, [isAuthenticated, isLoading, router]);
+
   return (
     <main className={styles.main}>
       <div className={styles.hero}>

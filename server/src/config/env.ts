@@ -23,7 +23,7 @@ export const envSchema = z.object({
   REDIS_URL: optionalNonEmptyString,
   
   // CORS
-  ALLOWED_ORIGINS: z.string().default('http://localhost:3000'),
+  ALLOWED_ORIGINS: z.string().default('http://localhost:3000,http://localhost:3001'),
   
   // JWT
   JWT_SECRET: optionalNonEmptyString,

@@ -1,18 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import styles from './login.module.css';
 import Link from 'next/link';
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, isAuthenticated, user, getDashboardPath } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localError, setLocalError] = useState(null);
   const router = useRouter();
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const targetPath = getDashboardPath(user.role);
+      router.push(targetPath);
+    }
+  }, [isAuthenticated, user, router, getDashboardPath]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,8 +32,10 @@ export default function LoginPage() {
     setLocalError(null);
 
     try {
-      await login(email, password);
-      router.push('/');
+      const res = await login(email, password);
+      const targetRole = res?.user?.role || 'student';
+      const targetPath = getDashboardPath(targetRole);
+      router.push(targetPath);
     } catch (err) {
       console.error(err);
       setLocalError(err.error || 'Invalid email or password. Please try again.');
@@ -39,11 +48,11 @@ export default function LoginPage() {
     <main className={styles.container}>
       <div className={styles.glowOrb} />
       <div className={styles.glowOrb2} />
-      
+
       <div className={styles.card}>
         <div className={styles.header}>
           <h1 className={styles.title}>PLACE@ASET</h1>
-          <p className={styles.subtitle}>Sign in to your candidate account</p>
+          <p className={styles.subtitle}>Single Authentication Portal for Students, Faculty, HODs, Placement Officers & Admins</p>
         </div>
 
         {localError && (
@@ -60,7 +69,7 @@ export default function LoginPage() {
               type="email"
               id="email"
               className={styles.input}
-              placeholder="candidate@ahalia.edu"
+              placeholder="user@ahalia.edu or user@aset.ac.in"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isSubmitting}
@@ -102,11 +111,19 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className={styles.footer}>
-          <span>Don&apos;t have an account? </span>
-          <Link href="/register" className={styles.signupLink} id="login-to-register-link">
-            Sign Up
-          </Link>
+        <div className={styles.footer} style={{ flexDirection: 'column', gap: '8px' }}>
+          <div>
+            <span>Student Candidate? </span>
+            <Link href="/register" className={styles.signupLink} id="login-to-register-link">
+              Student Registration
+            </Link>
+          </div>
+          <div>
+            <span>Faculty or Educator? </span>
+            <Link href="/register/faculty" className={styles.signupLink} style={{ color: '#818cf8' }}>
+              Faculty Registration
+            </Link>
+          </div>
         </div>
       </div>
     </main>

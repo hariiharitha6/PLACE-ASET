@@ -7,6 +7,7 @@ import { useToast } from '../../../context/ToastContext';
 import { useConfirm } from '../../../context/ConfirmContext';
 import { questionService } from '../../../lib/questionService';
 import { supabase } from '../../../lib/supabase';
+import { getDepartmentsForCollege } from '../../../constants/departments';
 import QuestionCard from '../../../components/questions/QuestionCard';
 import QuestionPreviewModal from '../../../components/questions/QuestionPreviewModal';
 import { Search, Plus, Filter } from 'lucide-react';
@@ -50,7 +51,7 @@ export default function QuestionsManagementPage() {
         const { data: depts } = await supabase.from('departments').select('id, name, code').order('name');
         const { data: comps } = await supabase.from('companies').select('id, name').order('name');
         setCategoriesList(cats || []);
-        setDepartmentsList(depts || []);
+        setDepartmentsList(getDepartmentsForCollege('aset', depts || []));
         setCompaniesList(comps || []);
       } catch (err) {
         console.error('Failed to load metadata in Questions List', err);

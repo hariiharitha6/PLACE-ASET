@@ -12,11 +12,19 @@ import communityRoutes from './community.routes';
 import logsRoutes from './logs.routes';
 import gamificationRoutes from './gamification.routes';
 import aiRoutes from './ai.routes';
+import adminRoutes from './admin.routes';
+import hostRoutes from './host.routes';
 
 const v1Router = Router();
 
 // Health check
 v1Router.use('/health', healthRoutes);
+
+// Admin routes
+v1Router.use('/admin', adminRoutes);
+
+// Host routes
+v1Router.use('/host', hostRoutes);
 
 // Auth routes
 v1Router.use('/auth', authRoutes);
@@ -38,7 +46,7 @@ v1Router.use('/practice', practiceRoutes);
 
 // Leaderboard & Gamification routes
 v1Router.use('/leaderboard', leaderboardRoutes);
-v1Router.use('/', gamificationRoutes); // Mounts /achievements and /badges directly
+v1Router.use('/', gamificationRoutes);
 
 // Resources routes
 v1Router.use('/resources', resourcesRoutes);

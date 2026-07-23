@@ -101,25 +101,49 @@ ALTER TABLE duplicate_checks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE review_history ENABLE ROW LEVEL SECURITY;
 
 -- Select/Update Policies
-CREATE POLICY "Users read own submissions" ON community_submissions FOR SELECT TO authenticated USING (auth.uid() = user_id OR (SELECT role FROM users WHERE id = auth.uid()) IN ('host', 'admin'));
-CREATE POLICY "Users insert submissions" ON community_submissions FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users update own submissions" ON community_submissions FOR UPDATE TO authenticated USING (auth.uid() = user_id OR (SELECT role FROM users WHERE id = auth.uid()) IN ('host', 'admin'));
+DROP POLICY IF EXISTS "Users read own submissions" ON community_submissions;
+CREATE POLICY "Users read own submissions" ON community_submissions FOR SELECT TO authenticated USING (auth.uid() = user_id OR public.current_user_role() IN ('super_admin', 'college_admin', 'host'));
 
+DROP POLICY IF EXISTS "Users insert submissions" ON community_submissions;
+CREATE POLICY "Users insert submissions" ON community_submissions FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users update own submissions" ON community_submissions;
+CREATE POLICY "Users update own submissions" ON community_submissions FOR UPDATE TO authenticated USING (auth.uid() = user_id OR public.current_user_role() IN ('super_admin', 'college_admin', 'host'));
+
+DROP POLICY IF EXISTS "Users read own attachments" ON submission_attachments;
 CREATE POLICY "Users read own attachments" ON submission_attachments FOR SELECT TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "Users insert attachments" ON submission_attachments;
 CREATE POLICY "Users insert attachments" ON submission_attachments FOR INSERT TO authenticated WITH CHECK (true);
 
-CREATE POLICY "Users read own OCR jobs" ON ocr_jobs FOR SELECT TO authenticated USING (auth.uid() = user_id OR (SELECT role FROM users WHERE id = auth.uid()) IN ('host', 'admin'));
-CREATE POLICY "Users insert OCR jobs" ON ocr_jobs FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users update OCR jobs" ON ocr_jobs FOR UPDATE TO authenticated USING (auth.uid() = user_id OR (SELECT role FROM users WHERE id = auth.uid()) IN ('host', 'admin'));
+DROP POLICY IF EXISTS "Users read own OCR jobs" ON ocr_jobs;
+CREATE POLICY "Users read own OCR jobs" ON ocr_jobs FOR SELECT TO authenticated USING (auth.uid() = user_id OR public.current_user_role() IN ('super_admin', 'college_admin', 'host'));
 
+DROP POLICY IF EXISTS "Users insert OCR jobs" ON ocr_jobs;
+CREATE POLICY "Users insert OCR jobs" ON ocr_jobs FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users update OCR jobs" ON ocr_jobs;
+CREATE POLICY "Users update OCR jobs" ON ocr_jobs FOR UPDATE TO authenticated USING (auth.uid() = user_id OR public.current_user_role() IN ('super_admin', 'college_admin', 'host'));
+
+DROP POLICY IF EXISTS "Users read OCR results" ON ocr_results;
 CREATE POLICY "Users read OCR results" ON ocr_results FOR SELECT TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "Users insert OCR results" ON ocr_results;
 CREATE POLICY "Users insert OCR results" ON ocr_results FOR INSERT TO authenticated WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Users read duplicate checks" ON duplicate_checks;
 CREATE POLICY "Users read duplicate checks" ON duplicate_checks FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Users manage duplicate checks" ON duplicate_checks FOR ALL TO authenticated USING ((SELECT role FROM users WHERE id = auth.uid()) IN ('host', 'admin'));
 
+DROP POLICY IF EXISTS "Users manage duplicate checks" ON duplicate_checks;
+CREATE POLICY "Users manage duplicate checks" ON duplicate_checks FOR ALL TO authenticated USING (public.current_user_role() IN ('super_admin', 'college_admin', 'host'));
+
+DROP POLICY IF EXISTS "Users read review history" ON review_history;
 CREATE POLICY "Users read review history" ON review_history FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Users manage review history" ON review_history FOR ALL TO authenticated USING ((SELECT role FROM users WHERE id = auth.uid()) IN ('host', 'admin'));
+
+DROP POLICY IF EXISTS "Users manage review history" ON review_history;
+CREATE POLICY "Users manage review history" ON review_history FOR ALL TO authenticated USING (public.current_user_role() IN ('super_admin', 'college_admin', 'host'));
+
+
 
 -- Grants
 GRANT ALL ON community_submissions TO authenticated;

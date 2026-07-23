@@ -24,6 +24,7 @@ CREATE TRIGGER trigger_challenge_discussions_updated
 ALTER TABLE challenge_discussions ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
+DROP POLICY IF EXISTS "Allow select for authenticated users on challenge discussions" ON challenge_discussions;
 CREATE POLICY "Allow select for authenticated users on challenge discussions" ON challenge_discussions
   FOR SELECT TO authenticated USING (
     -- Only allow reading comments if the challenge has ended and results are released
@@ -35,6 +36,7 @@ CREATE POLICY "Allow select for authenticated users on challenge discussions" ON
     )
   );
 
+DROP POLICY IF EXISTS "Allow insert for authenticated users on challenge discussions" ON challenge_discussions;
 CREATE POLICY "Allow insert for authenticated users on challenge discussions" ON challenge_discussions
   FOR INSERT TO authenticated WITH CHECK (
     -- Users can only post comment if the challenge has ended
@@ -45,3 +47,4 @@ CREATE POLICY "Allow insert for authenticated users on challenge discussions" ON
     )
     AND auth.uid() = user_id
   );
+

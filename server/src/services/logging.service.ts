@@ -67,6 +67,41 @@ export class LoggingService {
   }
 
   /**
+   * Enterprise System Admin Audit Trail Log. Writes to admin_audit_logs table.
+   */
+  static async logAdminAuditAction(data: {
+    userId?: string | null;
+    email: string;
+    role: string;
+    action: string;
+    targetTable?: string;
+    targetId?: string;
+    details?: string;
+    ipAddress?: string;
+    userAgent?: string;
+  }) {
+    const supabase = getSupabase();
+
+    const { error } = await supabase
+      .from('admin_audit_logs')
+      .insert({
+        user_id: data.userId || null,
+        email: data.email,
+        role: data.role,
+        action: data.action,
+        target_table: data.targetTable || null,
+        target_id: data.targetId || null,
+        details: data.details || null,
+        ip_address: data.ipAddress || null,
+        user_agent: data.userAgent || null,
+      });
+
+    if (error) {
+      logger.error('Failed to write admin_audit_log', { error: error.message });
+    }
+  }
+
+  /**
    * Retrieves activity logs with pagination/filters (admin/host only).
    */
   static async getActivityLogs(collegeId: string, options: {

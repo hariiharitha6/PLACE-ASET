@@ -1,0 +1,558 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.loadingContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  color: #94a3b8;
+  gap: 12px;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.08);
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.headerBadge {
+  background-color: rgba(99, 102, 241, 0.15);
+  color: #818cf8;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 12px;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+.title {
+  color: #f8fafc;
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 13px;
+  margin: 0;
+}
+
+.primaryBtn {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #ffffff;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+}
+
+.gridTwo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 1024px) {
+  .gridTwo {
+    grid-template-columns: 1fr;
+  }
+}
+
+.profileSummaryCard {
+  background-color: #0b1120;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.avatarBox {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+  flex-shrink: 0;
+}
+
+.candidateName {
+  color: #f8fafc;
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+}
+
+.profileSub {
+  color: #94a3b8;
+  font-size: 13px;
+  margin: 0 0 10px 0;
+}
+
+.badgeRow {
+  display: flex;
+  gap: 10px;
+}
+
+.cgpaPill {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.readinessStatusBadge {
+  background-color: rgba(99, 102, 241, 0.15);
+  color: #818cf8;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.scoreGaugeCard {
+  background-color: #0b1120;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.gaugeContent {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.circularGauge {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: conic-gradient(#6366f1 87%, rgba(255, 255, 255, 0.06) 0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gaugeInner {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: #0b1120;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.scoreNumber {
+  color: #f8fafc;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.scoreMax {
+  color: #64748b;
+  font-size: 10px;
+}
+
+.scoreMetaData {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.scoreLabel {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.statusText {
+  color: #34d399;
+  font-size: 18px;
+  font-weight: 800;
+  margin: 2px 0;
+}
+
+.statusSub {
+  color: #94a3b8;
+  font-size: 12px;
+  margin: 0;
+}
+
+.goalCard, .ranksCard, .cardBox {
+  background-color: #0b1120;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cardHeader h3 {
+  color: #f8fafc;
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.streakTag {
+  background-color: rgba(249, 115, 22, 0.15);
+  color: #fb923c;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+
+.tagDanger { background-color: rgba(239, 68, 68, 0.15); color: #f87171; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+.tagPurple { background-color: rgba(139, 92, 246, 0.15); color: #a78bfa; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+
+.goalMetricsRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.metricItem {
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.mVal {
+  color: #f8fafc;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.mLabel {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.ranksGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.rankBox {
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.rVal {
+  color: #fbbf24;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.rLabel {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.sectionCard {
+  background-color: #0b1120;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 12px;
+}
+
+.sectionHeader h3 {
+  color: #f8fafc;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.infoBadge {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.skillsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.skillItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skillHeader {
+  display: flex;
+  justify-content: space-between;
+  color: #cbd5e1;
+  font-size: 12px;
+}
+
+.barTrack {
+  height: 8px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.weakList, .recList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.weakItem {
+  background-color: rgba(239, 68, 68, 0.04);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.weakTitle {
+  color: #f87171;
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.weakReason {
+  color: #cbd5e1;
+  font-size: 12px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.actionLinkBtn {
+  align-self: flex-start;
+  background: transparent;
+  border: none;
+  color: #818cf8;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 4px;
+}
+
+.recItem {
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.recItem:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.recItem span {
+  font-size: 22px;
+}
+
+.recItem strong {
+  color: #f8fafc;
+  font-size: 13px;
+}
+
+.recItem p {
+  color: #94a3b8;
+  font-size: 11px;
+  margin: 2px 0 0 0;
+}
+
+.companyList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.companyRow {
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .companyRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.companyLogo {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.cDetails {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cTitleRow h4 {
+  color: #f8fafc;
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.pkgText {
+  color: #10b981;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cCriteria {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.cReason {
+  color: #cbd5e1;
+  font-size: 12px;
+  margin: 2px 0 0 0;
+  line-height: 1.4;
+}
+
+.cAction {
+  flex-shrink: 0;
+}
+
+.statusTag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+
+.statusTag.eligible { background-color: rgba(16, 185, 129, 0.15); color: #34d399; }
+.statusTag.nearlyeligible { background-color: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.statusTag.noteligible { background-color: rgba(239, 68, 68, 0.15); color: #f87171; }
+
+.activityList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.activityRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: #cbd5e1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding-bottom: 8px;
+}
+
+.actIcon {
+  font-size: 18px;
+}
+
+.actContent {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.actTime {
+  color: #64748b;
+  font-size: 11px;
+}

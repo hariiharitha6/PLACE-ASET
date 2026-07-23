@@ -3,6 +3,7 @@ dotenv.config();
 
 import { validateEnv } from './config/env';
 import { initDatabase } from './config/database';
+import { ensureSuperAdminExists } from './config/seedAdmin';
 import { initRedis } from './config/redis';
 import { initEmail } from './config/email';
 import logger from './utils/logger';
@@ -14,6 +15,7 @@ async function startServer() {
   
   // Initialize services
   initDatabase();
+  await ensureSuperAdminExists();
   initRedis();
   initEmail();
 

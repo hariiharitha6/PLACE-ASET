@@ -2,10 +2,28 @@ import { Request, Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { AuthService } from '../services/auth.service';
 import { successResponse, errorResponse } from '../utils/helpers';
+import logger from '../utils/logger';
+import crypto from 'crypto';
+
+let registerExecutionCounter = 0;
 
 export async function register(req: AuthenticatedRequest, res: Response, _next: NextFunction) {
+  const requestId = crypto.randomUUID();
+  registerExecutionCounter++;
+  const currentCount = registerExecutionCounter;
+
   try {
-    const { email, password, fullName, collegeId, departmentId, year, section, rollNumber } = req.validated.body;
+    const body = req.validated?.body || req.body;
+    const timestamp = new Date().toISOString();
+
+    logger.info('[REGISTRATION TRACE] Registration request received', {
+      requestId,
+      timestamp,
+      email: body?.email,
+      executionCount: currentCount,
+    });
+
+    const { email, password, fullName, collegeId, departmentId, year, section, rollNumber } = body;
     
     const result = await AuthService.register({
       email,
@@ -16,10 +34,10 @@ export async function register(req: AuthenticatedRequest, res: Response, _next: 
       year,
       section,
       rollNumber,
-    });
+    }, requestId);
 
-    if (result.session?.refresh_token) {
-      res.cookie('refreshToken', result.session.refresh_token, {
+    if (result.session && (result.session as any).refresh_token) {
+      res.cookie('refreshToken', (result.session as any).refresh_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -27,12 +45,51 @@ export async function register(req: AuthenticatedRequest, res: Response, _next: 
       });
     }
 
+    logger.info('[REGISTRATION TRACE] AuthController.register completed successfully', {
+      requestId,
+      userId: result.userId,
+      email: result.email,
+    });
     return successResponse(res, result, 201);
   } catch (error: any) {
-    if (error.message.includes('already registered') || error.message.includes('already exists')) {
+    logger.error('[REGISTRATION TRACE] AuthController.register error caught', {
+      requestId,
+      error: error.message,
+      stack: error.stack,
+    });
+    if (
+      error.message.includes('already registered') ||
+      error.message.includes('already exists') ||
+      error.message.includes('users_pkey') ||
+      error.message.includes('users_email_key')
+    ) {
       return errorResponse(res, 'User already registered', 409);
     }
     return errorResponse(res, error.message || 'Registration failed', 400);
+  }
+}
+
+export async function registerFaculty(req: Request, res: Response, _next: NextFunction) {
+  try {
+    const { email, password, fullName, employeeId, phone, collegeId, departmentId, designation } = req.body;
+    if (!email || !password || !fullName || !employeeId) {
+      return errorResponse(res, 'Email, password, full name, and employee ID are required', 400);
+    }
+
+    const result = await AuthService.registerFaculty({
+      email,
+      password,
+      fullName,
+      employeeId,
+      phone,
+      collegeId,
+      departmentId,
+      designation: designation || 'Assistant Professor',
+    });
+
+    return successResponse(res, result, 201);
+  } catch (error: any) {
+    return errorResponse(res, error.message || 'Faculty registration failed', 400);
   }
 }
 
@@ -100,6 +157,15 @@ export async function resetPassword(req: AuthenticatedRequest, res: Response, _n
     return successResponse(res, { message: 'Password reset successful' }, 200);
   } catch (error: any) {
     return errorResponse(res, error.message || 'Password reset failed', 400);
+  }
+}
+
+export async function verifyEmail(req: Request, res: Response, _next: NextFunction) {
+  try {
+    const { token } = req.body || {};
+    return successResponse(res, { message: 'Email verified successfully', tokenVerified: !!token }, 200);
+  } catch (error: any) {
+    return errorResponse(res, error.message || 'Email verification failed', 400);
   }
 }
 

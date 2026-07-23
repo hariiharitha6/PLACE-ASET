@@ -8,30 +8,35 @@ export function initDatabase(): void {
   const anonKey = process.env.SUPABASE_ANON_KEY;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!url || !anonKey) {
+  if (!url || (!anonKey && !serviceKey)) {
     console.warn('⚠️  Supabase not configured. Database operations will fail.');
     return;
   }
 
-  supabase = createClient(url, anonKey);
-  
-  if (serviceKey) {
-    supabaseAdmin = createClient(url, serviceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
+  // Primary backend client uses SUPABASE_SERVICE_ROLE_KEY for server operations
+  const primaryKey = serviceKey || anonKey!;
+
+  supabaseAdmin = createClient(url, primaryKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
+
+  if (anonKey) {
+    supabase = createClient(url, anonKey);
+  } else {
+    supabase = supabaseAdmin;
   }
 
   console.log('✅ Supabase client initialized');
 }
 
 export function getSupabase(): SupabaseClient {
-  if (!supabase) {
+  if (!supabase && !supabaseAdmin) {
     throw new Error('Database not initialized. Call initDatabase() first.');
   }
-  return supabase;
+  return supabaseAdmin || supabase!;
 }
 
 export function getSupabaseAdmin(): SupabaseClient {

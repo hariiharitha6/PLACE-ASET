@@ -43,17 +43,22 @@ CREATE INDEX IF NOT EXISTS idx_practice_rec_category ON practice_recommendations
 ALTER TABLE practice_statistics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE practice_recommendations ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users read own practice stats" ON practice_statistics;
 CREATE POLICY "Users read own practice stats" ON practice_statistics
   FOR SELECT TO authenticated USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users manage own practice stats" ON practice_statistics;
 CREATE POLICY "Users manage own practice stats" ON practice_statistics
   FOR ALL TO authenticated USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users read own practice recommendations" ON practice_recommendations;
 CREATE POLICY "Users read own practice recommendations" ON practice_recommendations
   FOR SELECT TO authenticated USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users manage own practice recommendations" ON practice_recommendations;
 CREATE POLICY "Users manage own practice recommendations" ON practice_recommendations
   FOR ALL TO authenticated USING (auth.uid() = user_id);
+
 
 -- Grants
 GRANT SELECT ON practice_statistics TO authenticated;

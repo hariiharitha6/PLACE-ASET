@@ -119,12 +119,24 @@ ALTER TABLE user_achievement_tiers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_badges ENABLE ROW LEVEL SECURITY;
 
 -- Select Policies
+DROP POLICY IF EXISTS "Allow read access to levels for all" ON level_definitions;
 CREATE POLICY "Allow read access to levels for all" ON level_definitions FOR SELECT TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "Allow read access to achievements for all" ON achievements;
 CREATE POLICY "Allow read access to achievements for all" ON achievements FOR SELECT TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "Users read own achievement tiers" ON user_achievement_tiers;
 CREATE POLICY "Users read own achievement tiers" ON user_achievement_tiers FOR SELECT TO authenticated USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users manage own achievement tiers" ON user_achievement_tiers;
 CREATE POLICY "Users manage own achievement tiers" ON user_achievement_tiers FOR ALL TO authenticated USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users read own badges" ON user_badges;
 CREATE POLICY "Users read own badges" ON user_badges FOR SELECT TO authenticated USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users manage own badges" ON user_badges;
 CREATE POLICY "Users manage own badges" ON user_badges FOR ALL TO authenticated USING (auth.uid() = user_id);
+
 
 -- Grants
 GRANT SELECT ON level_definitions TO authenticated;

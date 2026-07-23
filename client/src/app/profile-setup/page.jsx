@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { useRouter } from 'next/navigation';
 import SearchableCollegeSelect from '../../components/SearchableCollegeSelect';
+import SearchableDepartmentSelect from '../../components/SearchableDepartmentSelect';
 import styles from '../register/register.module.css';
 
 export default function ProfileSetupPage() {
@@ -133,19 +134,17 @@ export default function ProfileSetupPage() {
     if (collegeId) {
       const filtered = departments.filter((d) => d.college_id === collegeId);
       setFilteredDepartments(filtered);
-      
-      // Keep selected department if it belongs to the selected college, else select first
-      const belongs = filtered.some(d => d.id === departmentId);
-      if (!belongs) {
-        setDepartmentId(filtered.length > 0 ? filtered[0].id : '');
-      }
     }
-  }, [collegeId, departments, departmentId]);
+  }, [collegeId, departments]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!fullName || !collegeId) {
       setLocalError('Full Name and College selection are required.');
+      return;
+    }
+    if (!departmentId) {
+      setLocalError('Please select your department.');
       return;
     }
 
@@ -243,21 +242,14 @@ export default function ProfileSetupPage() {
           </div>
 
           <div className={styles.formGroup}>
-            <label htmlFor="department" className={styles.label}>Department</label>
-            <select
-              id="department"
-              className={styles.select}
-              value={departmentId}
-              onChange={(e) => setDepartmentId(e.target.value)}
-              disabled={isSubmitting || filteredDepartments.length === 0}
-            >
-              <option value="">Select Department</option>
-              {filteredDepartments.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name} ({d.code})
-                </option>
-              ))}
-            </select>
+            <label htmlFor="department" className={styles.label}>Department *</label>
+            <SearchableDepartmentSelect
+              collegeId={collegeId}
+              departments={filteredDepartments}
+              selectedId={departmentId}
+              onChange={(val) => setDepartmentId(val)}
+              disabled={isSubmitting}
+            />
           </div>
 
           <div className={styles.formGroup}>

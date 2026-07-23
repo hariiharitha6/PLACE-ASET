@@ -1,5 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ChevronDown, Search, Check } from 'lucide-react';
+
+const DEFAULT_ASET = {
+  id: 'aset',
+  name: 'ASET',
+  slug: 'aset',
+  full_name: 'Ahalia School of Engineering and Technology'
+};
 
 export default function SearchableCollegeSelect({
   colleges,
@@ -13,13 +20,37 @@ export default function SearchableCollegeSelect({
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const containerRef = useRef(null);
 
-  // Filter colleges based on search query
-  const filtered = colleges.filter(c => 
-    c.name.toLowerCase().includes(search.toLowerCase()) || 
-    (c.full_name && c.full_name.toLowerCase().includes(search.toLowerCase()))
-  );
+  // Guarantee non-empty colleges array with ASET placed first
+  const safeColleges = useMemo(() => {
+    let list = Array.isArray(colleges) && colleges.length > 0 ? [...colleges] : [DEFAULT_ASET];
+    
+    const hasAset = list.some(c => c.name === 'ASET' || c.id === 'aset' || (c.name && c.name.toLowerCase().includes('ahalia')));
+    if (!hasAset) {
+      list.unshift(DEFAULT_ASET);
+    }
+    
+    return list.sort((a, b) => {
+      const isA = a.name === 'ASET' || a.id === 'aset' || (a.name && a.name.toLowerCase().includes('ahalia'));
+      const isB = b.name === 'ASET' || b.id === 'aset' || (b.name && b.name.toLowerCase().includes('ahalia'));
+      if (isA && !isB) return -1;
+      if (!isA && isB) return 1;
+      return (a.name || '').localeCompare(b.name || '');
+    });
+  }, [colleges]);
 
-  const selectedCollege = colleges.find(c => c.id === selectedId);
+  // Filter colleges based on search query
+  const filtered = useMemo(() => {
+    if (!search.trim()) return safeColleges;
+    const lowerSearch = search.toLowerCase();
+    return safeColleges.filter(c => 
+      (c.name && c.name.toLowerCase().includes(lowerSearch)) || 
+      (c.full_name && c.full_name.toLowerCase().includes(lowerSearch))
+    );
+  }, [safeColleges, search]);
+
+  const selectedCollege = useMemo(() => {
+    return safeColleges.find(c => c.id === selectedId) || safeColleges[0];
+  }, [safeColleges, selectedId]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -67,6 +98,14 @@ export default function SearchableCollegeSelect({
     }
   }, [isOpen]);
 
+  const renderCollegeLabel = (c) => {
+    if (!c) return placeholder;
+    if (c.name === 'ASET' || c.id === 'aset' || (c.name && c.name.toLowerCase().includes('ahalia'))) {
+      return 'ASET (Ahalia School of Engineering and Technology)';
+    }
+    return c.full_name && c.full_name !== c.name ? `${c.name} (${c.full_name})` : c.name;
+  };
+
   return (
     <div 
       ref={containerRef}
@@ -99,7 +138,7 @@ export default function SearchableCollegeSelect({
         onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; }}
       >
         <span>
-          {selectedCollege ? (selectedCollege.name === 'ASET' ? 'ASET (Ahalia School of Engineering and Technology)' : selectedCollege.name) : placeholder}
+          {renderCollegeLabel(selectedCollege)}
         </span>
         <ChevronDown size={16} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }} />
       </div>
@@ -153,11 +192,11 @@ export default function SearchableCollegeSelect({
             </div>
           ) : (
             filtered.map((c, index) => {
-              const isSelected = c.id === selectedId;
+              const isSelected = c.id === selectedId || (selectedCollege && c.id === selectedCollege.id);
               const isHighlighted = index === highlightedIndex;
               return (
                 <div
-                  key={c.id}
+                  key={c.id || index}
                   role="option"
                   aria-selected={isSelected}
                   onClick={() => { onChange(c.id); setIsOpen(false); }}
@@ -177,8 +216,8 @@ export default function SearchableCollegeSelect({
                   onMouseOver={() => setHighlightedIndex(index)}
                 >
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span>{c.name}</span>
-                    {c.full_name && c.full_name !== c.name && (
+                    <span>{c.name === 'ASET' ? 'ASET (Ahalia School of Engineering and Technology)' : c.name}</span>
+                    {c.full_name && c.full_name !== c.name && c.name !== 'ASET' && (
                       <span style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
                         {c.full_name}
                       </span>
@@ -194,3 +233,4 @@ export default function SearchableCollegeSelect({
     </div>
   );
 }
+

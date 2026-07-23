@@ -25,7 +25,7 @@ CREATE INDEX IF NOT EXISTS idx_community_submissions_statement_fts
 -- 4. Practice Arena Optimizations
 -- Optimizes looking up historical practice sessions by user sorted by time
 CREATE INDEX IF NOT EXISTS idx_practice_sessions_user_time 
-  ON practice_sessions(user_id, start_time DESC);
+  ON practice_sessions(user_id, started_at DESC);
 
 -- Optimizes finding answers for a specific session quickly
 CREATE INDEX IF NOT EXISTS idx_practice_answers_session_question 

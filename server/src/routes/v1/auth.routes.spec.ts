@@ -10,6 +10,7 @@ describe('Auth API Routes Integration Tests', () => {
       user: {
         id: 'test-user-id',
         email: 'test@example.com',
+        fullName: 'Test User',
         role: 'student',
         collegeId: null,
       },
@@ -41,6 +42,7 @@ describe('Auth API Routes Integration Tests', () => {
       user: {
         id: 'test-user-id',
         email: 'test@example.com',
+        fullName: 'Test User',
         role: 'student',
         collegeId: null,
       },

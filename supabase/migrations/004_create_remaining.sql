@@ -6,7 +6,7 @@
 -- ============================================================
 -- Practice Sessions
 -- ============================================================
-CREATE TABLE practice_sessions (
+CREATE TABLE IF NOT EXISTS practice_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   college_id UUID NOT NULL REFERENCES colleges(id) ON DELETE CASCADE,
@@ -20,14 +20,14 @@ CREATE TABLE practice_sessions (
   ended_at TIMESTAMPTZ
 );
 
-CREATE INDEX idx_ps_user ON practice_sessions(user_id);
-CREATE INDEX idx_ps_college ON practice_sessions(college_id);
-CREATE INDEX idx_ps_category ON practice_sessions(category_id);
+CREATE INDEX IF NOT EXISTS idx_ps_user ON practice_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_ps_college ON practice_sessions(college_id);
+CREATE INDEX IF NOT EXISTS idx_ps_category ON practice_sessions(category_id);
 
 -- ============================================================
 -- Practice Answers
 -- ============================================================
-CREATE TABLE practice_answers (
+CREATE TABLE IF NOT EXISTS practice_answers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   session_id UUID NOT NULL REFERENCES practice_sessions(id) ON DELETE CASCADE,
   question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
@@ -37,13 +37,13 @@ CREATE TABLE practice_answers (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_pa_session ON practice_answers(session_id);
-CREATE INDEX idx_pa_question ON practice_answers(question_id);
+CREATE INDEX IF NOT EXISTS idx_pa_session ON practice_answers(session_id);
+CREATE INDEX IF NOT EXISTS idx_pa_question ON practice_answers(question_id);
 
 -- ============================================================
 -- Companies (Placement Preparation)
 -- ============================================================
-CREATE TABLE companies (
+CREATE TABLE IF NOT EXISTS companies (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(255) NOT NULL,
   slug VARCHAR(100) UNIQUE NOT NULL,
@@ -56,25 +56,22 @@ CREATE TABLE companies (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_companies_slug ON companies(slug);
-CREATE INDEX idx_companies_active ON companies(is_active);
+CREATE INDEX IF NOT EXISTS idx_companies_slug ON companies(slug);
+CREATE INDEX IF NOT EXISTS idx_companies_active ON companies(is_active);
 
-CREATE TABLE company_questions (
+CREATE TABLE IF NOT EXISTS company_questions (
   company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
   question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
   question_type VARCHAR(50) DEFAULT 'aptitude',
   PRIMARY KEY (company_id, question_id)
 );
 
-CREATE INDEX idx_compq_company ON company_questions(company_id);
-
-
+CREATE INDEX IF NOT EXISTS idx_compq_company ON company_questions(company_id);
 
 -- ============================================================
 -- Resources
 -- ============================================================
-
-CREATE TABLE resources (
+CREATE TABLE IF NOT EXISTS resources (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   college_id UUID NOT NULL REFERENCES colleges(id) ON DELETE CASCADE,
   uploaded_by UUID REFERENCES users(id) ON DELETE SET NULL,
@@ -94,47 +91,40 @@ CREATE TABLE resources (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_resources_college
-ON resources(college_id);
+CREATE INDEX IF NOT EXISTS idx_resources_college ON resources(college_id);
+CREATE INDEX IF NOT EXISTS idx_resources_type ON resources(type);
+CREATE INDEX IF NOT EXISTS idx_resources_category ON resources(category_id);
+CREATE INDEX IF NOT EXISTS idx_resources_global ON resources(is_global);
 
-CREATE INDEX idx_resources_type
-ON resources(type);
-
-CREATE INDEX idx_resources_category
-ON resources(category_id);
-
-CREATE INDEX idx_resources_global
-ON resources(is_global);
-
+DROP TRIGGER IF EXISTS trigger_resources_updated ON resources;
 CREATE TRIGGER trigger_resources_updated
-BEFORE UPDATE ON resources
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at();
+  BEFORE UPDATE ON resources
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================
 -- Company Resources
 -- ============================================================
-
-CREATE TABLE company_resources (
+CREATE TABLE IF NOT EXISTS company_resources (
   company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
   resource_id UUID NOT NULL REFERENCES resources(id) ON DELETE CASCADE,
   PRIMARY KEY (company_id, resource_id)
 );
 
-CREATE TABLE resource_downloads (
+CREATE TABLE IF NOT EXISTS resource_downloads (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   resource_id UUID NOT NULL REFERENCES resources(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   downloaded_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_rd_resource ON resource_downloads(resource_id);
-CREATE INDEX idx_rd_user ON resource_downloads(user_id);
+CREATE INDEX IF NOT EXISTS idx_rd_resource ON resource_downloads(resource_id);
+CREATE INDEX IF NOT EXISTS idx_rd_user ON resource_downloads(user_id);
 
 -- ============================================================
 -- Community Questions (Student submissions)
 -- ============================================================
-CREATE TABLE community_questions (
+CREATE TABLE IF NOT EXISTS community_questions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   college_id UUID NOT NULL REFERENCES colleges(id) ON DELETE CASCADE,
@@ -154,14 +144,14 @@ CREATE TABLE community_questions (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_communityq_college ON community_questions(college_id);
-CREATE INDEX idx_communityq_user ON community_questions(user_id);
-CREATE INDEX idx_communityq_status ON community_questions(status);
+CREATE INDEX IF NOT EXISTS idx_communityq_college ON community_questions(college_id);
+CREATE INDEX IF NOT EXISTS idx_communityq_user ON community_questions(user_id);
+CREATE INDEX IF NOT EXISTS idx_communityq_status ON community_questions(status);
 
 -- ============================================================
 -- Community Solutions
 -- ============================================================
-CREATE TABLE community_solutions (
+CREATE TABLE IF NOT EXISTS community_solutions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   question_id UUID REFERENCES questions(id) ON DELETE CASCADE,
@@ -173,10 +163,10 @@ CREATE TABLE community_solutions (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_communitys_question ON community_solutions(question_id);
-CREATE INDEX idx_communitys_user ON community_solutions(user_id);
+CREATE INDEX IF NOT EXISTS idx_communitys_question ON community_solutions(question_id);
+CREATE INDEX IF NOT EXISTS idx_communitys_user ON community_solutions(user_id);
 
-CREATE TABLE solution_votes (
+CREATE TABLE IF NOT EXISTS solution_votes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   solution_id UUID NOT NULL REFERENCES community_solutions(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -188,7 +178,7 @@ CREATE TABLE solution_votes (
 -- ============================================================
 -- Badges & Achievements
 -- ============================================================
-CREATE TABLE badges (
+CREATE TABLE IF NOT EXISTS badges (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(100) NOT NULL,
   slug VARCHAR(100) UNIQUE NOT NULL,
@@ -201,7 +191,7 @@ CREATE TABLE badges (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE user_achievements (
+CREATE TABLE IF NOT EXISTS user_achievements (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   badge_id UUID NOT NULL REFERENCES badges(id) ON DELETE CASCADE,
@@ -209,9 +199,9 @@ CREATE TABLE user_achievements (
   UNIQUE(user_id, badge_id)
 );
 
-CREATE INDEX idx_ua_user ON user_achievements(user_id);
+CREATE INDEX IF NOT EXISTS idx_ua_user ON user_achievements(user_id);
 
-CREATE TABLE user_xp_log (
+CREATE TABLE IF NOT EXISTS user_xp_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   amount INTEGER NOT NULL,
@@ -221,13 +211,13 @@ CREATE TABLE user_xp_log (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_xplog_user ON user_xp_log(user_id);
-CREATE INDEX idx_xplog_created ON user_xp_log(created_at);
+CREATE INDEX IF NOT EXISTS idx_xplog_user ON user_xp_log(user_id);
+CREATE INDEX IF NOT EXISTS idx_xplog_created ON user_xp_log(created_at);
 
 -- ============================================================
 -- Bookmarks & Recently Viewed
 -- ============================================================
-CREATE TABLE bookmarks (
+CREATE TABLE IF NOT EXISTS bookmarks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   bookmark_type bookmark_type NOT NULL,
@@ -236,9 +226,9 @@ CREATE TABLE bookmarks (
   UNIQUE(user_id, bookmark_type, target_id)
 );
 
-CREATE INDEX idx_bookmarks_user ON bookmarks(user_id);
+CREATE INDEX IF NOT EXISTS idx_bookmarks_user ON bookmarks(user_id);
 
-CREATE TABLE recently_viewed (
+CREATE TABLE IF NOT EXISTS recently_viewed (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   item_type VARCHAR(50) NOT NULL,
@@ -246,13 +236,13 @@ CREATE TABLE recently_viewed (
   viewed_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_rv_user ON recently_viewed(user_id);
-CREATE INDEX idx_rv_viewed ON recently_viewed(viewed_at DESC);
+CREATE INDEX IF NOT EXISTS idx_rv_user ON recently_viewed(user_id);
+CREATE INDEX IF NOT EXISTS idx_rv_viewed ON recently_viewed(viewed_at DESC);
 
 -- ============================================================
 -- Notifications
 -- ============================================================
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   college_id UUID REFERENCES colleges(id) ON DELETE CASCADE,
@@ -264,11 +254,11 @@ CREATE TABLE notifications (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_notif_user ON notifications(user_id);
-CREATE INDEX idx_notif_user_unread ON notifications(user_id, is_read) WHERE is_read = false;
-CREATE INDEX idx_notif_college ON notifications(college_id);
+CREATE INDEX IF NOT EXISTS idx_notif_user ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notif_user_unread ON notifications(user_id, is_read) WHERE is_read = false;
+CREATE INDEX IF NOT EXISTS idx_notif_college ON notifications(college_id);
 
-CREATE TABLE notification_preferences (
+CREATE TABLE IF NOT EXISTS notification_preferences (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   challenge_reminders BOOLEAN DEFAULT true,
@@ -283,7 +273,7 @@ CREATE TABLE notification_preferences (
 -- ============================================================
 -- Activity & Audit Logs
 -- ============================================================
-CREATE TABLE activity_logs (
+CREATE TABLE IF NOT EXISTS activity_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(id) ON DELETE SET NULL,
   college_id UUID REFERENCES colleges(id),
@@ -296,12 +286,12 @@ CREATE TABLE activity_logs (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_activity_user ON activity_logs(user_id);
-CREATE INDEX idx_activity_college ON activity_logs(college_id);
-CREATE INDEX idx_activity_action ON activity_logs(action);
-CREATE INDEX idx_activity_created ON activity_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_activity_user ON activity_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_activity_college ON activity_logs(college_id);
+CREATE INDEX IF NOT EXISTS idx_activity_action ON activity_logs(action);
+CREATE INDEX IF NOT EXISTS idx_activity_created ON activity_logs(created_at);
 
-CREATE TABLE audit_logs (
+CREATE TABLE IF NOT EXISTS audit_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   admin_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   college_id UUID REFERENCES colleges(id),
@@ -313,9 +303,9 @@ CREATE TABLE audit_logs (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_audit_admin ON audit_logs(admin_id);
-CREATE INDEX idx_audit_college ON audit_logs(college_id);
-CREATE INDEX idx_audit_created ON audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_admin ON audit_logs(admin_id);
+CREATE INDEX IF NOT EXISTS idx_audit_college ON audit_logs(college_id);
+CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_logs(created_at);
 
 -- ============================================================
 -- Seed companies
@@ -333,7 +323,8 @@ INSERT INTO companies (name, slug, sort_order) VALUES
   ('KPMG', 'kpmg', 10),
   ('Amazon', 'amazon', 11),
   ('Google', 'google', 12),
-  ('Microsoft', 'microsoft', 13);
+  ('Microsoft', 'microsoft', 13)
+ON CONFLICT (slug) DO NOTHING;
 
 -- ============================================================
 -- Seed badges
@@ -353,4 +344,6 @@ INSERT INTO badges (name, slug, description, category, criteria, xp_reward, sort
   ('First Contribution', 'first-contribution', 'First approved community question', 'contributor', '{"approved_questions": 1}', 50, 12),
   ('Top Contributor', 'top-contributor', '10 approved community questions', 'contributor', '{"approved_questions": 10}', 300, 13),
   ('Resource Explorer', 'resource-explorer', 'Downloaded 10 resources', 'resource', '{"downloads": 10}', 50, 14),
-  ('Bookworm', 'bookworm', 'Downloaded 50 resources', 'resource', '{"downloads": 50}', 150, 15);
+  ('Bookworm', 'bookworm', 'Downloaded 50 resources', 'resource', '{"downloads": 50}', 150, 15)
+ON CONFLICT (slug) DO NOTHING;
+

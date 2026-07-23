@@ -5,7 +5,7 @@
 -- ============================================================
 -- Challenges
 -- ============================================================
-CREATE TABLE challenges (
+CREATE TABLE IF NOT EXISTS challenges (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   college_id UUID NOT NULL REFERENCES colleges(id) ON DELETE CASCADE,
   created_by UUID REFERENCES users(id) ON DELETE SET NULL,
@@ -29,12 +29,13 @@ CREATE TABLE challenges (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_challenges_college ON challenges(college_id);
-CREATE INDEX idx_challenges_status ON challenges(status);
-CREATE INDEX idx_challenges_start ON challenges(start_time);
-CREATE INDEX idx_challenges_end ON challenges(end_time);
-CREATE INDEX idx_challenges_created_by ON challenges(created_by);
+CREATE INDEX IF NOT EXISTS idx_challenges_college ON challenges(college_id);
+CREATE INDEX IF NOT EXISTS idx_challenges_status ON challenges(status);
+CREATE INDEX IF NOT EXISTS idx_challenges_start ON challenges(start_time);
+CREATE INDEX IF NOT EXISTS idx_challenges_end ON challenges(end_time);
+CREATE INDEX IF NOT EXISTS idx_challenges_created_by ON challenges(created_by);
 
+DROP TRIGGER IF EXISTS trigger_challenges_updated ON challenges;
 CREATE TRIGGER trigger_challenges_updated
   BEFORE UPDATE ON challenges
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
@@ -42,7 +43,7 @@ CREATE TRIGGER trigger_challenges_updated
 -- ============================================================
 -- Challenge Questions (M2M with ordering and points)
 -- ============================================================
-CREATE TABLE challenge_questions (
+CREATE TABLE IF NOT EXISTS challenge_questions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   challenge_id UUID NOT NULL REFERENCES challenges(id) ON DELETE CASCADE,
   question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
@@ -51,13 +52,13 @@ CREATE TABLE challenge_questions (
   UNIQUE(challenge_id, question_id)
 );
 
-CREATE INDEX idx_cq_challenge ON challenge_questions(challenge_id);
-CREATE INDEX idx_cq_question ON challenge_questions(question_id);
+CREATE INDEX IF NOT EXISTS idx_cq_challenge ON challenge_questions(challenge_id);
+CREATE INDEX IF NOT EXISTS idx_cq_question ON challenge_questions(question_id);
 
 -- ============================================================
 -- Challenge Registrations
 -- ============================================================
-CREATE TABLE challenge_registrations (
+CREATE TABLE IF NOT EXISTS challenge_registrations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   challenge_id UUID NOT NULL REFERENCES challenges(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -67,13 +68,13 @@ CREATE TABLE challenge_registrations (
   UNIQUE(challenge_id, user_id)
 );
 
-CREATE INDEX idx_creg_challenge ON challenge_registrations(challenge_id);
-CREATE INDEX idx_creg_user ON challenge_registrations(user_id);
+CREATE INDEX IF NOT EXISTS idx_creg_challenge ON challenge_registrations(challenge_id);
+CREATE INDEX IF NOT EXISTS idx_creg_user ON challenge_registrations(user_id);
 
 -- ============================================================
 -- Submissions (per question per user per challenge)
 -- ============================================================
-CREATE TABLE submissions (
+CREATE TABLE IF NOT EXISTS submissions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   challenge_id UUID NOT NULL REFERENCES challenges(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -86,15 +87,15 @@ CREATE TABLE submissions (
   UNIQUE(challenge_id, user_id, question_id)
 );
 
-CREATE INDEX idx_sub_challenge ON submissions(challenge_id);
-CREATE INDEX idx_sub_user ON submissions(user_id);
-CREATE INDEX idx_sub_question ON submissions(question_id);
-CREATE INDEX idx_sub_challenge_user ON submissions(challenge_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_sub_challenge ON submissions(challenge_id);
+CREATE INDEX IF NOT EXISTS idx_sub_user ON submissions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sub_question ON submissions(question_id);
+CREATE INDEX IF NOT EXISTS idx_sub_challenge_user ON submissions(challenge_id, user_id);
 
 -- ============================================================
 -- Leaderboard Entries (computed after challenge ends)
 -- ============================================================
-CREATE TABLE leaderboard_entries (
+CREATE TABLE IF NOT EXISTS leaderboard_entries (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   challenge_id UUID NOT NULL REFERENCES challenges(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -111,16 +112,16 @@ CREATE TABLE leaderboard_entries (
   UNIQUE(challenge_id, user_id)
 );
 
-CREATE INDEX idx_lb_challenge ON leaderboard_entries(challenge_id);
-CREATE INDEX idx_lb_user ON leaderboard_entries(user_id);
-CREATE INDEX idx_lb_college ON leaderboard_entries(college_id);
-CREATE INDEX idx_lb_rank ON leaderboard_entries(challenge_id, rank);
-CREATE INDEX idx_lb_score ON leaderboard_entries(challenge_id, total_score DESC);
+CREATE INDEX IF NOT EXISTS idx_lb_challenge ON leaderboard_entries(challenge_id);
+CREATE INDEX IF NOT EXISTS idx_lb_user ON leaderboard_entries(user_id);
+CREATE INDEX IF NOT EXISTS idx_lb_college ON leaderboard_entries(college_id);
+CREATE INDEX IF NOT EXISTS idx_lb_rank ON leaderboard_entries(challenge_id, rank);
+CREATE INDEX IF NOT EXISTS idx_lb_score ON leaderboard_entries(challenge_id, total_score DESC);
 
 -- ============================================================
 -- Anti-Cheat Events
 -- ============================================================
-CREATE TABLE anti_cheat_events (
+CREATE TABLE IF NOT EXISTS anti_cheat_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   challenge_id UUID NOT NULL REFERENCES challenges(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -129,6 +130,7 @@ CREATE TABLE anti_cheat_events (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_ace_challenge ON anti_cheat_events(challenge_id);
-CREATE INDEX idx_ace_user ON anti_cheat_events(user_id);
-CREATE INDEX idx_ace_challenge_user ON anti_cheat_events(challenge_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_ace_challenge ON anti_cheat_events(challenge_id);
+CREATE INDEX IF NOT EXISTS idx_ace_user ON anti_cheat_events(user_id);
+CREATE INDEX IF NOT EXISTS idx_ace_challenge_user ON anti_cheat_events(challenge_id, user_id);
+

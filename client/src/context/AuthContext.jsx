@@ -7,6 +7,28 @@ import { useRouter, usePathname } from 'next/navigation';
 
 const AuthContext = createContext(null);
 
+export function getDashboardPath(role) {
+  switch (role) {
+    case 'super_admin':
+      return '/super-admin/dashboard';
+    case 'college_admin':
+      return '/admin/dashboard';
+    case 'principal':
+      return '/principal/dashboard';
+    case 'hod':
+      return '/hod/dashboard';
+    case 'placement_cell':
+      return '/placement/dashboard';
+    case 'host':
+      return '/host/dashboard';
+    case 'faculty':
+      return '/faculty/dashboard';
+    case 'student':
+    default:
+      return '/dashboard';
+  }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -14,22 +36,37 @@ export function AuthProvider({ children }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Load profile when supabase session changes
-  const fetchProfile = useCallback(async (userId) => {
+  // Load profile from backend API or localStorage fallback
+  const fetchProfile = useCallback(async (_userId) => {
     try {
       const profile = await authService.getProfile();
-      setUser(profile);
-      setError(null);
+      if (profile) {
+        setUser(profile);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('user', JSON.stringify(profile));
+        }
+        setError(null);
 
-      // Onboarding check: If college_id is missing or profile setup is incomplete, redirect to profile-setup
-      const incomplete = !profile.college_id || !profile.roll_number || !profile.department_id;
-      if (incomplete && pathname !== '/profile-setup') {
-        router.push('/profile-setup');
+        // Onboarding check for students
+        if (profile.role === 'student') {
+          const incomplete = !profile.college_id || !profile.roll_number || !profile.department_id;
+          if (incomplete && pathname !== '/profile-setup') {
+            router.push('/profile-setup');
+          }
+        }
       }
     } catch (err) {
-      console.error('Error fetching user profile', err);
-      setUser(null);
-      setError('Could not fetch user profile.');
+      console.error('Error fetching user profile from API, checking cached profile', err);
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem('user');
+        if (cached) {
+          try {
+            setUser(JSON.parse(cached));
+          } catch (e) {
+            setUser(null);
+          }
+        }
+      }
     } finally {
       setIsLoading(false);
     }
@@ -44,7 +81,17 @@ export function AuthProvider({ children }) {
         if (session?.user) {
           await fetchProfile(session.user.id);
         } else {
-          setUser(null);
+          // Check cached user in localStorage
+          if (typeof window !== 'undefined') {
+            const cached = localStorage.getItem('user');
+            if (cached) {
+              try {
+                setUser(JSON.parse(cached));
+              } catch (e) {
+                setUser(null);
+              }
+            }
+          }
           setIsLoading(false);
         }
       } catch (err) {
@@ -52,16 +99,15 @@ export function AuthProvider({ children }) {
         setIsLoading(false);
       }
 
-      // Listen for auth state changes (login, logout, token refresh, etc.)
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event, session) => {
           if (session?.user) {
             setIsLoading(true);
             await fetchProfile(session.user.id);
-          } else {
+          } else if (event === 'SIGNED_OUT') {
             setUser(null);
             setIsLoading(false);
-            if (pathname !== '/login' && pathname !== '/register' && pathname !== '/forgot-password' && pathname !== '/reset-password' && pathname !== '/') {
+            if (pathname !== '/login' && pathname !== '/admin/login' && pathname !== '/register' && pathname !== '/forgot-password' && pathname !== '/reset-password' && pathname !== '/') {
               router.push('/login');
             }
           }
@@ -84,7 +130,13 @@ export function AuthProvider({ children }) {
     setError(null);
     try {
       const data = await authService.login(email, password);
-      // fetchProfile will be triggered by onAuthStateChange automatically
+      if (data?.user) {
+        setUser(data.user);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('user', JSON.stringify(data.user));
+        }
+      }
+      setIsLoading(false);
       return data;
     } catch (err) {
       setError(err.error || 'Invalid credentials or login failed');
@@ -111,6 +163,9 @@ export function AuthProvider({ children }) {
     try {
       await authService.logout();
       setUser(null);
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+      }
       router.push('/login');
     } catch (err) {
       console.error('Logout error', err);
@@ -144,6 +199,9 @@ export function AuthProvider({ children }) {
     try {
       const updated = await authService.updateProfile(profileData);
       setUser(updated);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user', JSON.stringify(updated));
+      }
       return updated;
     } catch (err) {
       setError(err.error || 'Failed to update profile');
@@ -154,6 +212,7 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     isAuthenticated: !!user,
+    role: user?.role || 'student',
     isLoading,
     error,
     login,
@@ -162,6 +221,7 @@ export function AuthProvider({ children }) {
     forgotPassword,
     resetPassword,
     updateProfile,
+    getDashboardPath,
     refetchProfile: () => user && fetchProfile(user.id),
   };
 

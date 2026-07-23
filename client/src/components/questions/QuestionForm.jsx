@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { getDepartmentsForCollege } from '../../constants/departments';
 import { Plus, Trash2, CheckCircle2 } from 'lucide-react';
 import styles from '../../app/(dashboard)/questions/questions.module.css';
 
@@ -50,7 +51,7 @@ export default function QuestionForm({ initialData, onSubmit, onCancel }) {
         const { data: comps } = await supabase.from('companies').select('id, name').order('name');
         
         setCategories(cats || []);
-        setDepartments(depts || []);
+        setDepartments(getDepartmentsForCollege('aset', depts || []));
         setCompanies(comps || []);
       } catch (err) {
         console.error('Failed to load metadata inside QuestionForm', err);

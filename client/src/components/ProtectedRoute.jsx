@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuth } from '../context/AuthContext';
+import { useAuth, getDashboardPath } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
@@ -17,7 +17,6 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     }
   }, [isLoading, isAuthenticated, router]);
 
-  // Visual feedback loader during auth checks
   if (isLoading) {
     return (
       <div style={{
@@ -26,19 +25,19 @@ export default function ProtectedRoute({ children, allowedRoles }) {
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: '100vh',
-        backgroundColor: 'var(--bg-primary)',
-        color: 'var(--text-primary)',
+        backgroundColor: '#090d16',
+        color: '#f8fafc',
         gap: '16px'
       }}>
         <div style={{
           border: '4px solid rgba(255, 255, 255, 0.05)',
-          borderLeftColor: 'var(--accent-primary)',
+          borderLeftColor: '#6366f1',
           borderRadius: '50%',
           width: '40px',
           height: '40px',
           animation: 'spin 1s linear infinite'
         }} />
-        <span style={{ color: 'var(--text-secondary)', fontSize: '14px', letterSpacing: '0.05em' }}>
+        <span style={{ color: '#94a3b8', fontSize: '14px', letterSpacing: '0.05em' }}>
           Verifying Identity...
         </span>
         <style>{`
@@ -54,7 +53,6 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     return null;
   }
 
-  // Role validation
   if (allowedRoles && !allowedRoles.includes(user?.role)) {
     return (
       <div style={{
@@ -63,50 +61,43 @@ export default function ProtectedRoute({ children, allowedRoles }) {
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: '100vh',
-        backgroundColor: 'var(--bg-primary)',
-        color: 'var(--text-primary)',
+        backgroundColor: '#090d16',
+        color: '#f8fafc',
         padding: '24px',
         textAlign: 'center'
       }}>
-        <div style={{
-          fontSize: '48px',
-          marginBottom: '16px'
-        }}>
+        <div style={{ fontSize: '48px', marginBottom: '16px' }}>
           🛡️
         </div>
         <h1 style={{ 
           fontSize: '24px',
           fontWeight: '700',
-          color: 'var(--accent-danger)', 
+          color: '#f87171', 
           marginBottom: '12px' 
         }}>
           Restricted Access
         </h1>
         <p style={{ 
-          color: 'var(--text-secondary)', 
+          color: '#94a3b8', 
           maxWidth: '400px',
           marginBottom: '32px',
           fontSize: '15px'
         }}>
-          Your current account role <strong>({user?.role})</strong> does not have permission to view this section.
+          Your current account role <strong>({user?.role?.toUpperCase() || 'STUDENT'})</strong> does not have permission to view this section.
         </p>
         <button
-          onClick={() => router.push('/')}
+          onClick={() => router.push(getDashboardPath(user?.role))}
           style={{
-            background: 'var(--gradient-primary)',
+            background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
             color: '#fff',
             border: 'none',
             padding: '12px 28px',
-            borderRadius: 'var(--radius-md)',
+            borderRadius: '10px',
             cursor: 'pointer',
             fontWeight: '600',
-            boxShadow: 'var(--shadow-glow)',
-            transition: 'opacity var(--transition-fast)'
           }}
-          onMouseOver={(e) => e.currentTarget.style.opacity = '0.9'}
-          onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
         >
-          Return to Dashboard
+          Return to Authorized Dashboard
         </button>
       </div>
     );

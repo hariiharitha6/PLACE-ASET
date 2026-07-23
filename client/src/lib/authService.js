@@ -25,12 +25,30 @@ export const authService = {
   login: async (email, password) => {
     const response = await api.post('/auth/login', { email, password });
     
-    if (response.success && response.data?.session) {
-      const { session } = response.data;
-      await supabase.auth.setSession({
-        access_token: session.accessToken || session.access_token,
-        refresh_token: session.refreshToken || session.refresh_token,
-      });
+    if (response.success && response.data) {
+      const { session, user } = response.data;
+      const accessToken = session?.accessToken || session?.access_token;
+      const refreshToken = session?.refreshToken || session?.refresh_token;
+
+      if (accessToken && typeof window !== 'undefined') {
+        localStorage.setItem('accessToken', accessToken);
+        console.log('[AUTH SERVICE TRACE] TOKEN SAVED', { accessToken });
+      }
+      if (refreshToken && typeof window !== 'undefined') {
+        localStorage.setItem('refreshToken', refreshToken);
+      }
+      if (user && typeof window !== 'undefined') {
+        localStorage.setItem('user', JSON.stringify(user));
+        console.log('[AUTH SERVICE TRACE] USER SAVED', { user });
+      }
+
+      if (session) {
+        await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+      }
+      console.log('[AUTH SERVICE TRACE] LOGIN SUCCESS', { responseData: response.data });
     }
     return response.data;
   },

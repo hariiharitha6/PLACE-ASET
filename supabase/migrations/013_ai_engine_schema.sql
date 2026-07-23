@@ -75,18 +75,31 @@ ALTER TABLE question_embeddings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recommendation_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prediction_logs ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users read own learning profile" ON learning_profiles;
 CREATE POLICY "Users read own learning profile" ON learning_profiles FOR SELECT TO authenticated USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users manage own learning profile" ON learning_profiles;
 CREATE POLICY "Users manage own learning profile" ON learning_profiles FOR ALL TO authenticated USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users read own recommendations" ON ai_recommendations;
 CREATE POLICY "Users read own recommendations" ON ai_recommendations FOR SELECT TO authenticated USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users update own recommendations" ON ai_recommendations;
 CREATE POLICY "Users update own recommendations" ON ai_recommendations FOR UPDATE TO authenticated USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Allow read access to embeddings" ON question_embeddings;
 CREATE POLICY "Allow read access to embeddings" ON question_embeddings FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Users manage recommendation history" ON recommendation_history;
 CREATE POLICY "Users manage recommendation history" ON recommendation_history FOR ALL TO authenticated USING (auth.uid() = user_id);
 
-CREATE POLICY "Allow select on prediction logs for admins" ON prediction_logs FOR SELECT TO authenticated USING ((SELECT role FROM users WHERE id = auth.uid()) IN ('host', 'admin'));
+DROP POLICY IF EXISTS "Allow select on prediction logs for admins" ON prediction_logs;
+CREATE POLICY "Allow select on prediction logs for admins" ON prediction_logs FOR SELECT TO authenticated USING (public.current_user_role() IN ('super_admin', 'college_admin', 'host'));
+
+
+DROP POLICY IF EXISTS "Allow insert on prediction logs for all" ON prediction_logs;
 CREATE POLICY "Allow insert on prediction logs for all" ON prediction_logs FOR INSERT TO authenticated WITH CHECK (true);
+
 
 -- Grants
 GRANT ALL ON learning_profiles TO authenticated;

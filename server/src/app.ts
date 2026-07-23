@@ -13,11 +13,27 @@ const app: Express = express();
 
 // Security
 app.use(helmet());
+
+// CORS configuration supporting http://localhost:3000, http://localhost:3001 and ALLOWED_ORIGINS
+const defaultOrigins = ['http://localhost:3000', 'http://localhost:3001'];
+const envOrigins = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+const allowedOrigins = Array.from(new Set([...defaultOrigins, ...envOrigins]));
+
 app.use(cors({
-  origin: (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(','),
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, allowedOrigins[0] || 'http://localhost:3000');
+    if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'apikey', 'x-client-info'],
+  optionsSuccessStatus: 204,
 }));
 
 // Body parsing

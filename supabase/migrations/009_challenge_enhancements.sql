@@ -72,7 +72,13 @@ SELECT
   COUNT(CASE WHEN s.selected_option_id IS NULL THEN 1 END) AS unanswered_count,
   CASE 
     WHEN COUNT(s.id) > 0 
-    THEN ROUND((COUNT(CASE WHEN s.is_correct = true THEN 1 END)::FLOAT / COUNT(s.id)) * 100, 2)
+    THEN ROUND(
+    (
+        COUNT(CASE WHEN s.is_correct = true THEN 1 END)::NUMERIC
+        / COUNT(s.id)::NUMERIC
+    ) * 100,
+    2
+)
     ELSE 0 
   END AS correct_rate
 FROM challenge_questions cq

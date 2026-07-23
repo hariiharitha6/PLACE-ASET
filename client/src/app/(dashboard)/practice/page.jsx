@@ -6,6 +6,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 import { practiceService } from '../../../lib/practiceService';
 import { supabase } from '../../../lib/supabase';
+import { getDepartmentsForCollege } from '../../../constants/departments';
 import { 
   Brain, Cpu, BarChart3, BookOpen, Shuffle, Zap, Trophy, Target, 
   Flame, Clock, ChevronRight, Bookmark, AlertTriangle, Sparkles, 
@@ -72,8 +73,8 @@ export default function PracticeArenaPage() {
     } catch (e) { console.error(e); }
 
     try {
-      const { data: depts } = await supabase.from('departments').select('id, name').order('name');
-      setDepartments(depts || []);
+      const { data: depts } = await supabase.from('departments').select('id, name, code').order('name');
+      setDepartments(getDepartmentsForCollege('aset', depts || []));
     } catch (e) { console.error(e); }
 
     try {

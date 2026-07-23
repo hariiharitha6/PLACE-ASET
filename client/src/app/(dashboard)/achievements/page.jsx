@@ -1,193 +1,72 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { leaderboardService } from '../../../lib/leaderboardService';
-import { Trophy, Award, Lock, Unlock, Zap, Sparkles } from 'lucide-react';
-import styles from '../leaderboard/leaderboard.module.css';
+import { useState } from 'react';
+import styles from './achievements.module.css';
 
 export default function AchievementsPage() {
-  const [achievements, setAchievements] = useState([]);
-  const [activeTier, setActiveTier] = useState('all');
-  const [isLoading, setIsLoading] = useState(true);
+  const [filterCategory, setFilterCategory] = useState('ALL');
 
-  useEffect(() => {
-    const load = async () => {
-      setIsLoading(true);
-      try {
-        const res = await leaderboardService.getAchievements();
-        setAchievements(res || []);
-      } catch (err) {
-        console.error('Failed to load achievements', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    load();
-  }, []);
+  const achievementsList = [
+    { id: '1', title: '100 Questions Solved', category: 'PRACTICE', icon: '🎯', desc: 'Successfully solved 100 coding & aptitude questions in Arena', xp: 500, tier: 'GOLD', earned: true, date: 'June 15, 2026' },
+    { id: '2', title: 'Top 10 Leaderboard', category: 'RANK', icon: '🏆', desc: 'Achieved Top 10 overall campus leaderboard position', xp: 1000, tier: 'GOLD', earned: true, date: 'July 01, 2026' },
+    { id: '3', title: '7-Day Coding Streak', category: 'STREAK', icon: '🔥', desc: 'Maintained consecutive daily practice activity for 7 days', xp: 250, tier: 'BRONZE', earned: true, date: 'June 20, 2026' },
+    { id: '4', title: '30-Day Streak Master', category: 'STREAK', icon: '⚡', desc: 'Maintained consecutive daily practice activity for 30 days', xp: 1200, tier: 'GOLD', earned: false, date: null },
+    { id: '5', title: 'Placement Ready Candidate', category: 'PLACEMENT', icon: '💼', desc: 'Achieved a Placement Readiness Score exceeding 85%', xp: 750, tier: 'SILVER', earned: true, date: 'July 18, 2026' },
+    { id: '6', title: 'Community Resource Contributor', category: 'COMMUNITY', icon: '📚', desc: 'Shared 5 verified placement study materials & notes', xp: 400, tier: 'SILVER', earned: true, date: 'July 20, 2026' },
+    { id: '7', title: 'Mock Test Champion', category: 'PRACTICE', icon: '📝', desc: 'Scored 90%+ in a TCS / Infosys Corporate Mock Exam', xp: 600, tier: 'SILVER', earned: false, date: null },
+    { id: '8', title: 'Hackathon Finalist', category: 'COMMUNITY', icon: '🚀', desc: 'Ranked in the top 3 teams in ASET Innovation Hackathon', xp: 850, tier: 'GOLD', earned: false, date: null },
+  ];
 
-  const tiers = ['all', 'bronze', 'silver', 'gold', 'diamond'];
-
-  const filtered = activeTier === 'all'
-    ? achievements
-    : achievements.filter(a => a.tier === activeTier);
-
-  const getTierColor = (tier) => {
-    switch (tier) {
-      case 'bronze': return '#cd7f32';
-      case 'silver': return '#c0c0c0';
-      case 'gold': return '#ffd700';
-      case 'diamond': return '#b9f2ff';
-      default: return 'var(--text-primary)';
-    }
-  };
-
-  const unlockedCount = achievements.filter(a => a.isUnlocked).length;
-  const overallProgress = achievements.length > 0 
-    ? Math.round((unlockedCount / achievements.length) * 100) 
-    : 0;
+  const filtered = achievementsList.filter(a => filterCategory === 'ALL' || a.category === filterCategory);
 
   return (
     <div className={styles.container}>
-      {/* Header */}
       <div className={styles.header}>
-        <div className={styles.titleSection}>
-          <h1>Placement Milestones & Achievements</h1>
-          <p>Complete goals, unlock tiers (Bronze to Diamond), and earn XP bonuses.</p>
-        </div>
-      </div>
-
-      {/* Progress Card Summary */}
-      <div style={{
-        background: 'var(--bg-glass)',
-        border: '1px solid var(--border-color)',
-        borderRadius: 'var(--radius-lg)',
-        padding: '24px',
-        display: 'grid',
-        gridTemplateColumns: '1fr 2fr',
-        gap: '24px',
-        alignItems: 'center'
-      }}>
         <div>
-          <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '600' }}>Overall Progress</div>
-          <div style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text-primary)', margin: '4px 0' }}>
-            {unlockedCount} / {achievements.length}
-          </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Achievements Unlocked</div>
+          <h1 className={styles.title}>Achievements & Gamification Showcase</h1>
+          <p className={styles.subtitle}>Unlock badges, earn XP rewards, and celebrate your placement milestones</p>
         </div>
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '8px' }}>
-            <span style={{ color: 'var(--text-secondary)' }}>Completion Ratio</span>
-            <span style={{ fontWeight: '700', color: 'var(--accent-primary)' }}>{overallProgress}%</span>
-          </div>
-          <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${overallProgress}%`, background: 'var(--gradient-primary)', borderRadius: '4px', transition: 'width 0.5s ease' }}></div>
-          </div>
+        <div className={styles.earnedSummary}>
+          <span>🏆 {achievementsList.filter(a => a.earned).length} / {achievementsList.length} Badges Earned</span>
         </div>
       </div>
 
-      {/* Tier Filter Tabs */}
-      <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
-        {tiers.map(t => (
-          <button
-            key={t}
-            onClick={() => setActiveTier(t)}
-            style={{
-              padding: '8px 16px',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-color)',
-              background: activeTier === t ? 'var(--bg-primary)' : 'transparent',
-              color: activeTier === t ? 'var(--text-primary)' : 'var(--text-secondary)',
-              fontWeight: '600',
-              textTransform: 'capitalize',
-              fontSize: '13px',
-              cursor: 'pointer'
-            }}
-          >
-            {t}
-          </button>
-        ))}
+      {/* Filter Tabs */}
+      <div className={styles.tabRow}>
+        <button className={`${styles.tab} ${filterCategory === 'ALL' ? styles.activeTab : ''}`} onClick={() => setFilterCategory('ALL')}>All Badges</button>
+        <button className={`${styles.tab} ${filterCategory === 'PRACTICE' ? styles.activeTab : ''}`} onClick={() => setFilterCategory('PRACTICE')}>Practice & Solved</button>
+        <button className={`${styles.tab} ${filterCategory === 'RANK' ? styles.activeTab : ''}`} onClick={() => setFilterCategory('RANK')}>Rank & Leaderboard</button>
+        <button className={`${styles.tab} ${filterCategory === 'STREAK' ? styles.activeTab : ''}`} onClick={() => setFilterCategory('STREAK')}>Coding Streaks</button>
+        <button className={`${styles.tab} ${filterCategory === 'PLACEMENT' ? styles.activeTab : ''}`} onClick={() => setFilterCategory('PLACEMENT')}>Placement Readiness</button>
+        <button className={`${styles.tab} ${filterCategory === 'COMMUNITY' ? styles.activeTab : ''}`} onClick={() => setFilterCategory('COMMUNITY')}>Community</button>
       </div>
 
-      {isLoading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>Loading achievements list...</div>
-      ) : filtered.length === 0 ? (
-        <p style={{ color: 'var(--text-muted)', fontSize: '13px', textAlign: 'center', padding: '32px 0' }}>No achievements found for this tier.</p>
-      ) : (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-          gap: '20px'
-        }}>
-          {filtered.map(ach => (
-            <div
-              key={ach.id}
-              style={{
-                background: ach.isUnlocked ? 'var(--bg-glass)' : 'rgba(255,255,255,0.02)',
-                border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-lg)',
-                padding: '20px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                position: 'relative',
-                opacity: ach.isUnlocked ? 1 : 0.8
-              }}
-            >
-              {/* Header */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span 
-                  style={{
-                    fontSize: '10px',
-                    fontWeight: '800',
-                    textTransform: 'uppercase',
-                    color: getTierColor(ach.tier),
-                    border: `1px solid ${getTierColor(ach.tier)}`,
-                    padding: '2px 8px',
-                    borderRadius: '4px',
-                    letterSpacing: '0.5px'
-                  }}
-                >
-                  {ach.tier}
-                </span>
-                
-                {ach.isUnlocked ? (
-                  <span style={{ color: 'var(--accent-success)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: '700' }}>
-                    <Unlock size={12} /> Unlocked
-                  </span>
+      {/* Grid of Badges */}
+      <div className={styles.grid}>
+        {filtered.map((item) => (
+          <div key={item.id} className={`${styles.badgeCard} ${item.earned ? styles.earned : styles.locked}`}>
+            <div className={styles.iconCircle}>{item.icon}</div>
+
+            <div className={styles.cardContent}>
+              <div className={styles.tierHeader}>
+                <span className={`${styles.tierBadge} ${styles[item.tier.toLowerCase()]}`}>{item.tier} TIER</span>
+                <span className={styles.xpReward}>+{item.xp} XP</span>
+              </div>
+
+              <h3 className={styles.cardTitle}>{item.title}</h3>
+              <p className={styles.cardDesc}>{item.desc}</p>
+
+              <div className={styles.cardFooter}>
+                {item.earned ? (
+                  <span className={styles.earnedLabel}>✅ Earned on {item.date}</span>
                 ) : (
-                  <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}>
-                    <Lock size={12} /> Locked
-                  </span>
+                  <span className={styles.lockedLabel}>🔒 In Progress</span>
                 )}
               </div>
-
-              {/* Title & Description */}
-              <div>
-                <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>{ach.name}</h3>
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: '1.4' }}>
-                  {ach.description}
-                </p>
-              </div>
-
-              {/* XP reward badge */}
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', alignSelf: 'start', padding: '3px 8px', borderRadius: 'var(--radius-sm)', background: 'rgba(245,158,11,0.08)', color: 'var(--accent-warning)', fontSize: '11px', fontWeight: '700' }}>
-                <Zap size={10} fill="currentColor" /> +{ach.xpReward} XP Reward
-              </div>
-
-              {/* Progress fill */}
-              <div style={{ marginTop: 'auto', paddingTop: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                  <span>Progress: {ach.currentValue} / {ach.targetValue}</span>
-                  <span>{ach.progressPct}%</span>
-                </div>
-                <div style={{ height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${ach.progressPct}%`, background: getTierColor(ach.tier), borderRadius: '2px' }}></div>
-                </div>
-              </div>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

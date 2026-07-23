@@ -4,9 +4,7 @@ import { verifyJWT } from '../../middleware/auth';
 
 const router = Router();
 
-router.use(verifyJWT as any);
-
-router.get('/achievements', getAchievementsList as any);
-router.get('/badges', getBadgesList as any);
+router.get('/achievements', verifyJWT as any, getAchievementsList as any);
+router.get('/badges', verifyJWT as any, getBadgesList as any);
 
 export default router;

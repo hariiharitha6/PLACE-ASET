@@ -1,0 +1,166 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.title {
+  color: #f8fafc;
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 13px;
+  margin: 0;
+}
+
+.earnedSummary {
+  background-color: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #818cf8;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+
+.tabRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 12px;
+}
+
+.tab {
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.activeTab {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.badgeCard {
+  background-color: #0b1120;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  gap: 16px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.earned {
+  border-color: rgba(16, 185, 129, 0.3);
+  background: linear-gradient(135deg, #0b1120 0%, rgba(16, 185, 129, 0.04) 100%);
+}
+
+.earned:hover {
+  transform: translateY(-2px);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.locked {
+  opacity: 0.55;
+  filter: grayscale(0.5);
+}
+
+.iconCircle {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+.cardContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tierHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tierBadge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.tierBadge.gold { background-color: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.tierBadge.silver { background-color: rgba(148, 163, 184, 0.15); color: #cbd5e1; }
+.tierBadge.bronze { background-color: rgba(180, 83, 9, 0.15); color: #f97316; }
+
+.xpReward {
+  color: #fbbf24;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.cardTitle {
+  color: #f8fafc;
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.cardDesc {
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.cardFooter {
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+.earnedLabel {
+  color: #34d399;
+  font-weight: 600;
+}
+
+.lockedLabel {
+  color: #64748b;
+}

@@ -3,27 +3,42 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { dashboardService } from '../../../lib/dashboardService';
+import PlacementReadinessWidget from '../../../components/widgets/PlacementReadinessWidget';
+import PlacementDrivesWidget from '../../../components/widgets/PlacementDrivesWidget';
 import ChallengeWidget from '../../../components/widgets/ChallengeWidget';
 import ProgressWidget from '../../../components/widgets/ProgressWidget';
 import LeaderboardWidget from '../../../components/widgets/LeaderboardWidget';
 import RecentQuestionsWidget from '../../../components/widgets/RecentQuestionsWidget';
 import ResourcesWidget from '../../../components/widgets/ResourcesWidget';
-import ContributionsWidget from '../../../components/widgets/ContributionsWidget';
 import UpcomingEventsWidget from '../../../components/widgets/UpcomingEventsWidget';
+import styles from './studentDashboard.module.css';
+import { useRouter } from 'next/navigation';
 
 export default function StudentDashboardPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Motivational Quote Generator
+  const quotes = [
+    '"Success is not final, failure is not fatal: it is the courage to continue that counts." – Winston Churchill',
+    '"The secret of getting ahead is getting started." – Mark Twain',
+    '"Opportunities don\'t happen, you create them." – Chris Grosser',
+    '"Code is like humor. When you have to explain it, it’s bad." – Cory House',
+    '"Continuous learning is the minimum requirement for success in any field." – Brian Tracy',
+  ];
+  const [quoteIndex, setQuoteIndex] = useState(0);
+
   useEffect(() => {
+    setQuoteIndex(Math.floor(Math.random() * quotes.length));
     const loadDashboard = async () => {
       try {
         const res = await dashboardService.getSummary();
         setData(res);
       } catch (err) {
-        console.error('Failed to load dashboard metrics:', err);
+        console.error('Failed to load student dashboard metrics:', err);
         setError('Could not fetch dashboard summary data.');
       } finally {
         setIsLoading(false);
@@ -35,46 +50,9 @@ export default function StudentDashboardPage() {
 
   if (isLoading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '60vh',
-        color: 'var(--text-secondary)'
-      }}>
-        <div style={{
-          border: '4px solid rgba(255, 255, 255, 0.05)',
-          borderLeftColor: 'var(--accent-primary)',
-          borderRadius: '50%',
-          width: '32px',
-          height: '32px',
-          animation: 'spin 1s linear infinite',
-          marginRight: '12px'
-        }} />
-        <span>Loading Arena Panel...</span>
-        <style>{`
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={{
-        padding: '24px',
-        borderRadius: 'var(--radius-lg)',
-        backgroundColor: 'rgba(248, 113, 113, 0.05)',
-        border: '1px solid rgba(248, 113, 113, 0.1)',
-        color: 'var(--accent-danger)',
-        textAlign: 'center',
-        margin: '40px auto',
-        maxWidth: '480px'
-      }}>
-        <p style={{ fontWeight: '600', marginBottom: '8px' }}>⚠️ Error loading dashboard</p>
-        <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>{error}</p>
+      <div className={styles.loadingContainer}>
+        <div className={styles.spinner} />
+        <span>Initializing World-Class Student Arena...</span>
       </div>
     );
   }
@@ -82,101 +60,252 @@ export default function StudentDashboardPage() {
   const {
     profile = {},
     weeklyChallenge = null,
-    practiceProgress = {},
     leaderboardPreview = [],
     upcomingEvents = [],
     latestResources = [],
-    contributionsCount = 0
   } = data || {};
 
+  const todayFormatted = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-      
-      {/* Welcome Banner */}
-      <div style={{
-        padding: '32px',
-        borderRadius: 'var(--radius-lg)',
-        background: 'var(--gradient-card)',
-        border: '1px solid var(--border-color)',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        <div style={{
-          position: 'absolute',
-          top: '-20px',
-          right: '-20px',
-          width: '180px',
-          height: '180px',
-          background: 'radial-gradient(circle, rgba(129, 140, 248, 0.08) 0%, rgba(0,0,0,0) 70%)',
-          borderRadius: '50%',
-          filter: 'blur(10px)',
-          pointerEvents: 'none'
-        }} />
-        <h1 style={{
-          fontSize: '24px',
-          fontWeight: '800',
-          color: 'var(--text-primary)',
-          marginBottom: '8px',
-          letterSpacing: '-0.01em'
-        }}>
-          Welcome Back, {user?.full_name?.split(' ')[0] || 'Candidate'}! 👋
-        </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '14px', maxWidth: '600px', lineHeight: '1.6' }}>
-          Keep up your learning streak! Solve practice questions, check the latest resource uploads, or get ready for this week&apos;s coding challenge.
-        </p>
+    <div className={styles.dashboardContainer}>
+
+      {/* 1. WELCOME & MOTIVATIONAL HEADER */}
+      <div className={styles.welcomeBanner}>
+        <div className={styles.welcomeGlow} />
+        <div className={styles.welcomeContent}>
+          <div className={styles.greetingHeader}>
+            <div>
+              <span className={styles.dateBadge}>📅 {todayFormatted}</span>
+              <h1 className={styles.welcomeTitle}>
+                Welcome back, {user?.full_name || 'Candidate'}! 👋
+              </h1>
+              <p className={styles.welcomeSub}>
+                <strong>Dept:</strong> {profile.department_code || 'CSE'} &bull; <strong>Year:</strong> {profile.year || '4th Year'} &bull; <strong>Section:</strong> {profile.section || 'A'} &bull; <strong>Roll No:</strong> {profile.roll_number || 'ATP22CS006'}
+              </p>
+            </div>
+            <div className={styles.readinessPillCard}>
+              <span className={styles.readinessTitle}>Readiness Score</span>
+              <span className={styles.readinessScoreVal}>87 / 100</span>
+              <div className={styles.miniProgressTrack}>
+                <div className={styles.miniProgressFill} style={{ width: '87%' }} />
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.quoteBox}>
+            <span>💡 <em>{quotes[quoteIndex]}</em></span>
+          </div>
+        </div>
       </div>
 
-      {/* Grid Canvas Section 1 */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)',
-        gap: '24px'
-      }}
-      className="dashboard-grid-1"
-      >
+      {/* 2. 10 EXECUTIVE KPI DASHBOARD CARDS */}
+      <div className={styles.kpiGrid}>
+        <div className={styles.kpiCard} onClick={() => router.push('/placement-drives')}>
+          <div className={styles.kpiHeader}>
+            <span className={styles.kpiIcon}>💼</span>
+            <span className={styles.kpiTagActive}>3 Open</span>
+          </div>
+          <span className={styles.kpiVal}>3 Drives</span>
+          <span className={styles.kpiLabel}>Upcoming Placement Drives</span>
+        </div>
+
+        <div className={styles.kpiCard} onClick={() => router.push('/challenges')}>
+          <div className={styles.kpiHeader}>
+            <span className={styles.kpiIcon}>📝</span>
+            <span className={styles.kpiTagUrgent}>2 Scheduled</span>
+          </div>
+          <span className={styles.kpiVal}>2 Tests</span>
+          <span className={styles.kpiLabel}>Upcoming Mock Tests</span>
+        </div>
+
+        <div className={styles.kpiCard} onClick={() => router.push('/practice')}>
+          <div className={styles.kpiHeader}>
+            <span className={styles.kpiIcon}>⚡</span>
+            <span className={styles.kpiTag}>Pending</span>
+          </div>
+          <span className={styles.kpiVal}>14 Sets</span>
+          <span className={styles.kpiLabel}>Pending Practice Modules</span>
+        </div>
+
+        <div className={styles.kpiCard}>
+          <div className={styles.kpiHeader}>
+            <span className={styles.kpiIcon}>✅</span>
+            <span className={styles.kpiTagSuccess}>+12 this week</span>
+          </div>
+          <span className={styles.kpiVal}>{profile.solved_count || 142}</span>
+          <span className={styles.kpiLabel}>Total Solved Questions</span>
+        </div>
+
+        <div className={styles.kpiCard} onClick={() => router.push('/leaderboard')}>
+          <div className={styles.kpiHeader}>
+            <span className={styles.kpiIcon}>🏆</span>
+            <span className={styles.kpiTagGold}>Campus Rank</span>
+          </div>
+          <span className={styles.kpiVal}>#{profile.rank || 4}</span>
+          <span className={styles.kpiLabel}>Overall Leaderboard Rank</span>
+        </div>
+
+        <div className={styles.kpiCard}>
+          <div className={styles.kpiHeader}>
+            <span className={styles.kpiIcon}>🔥</span>
+            <span className={styles.kpiTagOrange}>Active</span>
+          </div>
+          <span className={styles.kpiVal}>{profile.streak_days || 14} Days</span>
+          <span className={styles.kpiLabel}>Daily Coding Streak</span>
+        </div>
+
+        <div className={styles.kpiCard}>
+          <div className={styles.kpiHeader}>
+            <span className={styles.kpiIcon}>📈</span>
+            <span className={styles.kpiTag}>Level {profile.level || 4}</span>
+          </div>
+          <span className={styles.kpiVal}>78%</span>
+          <span className={styles.kpiLabel}>Overall Placement Progress</span>
+        </div>
+
+        <div className={styles.kpiCard} onClick={() => router.push('/achievements')}>
+          <div className={styles.kpiHeader}>
+            <span className={styles.kpiIcon}>📜</span>
+            <span className={styles.kpiTagSuccess}>Verified</span>
+          </div>
+          <span className={styles.kpiVal}>5 Badges</span>
+          <span className={styles.kpiLabel}>Certificates & Achievements</span>
+        </div>
+
+        <div className={styles.kpiCard}>
+          <div className={styles.kpiHeader}>
+            <span className={styles.kpiIcon}>🎯</span>
+            <span className={styles.kpiTagPurple}>AI Index</span>
+          </div>
+          <span className={styles.kpiVal}>87 / 100</span>
+          <span className={styles.kpiLabel}>Placement Readiness Score</span>
+        </div>
+
+        <div className={styles.kpiCard} onClick={() => router.push('/practice/bookmarks')}>
+          <div className={styles.kpiHeader}>
+            <span className={styles.kpiIcon}>🔖</span>
+            <span className={styles.kpiTag}>Saved</span>
+          </div>
+          <span className={styles.kpiVal}>18 Items</span>
+          <span className={styles.kpiLabel}>Saved Bookmarks & Notes</span>
+        </div>
+      </div>
+
+      {/* 3. PLACEMENT READINESS & PLACEMENT DRIVES ROW */}
+      <div className={styles.sectionRowTwo}>
+        <PlacementReadinessWidget readinessScore={87} />
+        <PlacementDrivesWidget drives={[]} />
+      </div>
+
+      {/* 4. MY PROFILE SUMMARY & QUICK PRACTICE NAVIGATOR */}
+      <div className={styles.sectionRowTwo}>
+        
+        {/* Profile Card */}
+        <div className={styles.profileCard}>
+          <div className={styles.profileHeader}>
+            <div className={styles.avatarBox}>
+              {user?.full_name ? user.full_name.substring(0, 2).toUpperCase() : 'ST'}
+            </div>
+            <div>
+              <h3 className={styles.profileName}>{user?.full_name || 'D Haritha'}</h3>
+              <p className={styles.profileEmail}>{user?.email || 'hariiharitha05@gmail.com'}</p>
+              <div className={styles.badgeRow}>
+                <span className={styles.pillDept}>CSE Dept</span>
+                <span className={styles.pillCgpa}>CGPA: 8.9 / 10</span>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.profileMetaGrid}>
+            <div><span>College:</span> <strong>ASET Campus</strong></div>
+            <div><span>Roll No:</span> <code>ATP22CS006</code></div>
+            <div><span>Phone:</span> <strong>+91 98470 12345</strong></div>
+            <div><span>Resume:</span> <span className={styles.resumeStatus}>✓ Uploaded (PDF)</span></div>
+          </div>
+
+          <div className={styles.socialRow}>
+            <a href="https://linkedin.com" target="_blank" rel="noreferrer" className={styles.socialLink}>💼 LinkedIn</a>
+            <a href="https://github.com" target="_blank" rel="noreferrer" className={styles.socialLink}>🐙 GitHub</a>
+            <button className={styles.editProfileBtn} onClick={() => router.push('/profile-setup')}>✏️ Edit Profile</button>
+          </div>
+        </div>
+
+        {/* Question Bank Shortcuts */}
+        <div className={styles.qBankCard}>
+          <div className={styles.cardHeader}>
+            <div>
+              <h3 className={styles.cardTitle}>Question Bank & Arena Shortcuts</h3>
+              <p className={styles.cardSub}>Practice company-curated questions by difficulty and topic</p>
+            </div>
+            <button className={styles.viewAllBtn} onClick={() => router.push('/questions')}>Explore All</button>
+          </div>
+
+          <div className={styles.companyShortcuts}>
+            <span className={styles.companyBadge} onClick={() => router.push('/questions')}>Amazon (42)</span>
+            <span className={styles.companyBadge} onClick={() => router.push('/questions')}>TCS Digital (85)</span>
+            <span className={styles.companyBadge} onClick={() => router.push('/questions')}>Infosys (60)</span>
+            <span className={styles.companyBadge} onClick={() => router.push('/questions')}>Wipro (50)</span>
+            <span className={styles.companyBadge} onClick={() => router.push('/questions')}>Google (24)</span>
+          </div>
+
+          <div className={styles.categoryGrid}>
+            <div className={styles.catBox} onClick={() => router.push('/practice')}>
+              <span>💻</span>
+              <div>
+                <strong>Coding Arena</strong>
+                <p>Data Structures, Algo</p>
+              </div>
+            </div>
+            <div className={styles.catBox} onClick={() => router.push('/practice')}>
+              <span>🧠</span>
+              <div>
+                <strong>Aptitude Test</strong>
+                <p>Quants, Reasoning</p>
+              </div>
+            </div>
+            <div className={styles.catBox} onClick={() => router.push('/practice')}>
+              <span>⚙️</span>
+              <div>
+                <strong>Technical Core</strong>
+                <p>OS, DBMS, Networks</p>
+              </div>
+            </div>
+            <div className={styles.catBox} onClick={() => router.push('/practice')}>
+              <span>🗣️</span>
+              <div>
+                <strong>HR & Behavioral</strong>
+                <p>Interview Prep & Tips</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* 5. WEEKLY CHALLENGE & PROGRESS LEVEL */}
+      <div className={styles.sectionRowTwo}>
         <ChallengeWidget challenge={weeklyChallenge} />
         <ProgressWidget progress={profile} level={profile.level} />
       </div>
 
-      {/* Grid Canvas Section 2 */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
-        gap: '24px'
-      }}
-      className="dashboard-grid-2"
-      >
+      {/* 6. LEADERBOARD PREVIEW & RECENT QUESTIONS */}
+      <div className={styles.sectionRowTwo}>
         <LeaderboardWidget leaderboard={leaderboardPreview} />
         <RecentQuestionsWidget />
       </div>
 
-      {/* Grid Canvas Section 3 */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)',
-        gap: '24px'
-      }}
-      className="dashboard-grid-3"
-      >
+      {/* 7. STUDY MATERIALS, CONTRIBUTIONS & EVENTS */}
+      <div className={styles.sectionRowThree}>
         <ResourcesWidget resources={latestResources} />
-        <ContributionsWidget count={contributionsCount} />
         <UpcomingEventsWidget events={upcomingEvents} />
       </div>
 
-      {/* Global CSS responsive layout overrides */}
-      <style jsx global>{`
-        @media (max-width: 1024px) {
-          .dashboard-grid-1,
-          .dashboard-grid-2 {
-            grid-template-columns: 1fr !important;
-          }
-        }
-        @media (max-width: 1200px) {
-          .dashboard-grid-3 {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }

@@ -12,7 +12,8 @@ import {
   Award, 
   LogOut,
   X,
-  Brain
+  Brain,
+  Target
 } from 'lucide-react';
 import { APP_NAME } from '../lib/constants';
 
@@ -27,6 +28,7 @@ export default function Sidebar({ isOpen, onClose }) {
     { label: 'Challenges', href: '/challenges', icon: Trophy },
     { label: 'Resource Library', href: '/resources', icon: Library },
     { label: 'Community', href: '/community', icon: Users },
+    { label: '🎯 Placement Readiness', href: '/dashboard/readiness', icon: Target },
     { label: 'AI Analytics', href: '/ai', icon: Brain },
     { label: 'Achievements', href: '/achievements', icon: Award },
     { label: 'Badges', href: '/badges', icon: Award },
@@ -118,7 +120,7 @@ export default function Sidebar({ isOpen, onClose }) {
         }}>
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            const isActive = pathname === item.href || (pathname.startsWith(item.href + '/') && item.href !== '/dashboard');
 
             return (
               <Link 

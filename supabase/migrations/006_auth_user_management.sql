@@ -86,62 +86,72 @@ ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
 -- RLS Policies
 -- ============================================================
 -- Roles: readable by authenticated, managed by super_admin
+DROP POLICY IF EXISTS "Roles readable by authenticated users" ON roles;
 CREATE POLICY "Roles readable by authenticated users" ON roles
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Super admin manages roles" ON roles;
 CREATE POLICY "Super admin manages roles" ON roles
-  FOR ALL TO authenticated USING (auth.user_role() = 'super_admin');
+  FOR ALL TO authenticated USING (public.current_user_role() = 'super_admin');
 
 -- Permissions: readable by authenticated, managed by super_admin
+DROP POLICY IF EXISTS "Permissions readable by authenticated users" ON permissions;
 CREATE POLICY "Permissions readable by authenticated users" ON permissions
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Super admin manages permissions" ON permissions;
 CREATE POLICY "Super admin manages permissions" ON permissions
-  FOR ALL TO authenticated USING (auth.user_role() = 'super_admin');
+  FOR ALL TO authenticated USING (public.current_user_role() = 'super_admin');
 
 -- Role Permissions: readable by authenticated, managed by super_admin
+DROP POLICY IF EXISTS "Role permissions readable by authenticated users" ON role_permissions;
 CREATE POLICY "Role permissions readable by authenticated users" ON role_permissions
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Super admin manages role permissions" ON role_permissions;
 CREATE POLICY "Super admin manages role permissions" ON role_permissions
-  FOR ALL TO authenticated USING (auth.user_role() = 'super_admin');
+  FOR ALL TO authenticated USING (public.current_user_role() = 'super_admin');
 
 -- User Roles: readable by own college users, managed by college/super admins
+DROP POLICY IF EXISTS "User roles readable by same college users" ON user_roles;
 CREATE POLICY "User roles readable by same college users" ON user_roles
   FOR SELECT TO authenticated 
   USING (
     EXISTS (
       SELECT 1 FROM users u 
       WHERE u.id = user_roles.user_id 
-      AND (u.college_id = auth.college_id() OR auth.user_role() = 'super_admin')
+      AND (u.college_id = public.current_college_id() OR public.current_user_role() = 'super_admin')
     )
   );
 
+DROP POLICY IF EXISTS "Admins manage user roles" ON user_roles;
 CREATE POLICY "Admins manage user roles" ON user_roles
   FOR ALL TO authenticated
   USING (
-    auth.user_role() IN ('super_admin', 'college_admin')
+    public.current_user_role() IN ('super_admin', 'college_admin')
     AND EXISTS (
       SELECT 1 FROM users u 
       WHERE u.id = user_roles.user_id 
-      AND (u.college_id = auth.college_id() OR auth.user_role() = 'super_admin')
+      AND (u.college_id = public.current_college_id() OR public.current_user_role() = 'super_admin')
     )
   );
 
 -- Sessions: readable/deletable by own user or college/super admins
+DROP POLICY IF EXISTS "Users manage own sessions" ON sessions;
 CREATE POLICY "Users manage own sessions" ON sessions
   FOR ALL TO authenticated
   USING (user_id = auth.uid())
   WITH CHECK (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Admins read sessions" ON sessions;
 CREATE POLICY "Admins read sessions" ON sessions
   FOR SELECT TO authenticated
   USING (
-    auth.user_role() IN ('super_admin', 'college_admin')
+    public.current_user_role() IN ('super_admin', 'college_admin')
     AND EXISTS (
       SELECT 1 FROM users u 
       WHERE u.id = sessions.user_id 
-      AND (u.college_id = auth.college_id() OR auth.user_role() = 'super_admin')
+      AND (u.college_id = public.current_college_id() OR public.current_user_role() = 'super_admin')
     )
   );
 

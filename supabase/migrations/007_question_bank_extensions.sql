@@ -32,17 +32,14 @@ CREATE INDEX IF NOT EXISTS idx_qdepts_department ON question_departments(departm
 ALTER TABLE question_departments ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for question_departments
+DROP POLICY IF EXISTS "Allow read access for question_departments" ON question_departments;
 CREATE POLICY "Allow read access for question_departments" ON question_departments
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Allow write access for admins and hosts in question_departments" ON question_departments;
 CREATE POLICY "Allow write access for admins and hosts in question_departments" ON question_departments
   FOR ALL TO authenticated USING (
-    EXISTS (
-      SELECT 1 FROM user_roles ur
-      JOIN roles r ON ur.role_id = r.id
-      WHERE ur.user_id = auth.uid()
-      AND r.name IN ('super_admin', 'college_admin', 'host')
-    )
+    public.current_user_role() IN ('super_admin', 'college_admin', 'host')
   );
 
 -- Update RLS policies on questions table to enforce approval status and visibility
@@ -50,19 +47,16 @@ DROP POLICY IF EXISTS "Allow select for authenticated users on questions" ON que
 CREATE POLICY "Allow select for authenticated users on questions" ON questions
   FOR SELECT TO authenticated USING (
     -- Admins/hosts can see any question
-    EXISTS (
-      SELECT 1 FROM user_roles ur
-      JOIN roles r ON ur.role_id = r.id
-      WHERE ur.user_id = auth.uid()
-      AND r.name IN ('super_admin', 'college_admin', 'host')
-    )
+    public.current_user_role() IN ('super_admin', 'college_admin', 'host')
     OR
     -- Students/faculty can see approved questions that are public or match their college
     (
       approval_status = 'approved'
       AND (
         visibility = 'public'
-        OR (visibility = 'college' AND college_id = (SELECT college_id FROM users WHERE id = auth.uid()))
+        OR (visibility = 'college' AND college_id = public.current_college_id())
       )
     )
   );
+
+

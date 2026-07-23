@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { useRouter } from 'next/navigation';
 import SearchableCollegeSelect from '../../components/SearchableCollegeSelect';
+import SearchableDepartmentSelect from '../../components/SearchableDepartmentSelect';
 import styles from './register.module.css';
 import Link from 'next/link';
 
@@ -21,6 +22,7 @@ export default function RegisterPage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [collegeId, setCollegeId] = useState('');
   const [departmentId, setDepartmentId] = useState('');
   const [year, setYear] = useState('1');
@@ -118,20 +120,27 @@ export default function RegisterPage() {
   // Filter departments when college selection changes
   useEffect(() => {
     if (collegeId) {
-      const filtered = departments.filter((d) => d.college_id === collegeId);
-      setFilteredDepartments(filtered);
-      if (filtered.length > 0) {
-        setDepartmentId(filtered[0].id);
-      } else {
-        setDepartmentId('');
-      }
+      const filtered = departments.filter((d) => !d.college_id || d.college_id === collegeId);
+      setFilteredDepartments(filtered.length > 0 ? filtered : departments);
+    } else {
+      setFilteredDepartments(departments);
     }
   }, [collegeId, departments]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
     if (!fullName || !email || !password || !collegeId) {
       setLocalError('Please fill in all required fields.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setLocalError('Passwords do not match. Please check and try again.');
+      return;
+    }
+    if (!departmentId) {
+      setLocalError('Please select your department.');
       return;
     }
 
@@ -150,10 +159,9 @@ export default function RegisterPage() {
         rollNumber: rollNumber || null,
       });
 
-      // Redirect to dashboard or email verification instructions
       router.push('/verify-email');
     } catch (err) {
-      console.error(err);
+      console.error('[FRONTEND REGISTRATION TRACE] Registration error', err);
       setLocalError(err.error || 'Registration failed. Please check your inputs and try again.');
     } finally {
       setIsSubmitting(false);
@@ -222,6 +230,20 @@ export default function RegisterPage() {
           </div>
 
           <div className={styles.formGroup}>
+            <label htmlFor="confirmPassword" className={styles.label}>Confirm Password *</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              className={styles.input}
+              placeholder="Re-enter password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={isSubmitting}
+              required
+            />
+          </div>
+
+          <div className={styles.formGroup}>
             <label htmlFor="college" className={styles.label}>College *</label>
             <SearchableCollegeSelect
               colleges={colleges}
@@ -232,21 +254,14 @@ export default function RegisterPage() {
           </div>
 
           <div className={styles.formGroup}>
-            <label htmlFor="department" className={styles.label}>Department</label>
-            <select
-              id="department"
-              className={styles.select}
-              value={departmentId}
-              onChange={(e) => setDepartmentId(e.target.value)}
-              disabled={isSubmitting || filteredDepartments.length === 0}
-            >
-              <option value="">Select Department</option>
-              {filteredDepartments.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name} ({d.code})
-                </option>
-              ))}
-            </select>
+            <label htmlFor="department" className={styles.label}>Department *</label>
+            <SearchableDepartmentSelect
+              collegeId={collegeId}
+              departments={filteredDepartments}
+              selectedId={departmentId}
+              onChange={(val) => setDepartmentId(val)}
+              disabled={isSubmitting}
+            />
           </div>
 
           <div className={styles.formGroup}>
