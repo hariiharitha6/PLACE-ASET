@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../../../lib/api';
 import styles from './students.module.css';
 
@@ -13,11 +13,7 @@ export default function StudentManagementPage() {
   const [selectedIds, setSelectedIds] = useState([]);
   const [actionSuccess, setActionSuccess] = useState(null);
 
-  useEffect(() => {
-    fetchStudents();
-  }, [departmentFilter, statusFilter]);
-
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get('/admin/students', {
@@ -41,7 +37,11 @@ export default function StudentManagementPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, departmentFilter, statusFilter]);
+
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
 
   const handleToggleStatus = async (studentId, currentStatus) => {
     try {

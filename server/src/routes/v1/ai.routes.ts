@@ -7,7 +7,9 @@ import {
   recordAction,
   getStudyPath,
   getSimilarQuestions,
-  getAIDashboard
+  getAIDashboard,
+  scoreResume,
+  submitMockInterview,
 } from '../../controllers/ai.controller';
 import {
   getAIProvidersStatus,
@@ -31,6 +33,10 @@ router.post('/recommendations/action', recordAction as any);
 router.get('/study-path', getStudyPath as any);
 router.get('/similar/:questionId', getSimilarQuestions as any);
 router.get('/dashboard', getAIDashboard as any);
+
+// Resume & Interview AI endpoints
+router.post('/resume/score', scoreResume as any);
+router.post('/interview/submit', submitMockInterview as any);
 
 // Multi-Provider Enterprise AI Engine Endpoints
 router.get('/providers', getAIProvidersStatus as any);

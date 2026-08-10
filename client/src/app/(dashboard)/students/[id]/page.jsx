@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import api from '../../../../lib/api';
 import styles from './studentProfile.module.css';
@@ -14,11 +14,7 @@ export default function PublicStudentProfilePage() {
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchProfileData();
-  }, [studentId]);
-
-  const fetchProfileData = async () => {
+  const fetchProfileData = useCallback(async () => {
     setLoading(true);
     try {
       const [profRes, achRes] = await Promise.all([
@@ -69,7 +65,11 @@ export default function PublicStudentProfilePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [studentId]);
+
+  useEffect(() => {
+    fetchProfileData();
+  }, [fetchProfileData]);
 
   if (loading) {
     return (

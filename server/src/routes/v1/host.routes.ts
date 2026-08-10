@@ -5,6 +5,9 @@ import {
   getHostDashboard,
   getHostDepartmentQuestions,
   createHostPracticeSet,
+  createHostChallenge,
+  getHostDiscussions,
+  moderateHostDiscussion,
 } from '../../controllers/host.controller';
 
 const router = Router();
@@ -15,5 +18,8 @@ router.use(verifyJWT, checkRole(['host', 'faculty', 'college_admin', 'super_admi
 router.get('/dashboard', getHostDashboard);
 router.get('/questions', getHostDepartmentQuestions);
 router.post('/practice-sets', createHostPracticeSet);
+router.post('/challenges', createHostChallenge);
+router.get('/discussions', getHostDiscussions);
+router.patch('/discussions/:id', moderateHostDiscussion);
 
 export default router;

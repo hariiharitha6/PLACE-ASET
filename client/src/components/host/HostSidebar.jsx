@@ -11,6 +11,8 @@ export default function HostSidebar({ isOpen, onClose }) {
 
   const navItems = [
     { label: 'Host Dashboard', path: '/host/dashboard', icon: LayoutDashboard },
+    { label: 'Create New Contest', path: '/host/challenges/new', icon: Trophy },
+    { label: 'Q&A & Discussions', path: '/host/discussions', icon: CheckCircle },
     { label: 'My Questions & PDFs', path: '/admin/questions', icon: BookOpen },
     { label: 'Create Practice Set', path: '/admin/practice', icon: FileUp },
     { label: 'Manage Challenges', path: '/admin/challenges', icon: Trophy },

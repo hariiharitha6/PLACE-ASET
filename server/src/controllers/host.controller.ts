@@ -78,3 +78,49 @@ export async function createHostPracticeSet(req: AuthenticatedRequest, res: Resp
     return errorResponse(res, error.message || 'Failed to create practice set', 400);
   }
 }
+
+export async function createHostChallenge(req: AuthenticatedRequest, res: Response, _next: NextFunction) {
+  try {
+    const { title, description, start_time, end_time, duration_minutes, questions } = req.body;
+    const challenge = {
+      id: `ch-${Date.now()}`,
+      title,
+      description,
+      start_time,
+      end_time,
+      duration_minutes: duration_minutes || 60,
+      creator_id: req.user?.id,
+      status: 'scheduled',
+      questions_count: questions?.length || 0,
+      createdAt: new Date().toISOString(),
+    };
+
+    logger.info(`Host ${req.user?.id} published contest challenge`, { title });
+    return successResponse(res, challenge, 201);
+  } catch (error: any) {
+    return errorResponse(res, error.message || 'Failed to publish contest challenge', 400);
+  }
+}
+
+export async function getHostDiscussions(_req: AuthenticatedRequest, res: Response, _next: NextFunction) {
+  try {
+    const discussions = [
+      { id: 'disc-1', contest_title: 'ASET CSE Weekly Contest #14', author: 'Ananya Ramesh', message: 'Is test case 4 considering trailing spaces?', status: 'pending', created_at: '2026-07-21 14:30' },
+      { id: 'disc-2', contest_title: 'TCS NQT Speed Coding Mock', author: 'Rahul Varma', message: 'Please clarify time complexity constraint for Q2.', status: 'approved', created_at: '2026-07-20 16:15' },
+    ];
+    return successResponse(res, discussions, 200);
+  } catch (error: any) {
+    return errorResponse(res, error.message || 'Failed to fetch host discussions', 500);
+  }
+}
+
+export async function moderateHostDiscussion(req: AuthenticatedRequest, res: Response, _next: NextFunction) {
+  try {
+    const { id } = req.params;
+    const { status, reply } = req.body;
+    logger.info(`Host moderated discussion ${id}`, { status, reply });
+    return successResponse(res, { id, status, reply, updated_at: new Date().toISOString() }, 200);
+  } catch (error: any) {
+    return errorResponse(res, error.message || 'Failed to moderate discussion', 400);
+  }
+}

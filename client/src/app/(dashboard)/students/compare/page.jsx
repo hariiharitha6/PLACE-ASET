@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import api from '../../../../lib/api';
 import styles from './studentCompare.module.css';
@@ -13,11 +13,7 @@ export default function StudentComparePage() {
   const [compareData, setCompareData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchComparison();
-  }, [user1, user2]);
-
-  const fetchComparison = async () => {
+  const fetchComparison = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get('/users/compare', { params: { user1, user2 } });
@@ -36,14 +32,18 @@ export default function StudentComparePage() {
           id: user2,
           full_name: 'Rahul Varma',
           departments: { code: 'ECE' },
-          year: '4th Year',
-          stats: { totalXP: 4210, rank: 7, level: 4, solvedCount: 128, streakDays: 12, readinessScore: 82, mockTestsCount: 10, resourcesUploadedCount: 3 }
+          year: '3rd Year',
+          stats: { totalXP: 3200, rank: 12, level: 4, solvedCount: 98, streakDays: 7, readinessScore: 74, mockTestsCount: 8, resourcesUploadedCount: 2 }
         }
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [user1, user2]);
+
+  useEffect(() => {
+    fetchComparison();
+  }, [fetchComparison]);
 
   if (loading) {
     return (

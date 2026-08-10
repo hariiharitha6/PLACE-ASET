@@ -13,7 +13,9 @@ import {
   LogOut,
   X,
   Brain,
-  Target
+  Target,
+  FileText,
+  Mic
 } from 'lucide-react';
 import { APP_NAME } from '../lib/constants';
 
@@ -32,6 +34,8 @@ export default function Sidebar({ isOpen, onClose }) {
     { label: 'AI Analytics', href: '/ai', icon: Brain },
     { label: 'Achievements', href: '/achievements', icon: Award },
     { label: 'Badges', href: '/badges', icon: Award },
+    { label: 'Interview Prep', href: '/interview-prep', icon: Mic },
+    { label: 'Resume Builder', href: '/resume', icon: FileText },
   ];
 
   return (

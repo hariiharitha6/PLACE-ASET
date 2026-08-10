@@ -14,6 +14,7 @@ import gamificationRoutes from './gamification.routes';
 import aiRoutes from './ai.routes';
 import adminRoutes from './admin.routes';
 import hostRoutes from './host.routes';
+import facultyRoutes from './faculty.routes';
 
 const v1Router = Router();
 
@@ -25,6 +26,9 @@ v1Router.use('/admin', adminRoutes);
 
 // Host routes
 v1Router.use('/host', hostRoutes);
+
+// Faculty routes
+v1Router.use('/faculty', facultyRoutes);
 
 // Auth routes
 v1Router.use('/auth', authRoutes);

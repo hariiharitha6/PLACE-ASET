@@ -1,0 +1,226 @@
+.resumeContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 0 16px;
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.titleBox h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.titleBox p {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+.previewBtn, .exportBtn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.previewBtn {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.previewBtn:hover {
+  background: var(--bg-tertiary);
+}
+
+.exportBtn {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+}
+
+.exportBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(var(--primary-rgb), 0.4);
+}
+
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 1024px) {
+  .mainGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.formSection {
+  background: var(--bg-secondary);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formGroup label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.formGroup input, .formGroup textarea {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.formGroup input:focus, .formGroup textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+}
+
+.formGroup textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px;
+  margin-bottom: 8px;
+}
+
+.sectionHeader h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.addBtn {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.addBtn:hover {
+  text-decoration: underline;
+}
+
+/* Document Preview Panel */
+.previewPanel {
+  background: #fff;
+  border-radius: 12px;
+  min-height: 800px;
+  padding: 40px;
+  color: #000;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+}
+
+/* Resume Styling (inside preview) */
+.resumeDoc h1 {
+  font-size: 24px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  color: #111;
+  text-align: center;
+}
+
+.resumeDoc .contactInfo {
+  text-align: center;
+  font-size: 12px;
+  color: #444;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 12px;
+}
+
+.resumeSection {
+  margin-bottom: 16px;
+}
+
+.resumeSection h3 {
+  font-size: 14px;
+  text-transform: uppercase;
+  border-bottom: 1px solid #000;
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+  color: #222;
+}
+
+.itemBlock {
+  margin-bottom: 12px;
+}
+
+.itemHeader {
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.itemSub {
+  font-size: 12px;
+  font-style: italic;
+  color: #555;
+  margin-bottom: 4px;
+}
+
+.itemDesc {
+  font-size: 12px;
+  line-height: 1.4;
+  color: #333;
+}

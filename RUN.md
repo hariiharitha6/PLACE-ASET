@@ -44,7 +44,7 @@ Create the `.env` configuration files in both `server/` and `client/` directorie
 ### Server Env (`server/.env`)
 Create a file named `.env` inside the `server/` directory and configure the variables:
 ```env
-PORT=5000
+PORT=4000
 NODE_ENV=development
 SUPABASE_URL=https://your-supabase-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-secret-key
@@ -55,7 +55,7 @@ REDIS_URL=redis://localhost:6379
 ### Client Env (`client/.env.local`)
 Create a file named `.env.local` inside the `client/` directory:
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
+NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
 NEXT_PUBLIC_SUPABASE_URL=https://your-supabase-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-public-key
 ```
@@ -98,7 +98,7 @@ You can run the frontend client and backend server simultaneously in separate te
    ```bash
    npm run dev
    ```
-   *The server will start listening at [http://localhost:5000](http://localhost:5000).*
+   *The server will start listening at [http://localhost:4000](http://localhost:4000).*
 
 ### Running the Frontend Client
 1. Navigate to the `client/` directory:
@@ -124,7 +124,7 @@ If you have Docker installed and running, you can run the entire platform (Front
    ```
 3. Docker will download, build, and link the images. Once the containers are online:
    - **Frontend App**: Accessible at [http://localhost:3000](http://localhost:3000)
-   - **Backend API**: Accessible at [http://localhost:5000](http://localhost:5000)
+   - **Backend API**: Accessible at [http://localhost:4000](http://localhost:4000)
    - **Redis Instance**: Bound to standard internal caching ports.
 
 To stop the containers, use:
@@ -140,9 +140,9 @@ docker-compose down
 * **Cause**: Client `.env.local` or Server `.env` file is missing.
 * **Fix**: Ensure `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are declared inside the `client/.env.local` file.
 
-### 2. `Port 5000 is already in use`
+### 2. `Port 4000 is already in use`
 * **Cause**: Another local project or node server is occupying the backend listening port.
-* **Fix**: Change the `PORT` value inside `server/.env` to another number (e.g. `PORT=5001`), and update the frontend `NEXT_PUBLIC_API_URL` to point to it.
+* **Fix**: Change the `PORT` value inside `server/.env` to another number (e.g. `PORT=4001`), and update the frontend `NEXT_PUBLIC_API_URL` to point to it.
 
 ### 3. `ts-node ERR_MODULE_NOT_FOUND`
 * **Cause**: During typescript testing, imports might be resolved incorrectly if there's a syntax or validation warning in the code files.

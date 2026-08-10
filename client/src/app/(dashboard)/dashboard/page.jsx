@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import gsap from 'gsap';
 import { useAuth } from '../../../context/AuthContext';
 import { dashboardService } from '../../../lib/dashboardService';
 import PlacementReadinessWidget from '../../../components/widgets/PlacementReadinessWidget';
@@ -14,25 +15,26 @@ import UpcomingEventsWidget from '../../../components/widgets/UpcomingEventsWidg
 import styles from './studentDashboard.module.css';
 import { useRouter } from 'next/navigation';
 
+const QUOTES = [
+  '"Success is not final, failure is not fatal: it is the courage to continue that counts." – Winston Churchill',
+  '"The secret of getting ahead is getting started." – Mark Twain',
+  '"Opportunities don\'t happen, you create them." – Chris Grosser',
+  '"Code is like humor. When you have to explain it, it’’s bad." – Cory House',
+  '"Continuous learning is the minimum requirement for success in any field." – Brian Tracy',
+];
+
 export default function StudentDashboardPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const containerRef = useRef(null);
 
-  // Motivational Quote Generator
-  const quotes = [
-    '"Success is not final, failure is not fatal: it is the courage to continue that counts." – Winston Churchill',
-    '"The secret of getting ahead is getting started." – Mark Twain',
-    '"Opportunities don\'t happen, you create them." – Chris Grosser',
-    '"Code is like humor. When you have to explain it, it’s bad." – Cory House',
-    '"Continuous learning is the minimum requirement for success in any field." – Brian Tracy',
-  ];
   const [quoteIndex, setQuoteIndex] = useState(0);
 
   useEffect(() => {
-    setQuoteIndex(Math.floor(Math.random() * quotes.length));
+    setQuoteIndex(Math.floor(Math.random() * QUOTES.length));
     const loadDashboard = async () => {
       try {
         const res = await dashboardService.getSummary();
@@ -57,6 +59,17 @@ export default function StudentDashboardPage() {
     );
   }
 
+  // GSAP Animation Trigger
+  if (!isLoading && containerRef.current) {
+    const ctx = gsap.context(() => {
+      gsap.fromTo('.gsap-animate-up', 
+        { y: 50, opacity: 0 }, 
+        { y: 0, opacity: 1, stagger: 0.1, duration: 0.8, ease: 'power3.out', delay: 0.1 }
+      );
+    }, containerRef);
+    // Cleanup if component unmounts before animation finishes is handled by context but we'll let it run.
+  }
+
   const {
     profile = {},
     weeklyChallenge = null,
@@ -73,10 +86,10 @@ export default function StudentDashboardPage() {
   });
 
   return (
-    <div className={styles.dashboardContainer}>
+    <div className={styles.dashboardContainer} ref={containerRef}>
 
       {/* 1. WELCOME & MOTIVATIONAL HEADER */}
-      <div className={styles.welcomeBanner}>
+      <div className={`${styles.welcomeBanner} gsap-animate-up`}>
         <div className={styles.welcomeGlow} />
         <div className={styles.welcomeContent}>
           <div className={styles.greetingHeader}>
@@ -99,13 +112,13 @@ export default function StudentDashboardPage() {
           </div>
 
           <div className={styles.quoteBox}>
-            <span>💡 <em>{quotes[quoteIndex]}</em></span>
+            <span>💡 <em>{QUOTES[quoteIndex]}</em></span>
           </div>
         </div>
       </div>
 
       {/* 2. 10 EXECUTIVE KPI DASHBOARD CARDS */}
-      <div className={styles.kpiGrid}>
+      <div className={`${styles.kpiGrid} gsap-animate-up`}>
         <div className={styles.kpiCard} onClick={() => router.push('/placement-drives')}>
           <div className={styles.kpiHeader}>
             <span className={styles.kpiIcon}>💼</span>
@@ -198,13 +211,13 @@ export default function StudentDashboardPage() {
       </div>
 
       {/* 3. PLACEMENT READINESS & PLACEMENT DRIVES ROW */}
-      <div className={styles.sectionRowTwo}>
+      <div className={`${styles.sectionRowTwo} gsap-animate-up`}>
         <PlacementReadinessWidget readinessScore={87} />
         <PlacementDrivesWidget drives={[]} />
       </div>
 
       {/* 4. MY PROFILE SUMMARY & QUICK PRACTICE NAVIGATOR */}
-      <div className={styles.sectionRowTwo}>
+      <div className={`${styles.sectionRowTwo} gsap-animate-up`}>
         
         {/* Profile Card */}
         <div className={styles.profileCard}>
@@ -289,19 +302,19 @@ export default function StudentDashboardPage() {
       </div>
 
       {/* 5. WEEKLY CHALLENGE & PROGRESS LEVEL */}
-      <div className={styles.sectionRowTwo}>
+      <div className={`${styles.sectionRowTwo} gsap-animate-up`}>
         <ChallengeWidget challenge={weeklyChallenge} />
         <ProgressWidget progress={profile} level={profile.level} />
       </div>
 
       {/* 6. LEADERBOARD PREVIEW & RECENT QUESTIONS */}
-      <div className={styles.sectionRowTwo}>
+      <div className={`${styles.sectionRowTwo} gsap-animate-up`}>
         <LeaderboardWidget leaderboard={leaderboardPreview} />
         <RecentQuestionsWidget />
       </div>
 
       {/* 7. STUDY MATERIALS, CONTRIBUTIONS & EVENTS */}
-      <div className={styles.sectionRowThree}>
+      <div className={`${styles.sectionRowThree} gsap-animate-up`}>
         <ResourcesWidget resources={latestResources} />
         <UpcomingEventsWidget events={upcomingEvents} />
       </div>

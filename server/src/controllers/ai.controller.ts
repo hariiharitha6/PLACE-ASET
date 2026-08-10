@@ -102,3 +102,42 @@ export async function getAIDashboard(req: AuthenticatedRequest, res: Response, _
     return errorResponse(res, error.message || 'Failed to retrieve AI dashboard data', 400);
   }
 }
+
+export async function scoreResume(req: AuthenticatedRequest, res: Response, _next: NextFunction) {
+  try {
+    const { template = 'modern' } = req.body || {};
+    const scoreData = {
+      overallScore: 88,
+      templateUsed: template,
+      atsMatch: '92%',
+      impactScore: 85,
+      formattingScore: 90,
+      suggestions: [
+        'Add quantifiable metrics to project descriptions (e.g. "Reduced query response time by 40%").',
+        'Include System Design and Data Structures keywords in the Skills section.',
+        'Ensure LinkedIn and GitHub URLs are actively verified.',
+      ],
+      missingKeywords: ['Microservices', 'Docker', 'CI/CD', 'GraphQL'],
+    };
+    return successResponse(res, scoreData, 200);
+  } catch (error: any) {
+    return errorResponse(res, error.message || 'Failed to score resume', 400);
+  }
+}
+
+export async function submitMockInterview(req: AuthenticatedRequest, res: Response, _next: NextFunction) {
+  try {
+    const { track = 'Technical', answers = [] } = req.body || {};
+    const feedback = {
+      score: 84,
+      track,
+      totalAnswered: answers.length || 1,
+      summary: 'Strong technical clarity and structured response. Improved depth required on concurrency edge-cases.',
+      strengths: ['Clear algorithmic explanation', 'Good communication flow', 'Correct time complexity analysis'],
+      areasForImprovement: ['Elaborate on multi-threading considerations', 'Mention concrete real-world use cases'],
+    };
+    return successResponse(res, feedback, 200);
+  } catch (error: any) {
+    return errorResponse(res, error.message || 'Failed to evaluate interview response', 400);
+  }
+}
