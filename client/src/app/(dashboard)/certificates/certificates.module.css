@@ -1,0 +1,23 @@
+.container { display: flex; flex-direction: column; gap: 24px; }
+.header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+.titleSection h1 { font-size: 24px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px; }
+.titleSection p { font-size: 14px; color: var(--text-secondary); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+
+.certCard {
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(99,102,241,0.04) 100%);
+  border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 24px;
+  display: flex; flex-direction: column; gap: 16px; position: relative; transition: all var(--transition-fast);
+}
+.certCard:hover { border-color: var(--accent-primary); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: var(--radius-full); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.badgeVerified { background: rgba(16,185,129,0.15); color: #10b981; }
+
+.tierBadge { padding: 4px 12px; border-radius: var(--radius-full); font-size: 11px; font-weight: 800; text-transform: uppercase; }
+.tierBronze { background: rgba(217,119,6,0.15); color: #d97706; }
+.tierSilver { background: rgba(148,163,184,0.15); color: #94a3b8; }
+.tierGold { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.tierPlatinum { background: rgba(99,102,241,0.15); color: var(--accent-primary); }
+.tierLegend { background: rgba(168,85,247,0.15); color: #a855f7; }

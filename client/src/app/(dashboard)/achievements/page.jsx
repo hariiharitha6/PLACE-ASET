@@ -1,72 +1,130 @@
 'use client';
 
-import { useState } from 'react';
-import styles from './achievements.module.css';
+import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import { useAuth } from '../../../context/AuthContext';
+import { useToast } from '../../../context/ToastContext';
+import { certificateService } from '../../../lib/certificateService';
+import { 
+  Trophy, Award, Sparkles, CheckCircle2, Lock, Flame, 
+  Target, MessageSquare, Zap, Star, Shield 
+} from 'lucide-react';
+import styles from '../certificates/certificates.module.css';
 
-export default function AchievementsPage() {
-  const [filterCategory, setFilterCategory] = useState('ALL');
+export default function AchievementsGalleryPage() {
+  const { user } = useAuth();
+  const toast = useToast();
 
-  const achievementsList = [
-    { id: '1', title: '100 Questions Solved', category: 'PRACTICE', icon: '🎯', desc: 'Successfully solved 100 coding & aptitude questions in Arena', xp: 500, tier: 'GOLD', earned: true, date: 'June 15, 2026' },
-    { id: '2', title: 'Top 10 Leaderboard', category: 'RANK', icon: '🏆', desc: 'Achieved Top 10 overall campus leaderboard position', xp: 1000, tier: 'GOLD', earned: true, date: 'July 01, 2026' },
-    { id: '3', title: '7-Day Coding Streak', category: 'STREAK', icon: '🔥', desc: 'Maintained consecutive daily practice activity for 7 days', xp: 250, tier: 'BRONZE', earned: true, date: 'June 20, 2026' },
-    { id: '4', title: '30-Day Streak Master', category: 'STREAK', icon: '⚡', desc: 'Maintained consecutive daily practice activity for 30 days', xp: 1200, tier: 'GOLD', earned: false, date: null },
-    { id: '5', title: 'Placement Ready Candidate', category: 'PLACEMENT', icon: '💼', desc: 'Achieved a Placement Readiness Score exceeding 85%', xp: 750, tier: 'SILVER', earned: true, date: 'July 18, 2026' },
-    { id: '6', title: 'Community Resource Contributor', category: 'COMMUNITY', icon: '📚', desc: 'Shared 5 verified placement study materials & notes', xp: 400, tier: 'SILVER', earned: true, date: 'July 20, 2026' },
-    { id: '7', title: 'Mock Test Champion', category: 'PRACTICE', icon: '📝', desc: 'Scored 90%+ in a TCS / Infosys Corporate Mock Exam', xp: 600, tier: 'SILVER', earned: false, date: null },
-    { id: '8', title: 'Hackathon Finalist', category: 'COMMUNITY', icon: '🚀', desc: 'Ranked in the top 3 teams in ASET Innovation Hackathon', xp: 850, tier: 'GOLD', earned: false, date: null },
-  ];
+  const [achievements, setAchievements] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [checking, setChecking] = useState(false);
 
-  const filtered = achievementsList.filter(a => filterCategory === 'ALL' || a.category === filterCategory);
+  const loadAchievements = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await certificateService.getUserAchievements();
+      setAchievements(res || []);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to load achievement badges');
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    loadAchievements();
+  }, [loadAchievements]);
+
+  const handleCheckAchievements = async () => {
+    setChecking(true);
+    try {
+      const res = await certificateService.checkAndUnlockAchievements();
+      if (res.newly_unlocked?.length > 0) {
+        toast.success(`🎉 Congratulations! Unlocked: ${res.newly_unlocked.join(', ')}`);
+      } else {
+        toast.info('All eligible achievements already synced!');
+      }
+      loadAchievements();
+    } catch (err) {
+      toast.error('Failed to sync achievements');
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const getTierClass = (tier) => {
+    switch ((tier || '').toLowerCase()) {
+      case 'silver': return styles.tierSilver;
+      case 'gold': return styles.tierGold;
+      case 'platinum': return styles.tierPlatinum;
+      case 'legend': return styles.tierLegend;
+      default: return styles.tierBronze;
+    }
+  };
 
   return (
     <div className={styles.container}>
+      {/* Header */}
       <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Achievements & Gamification Showcase</h1>
-          <p className={styles.subtitle}>Unlock badges, earn XP rewards, and celebrate your placement milestones</p>
+        <div className={styles.titleSection}>
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Trophy size={26} style={{ color: '#f59e0b' }} /> Digital Achievements & Badge Gallery
+          </h1>
+          <p>Earn XP rewards, unlock coding streak milestones, challenge mastery badges, and community honors.</p>
         </div>
-        <div className={styles.earnedSummary}>
-          <span>🏆 {achievementsList.filter(a => a.earned).length} / {achievementsList.length} Badges Earned</span>
-        </div>
+
+        <button onClick={handleCheckAchievements} disabled={checking}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: 'var(--radius-md)', background: 'var(--gradient-primary)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }}>
+          <Sparkles size={16} /> {checking ? 'Syncing Progress...' : 'Check & Unlock Badges'}
+        </button>
       </div>
 
-      {/* Filter Tabs */}
-      <div className={styles.tabRow}>
-        <button className={`${styles.tab} ${filterCategory === 'ALL' ? styles.activeTab : ''}`} onClick={() => setFilterCategory('ALL')}>All Badges</button>
-        <button className={`${styles.tab} ${filterCategory === 'PRACTICE' ? styles.activeTab : ''}`} onClick={() => setFilterCategory('PRACTICE')}>Practice & Solved</button>
-        <button className={`${styles.tab} ${filterCategory === 'RANK' ? styles.activeTab : ''}`} onClick={() => setFilterCategory('RANK')}>Rank & Leaderboard</button>
-        <button className={`${styles.tab} ${filterCategory === 'STREAK' ? styles.activeTab : ''}`} onClick={() => setFilterCategory('STREAK')}>Coding Streaks</button>
-        <button className={`${styles.tab} ${filterCategory === 'PLACEMENT' ? styles.activeTab : ''}`} onClick={() => setFilterCategory('PLACEMENT')}>Placement Readiness</button>
-        <button className={`${styles.tab} ${filterCategory === 'COMMUNITY' ? styles.activeTab : ''}`} onClick={() => setFilterCategory('COMMUNITY')}>Community</button>
-      </div>
-
-      {/* Grid of Badges */}
-      <div className={styles.grid}>
-        {filtered.map((item) => (
-          <div key={item.id} className={`${styles.badgeCard} ${item.earned ? styles.earned : styles.locked}`}>
-            <div className={styles.iconCircle}>{item.icon}</div>
-
-            <div className={styles.cardContent}>
-              <div className={styles.tierHeader}>
-                <span className={`${styles.tierBadge} ${styles[item.tier.toLowerCase()]}`}>{item.tier} TIER</span>
-                <span className={styles.xpReward}>+{item.xp} XP</span>
+      {/* Achievement Grid */}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
+          <Sparkles size={24} style={{ animation: 'spin 1s linear infinite', marginBottom: '12px' }} />
+          <p>Loading digital achievement badges...</p>
+        </div>
+      ) : (
+        <div className={styles.grid}>
+          {achievements.map(ach => (
+            <div key={ach.id} className={styles.certCard} style={{ opacity: ach.is_unlocked ? 1 : 0.6 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className={`${styles.tierBadge} ${getTierClass(ach.tier)}`}>
+                  {ach.tier || 'Bronze'} Tier
+                </span>
+                <span style={{ fontSize: '12px', fontWeight: '800', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Zap size={14} /> +{ach.xp_reward || 50} XP
+                </span>
               </div>
 
-              <h3 className={styles.cardTitle}>{item.title}</h3>
-              <p className={styles.cardDesc}>{item.desc}</p>
+              <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: ach.is_unlocked ? 'rgba(245,158,11,0.15)' : 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: ach.is_unlocked ? '#f59e0b' : 'var(--text-muted)' }}>
+                  {ach.is_unlocked ? <Trophy size={24} /> : <Lock size={24} />}
+                </div>
 
-              <div className={styles.cardFooter}>
-                {item.earned ? (
-                  <span className={styles.earnedLabel}>✅ Earned on {item.date}</span>
+                <div>
+                  <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 4px 0' }}>{ach.title}</h3>
+                  <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.4' }}>{ach.description}</p>
+                </div>
+              </div>
+
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+                {ach.is_unlocked ? (
+                  <span style={{ color: '#10b981', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <CheckCircle2 size={14} /> Unlocked on {new Date(ach.unlocked_at || Date.now()).toLocaleDateString()}
+                  </span>
                 ) : (
-                  <span className={styles.lockedLabel}>🔒 In Progress</span>
+                  <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Lock size={12} /> Locked Badge
+                  </span>
                 )}
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
