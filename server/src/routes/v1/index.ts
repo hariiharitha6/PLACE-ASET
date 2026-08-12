@@ -18,6 +18,7 @@ import facultyRoutes from './faculty.routes';
 import calendarRoutes from './calendar.routes';
 import certificatesRoutes from './certificates.routes';
 import analyticsRoutes from './analytics.routes';
+import mentorRoutes from './ai_mentor.routes';
 
 const v1Router = Router();
 
@@ -69,6 +70,9 @@ v1Router.use('/certificates', certificatesRoutes);
 
 // Analytics routes
 v1Router.use('/analytics', analyticsRoutes);
+
+// AI Personal Mentor routes
+v1Router.use('/mentor', mentorRoutes);
 
 // Logs routes
 v1Router.use('/logs', logsRoutes);
