@@ -1,0 +1,19 @@
+.container { display: flex; flex-direction: column; gap: 24px; }
+.header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+.titleSection h1 { font-size: 24px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px; }
+.titleSection p { font-size: 14px; color: var(--text-secondary); }
+
+.kpiGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.kpiCard { background: var(--bg-glass); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+
+.sectionGrid { display: grid; grid-template-columns: 1fr 340px; gap: 24px; }
+
+.card { background: var(--bg-glass); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+
+.heatmapGrid { display: grid; grid-template-columns: repeat(15, 1fr); gap: 6px; }
+.heatmapCell { height: 18px; border-radius: 3px; background: rgba(99,102,241,0.08); }
+.heatmapCellActive { background: var(--accent-primary) !important; }
+
+.skillRow { display: flex; flex-direction: column; gap: 6px; }
+.skillTrack { height: 8px; border-radius: 4px; background: var(--bg-tertiary); overflow: hidden; }
+.skillFill { height: 100%; border-radius: 4px; background: var(--gradient-primary); transition: width 0.5s ease; }

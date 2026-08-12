@@ -17,6 +17,7 @@ import hostRoutes from './host.routes';
 import facultyRoutes from './faculty.routes';
 import calendarRoutes from './calendar.routes';
 import certificatesRoutes from './certificates.routes';
+import analyticsRoutes from './analytics.routes';
 
 const v1Router = Router();
 
@@ -65,6 +66,9 @@ v1Router.use('/calendar', calendarRoutes);
 
 // Certificates & Achievements routes
 v1Router.use('/certificates', certificatesRoutes);
+
+// Analytics routes
+v1Router.use('/analytics', analyticsRoutes);
 
 // Logs routes
 v1Router.use('/logs', logsRoutes);
