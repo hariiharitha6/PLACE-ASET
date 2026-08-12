@@ -1,0 +1,20 @@
+.container { display: flex; flex-direction: column; gap: 24px; }
+.header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+.titleSection h1 { font-size: 24px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px; }
+.titleSection p { font-size: 14px; color: var(--text-secondary); }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; }
+
+.calendarCard { background: var(--bg-glass); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+
+.agendaList { display: flex; flex-direction: column; gap: 12px; }
+.eventItem { padding: 14px 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: var(--bg-primary); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+.aiPlanCard { background: linear-gradient(135deg, rgba(99,102,241,0.06) 0%, rgba(168,85,247,0.06) 100%); border: 1px solid rgba(99,102,241,0.2); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+
+.modalOverlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 32px; width: 100%; max-width: 520px; display: flex; flex-direction: column; gap: 18px; box-shadow: var(--shadow-lg); }
+
+.formGroup { display: flex; flex-direction: column; gap: 6px; }
+.formGroup label { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+.formInput { padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 13px; }

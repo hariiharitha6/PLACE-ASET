@@ -1,0 +1,21 @@
+.container { display: flex; flex-direction: column; gap: 24px; }
+.header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+.titleSection h1 { font-size: 24px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px; }
+.titleSection p { font-size: 14px; color: var(--text-secondary); }
+
+.tabBar { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; border-bottom: 1px solid var(--border-color); }
+.tab {
+  padding: 8px 16px; border-radius: var(--radius-md); border: none; background: transparent;
+  color: var(--text-secondary); font-weight: 600; font-size: 13px; cursor: pointer; transition: all var(--transition-fast);
+  white-space: nowrap; display: flex; align-items: center; gap: 6px;
+}
+.tab:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+.tabActive { background: rgba(99,102,241,0.1) !important; color: var(--accent-primary) !important; font-weight: 700; }
+
+.list { display: flex; flex-direction: column; gap: 12px; }
+.card {
+  background: var(--bg-glass); border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+  padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  transition: all var(--transition-fast);
+}
+.cardUnread { border-color: rgba(99,102,241,0.3) !important; background: rgba(99,102,241,0.02) !important; }

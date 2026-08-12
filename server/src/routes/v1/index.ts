@@ -15,6 +15,7 @@ import aiRoutes from './ai.routes';
 import adminRoutes from './admin.routes';
 import hostRoutes from './host.routes';
 import facultyRoutes from './faculty.routes';
+import calendarRoutes from './calendar.routes';
 
 const v1Router = Router();
 
@@ -57,6 +58,9 @@ v1Router.use('/resources', resourcesRoutes);
 
 // Community routes
 v1Router.use('/community', communityRoutes);
+
+// Calendar routes
+v1Router.use('/calendar', calendarRoutes);
 
 // Logs routes
 v1Router.use('/logs', logsRoutes);
