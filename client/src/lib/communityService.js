@@ -25,7 +25,50 @@ export const communityService = {
     const response = await api.post(`/community/solutions/${solutionId}/vote`, { vote_type: voteType });
     return response.data;
   },
-  // Module 8 community repository & OCR engine integrations
+
+  // Module 4.2 Discussions API
+  listDiscussions: async (params) => {
+    const response = await api.get('/community/discussions', { params });
+    return response.data;
+  },
+  getDiscussionDetail: async (id) => {
+    const response = await api.get(`/community/discussions/${id}`);
+    return response.data;
+  },
+  createDiscussion: async (data) => {
+    const response = await api.post('/community/discussions', data);
+    return response.data;
+  },
+  createReply: async (discussionId, data) => {
+    const response = await api.post(`/community/discussions/${discussionId}/replies`, data);
+    return response.data;
+  },
+  acceptAnswer: async (discussionId, replyId) => {
+    const response = await api.patch(`/community/discussions/${discussionId}/replies/${replyId}/accept`);
+    return response.data;
+  },
+  toggleReaction: async (data) => {
+    const response = await api.post('/community/discussions/react', data);
+    return response.data;
+  },
+  toggleBookmark: async (id) => {
+    const response = await api.post(`/community/discussions/${id}/bookmark`);
+    return response.data;
+  },
+  getAISuggestedAnswer: async (id) => {
+    const response = await api.get(`/community/discussions/${id}/ai-suggest`);
+    return response.data;
+  },
+  togglePin: async (id) => {
+    const response = await api.patch(`/community/discussions/${id}/pin`);
+    return response.data;
+  },
+  reportContent: async (data) => {
+    const response = await api.post('/community/reports', data);
+    return response.data;
+  },
+
+  // Community repository & OCR engine integrations
   uploadSubmission: async (data) => {
     const response = await api.post('/community/upload', data);
     return response.data;

@@ -1,7 +1,10 @@
 import { Router } from 'express';
 import {
   listCommunityQuestions, submitCommunityQuestion, reviewCommunityQuestion,
-  listSolutions, submitSolution, voteSolution
+  listSolutions, submitSolution, voteSolution,
+  listDiscussions, getDiscussionDetail, createDiscussion, createReply,
+  acceptAnswer, toggleReaction, toggleBookmark, getAISuggestedAnswer,
+  togglePin, reportContent
 } from '../../controllers/community.controller';
 import { verifyJWT } from '../../middleware/auth';
 import { checkRole } from '../../middleware/rbac';
@@ -19,6 +22,18 @@ router.put('/questions/:id/review', checkRole(['super_admin', 'college_admin', '
 router.get('/solutions/:questionId', listSolutions as any);
 router.post('/solutions', submitSolution as any);
 router.post('/solutions/:solutionId/vote', voteSolution as any);
+
+// Discussion Forum & Collaboration Routes
+router.get('/discussions', listDiscussions as any);
+router.get('/discussions/:id', getDiscussionDetail as any);
+router.post('/discussions', createDiscussion as any);
+router.post('/discussions/:id/replies', createReply as any);
+router.patch('/discussions/:id/replies/:replyId/accept', acceptAnswer as any);
+router.post('/discussions/react', toggleReaction as any);
+router.post('/discussions/:id/bookmark', toggleBookmark as any);
+router.get('/discussions/:id/ai-suggest', getAISuggestedAnswer as any);
+router.patch('/discussions/:id/pin', checkRole(['faculty', 'hod', 'super_admin', 'college_admin', 'host']) as any, togglePin as any);
+router.post('/reports', reportContent as any);
 
 // Community Repository & OCR Routes
 import {

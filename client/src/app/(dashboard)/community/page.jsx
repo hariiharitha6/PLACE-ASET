@@ -1,291 +1,330 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
-import { useConfirm } from '../../../context/ConfirmContext';
 import { communityService } from '../../../lib/communityService';
-import { supabase } from '../../../lib/supabase';
-import { BookOpen, Plus, ThumbsUp, Send, Check, X, ShieldAlert } from 'lucide-react';
+import { 
+  Users, MessageSquare, ThumbsUp, Plus, Search, CheckCircle2, 
+  Pin, Sparkles, Filter, Bookmark, User, Tag, ArrowRight, ShieldCheck 
+} from 'lucide-react';
 import styles from './community.module.css';
 
-export default function CommunityPage() {
+const FILTER_TABS = [
+  { id: 'all', label: 'All Discussions' },
+  { id: 'trending', label: '🔥 Trending' },
+  { id: 'unanswered', label: '❓ Unanswered' },
+  { id: 'solved', label: '✅ Solved' },
+  { id: 'pinned', label: '📌 Pinned' },
+];
+
+export default function CommunityHubPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const { toast } = useToast();
-  const confirm = useConfirm();
-  const [questions, setQuestions] = useState([]);
+  const toast = useToast();
+
+  const [discussions, setDiscussions] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [activeTab, setActiveTab] = useState('approved'); // approved, pending, rejected
-  const [categories, setCategories] = useState([]);
-  const [showAddModal, setShowAddModal] = useState(false);
 
-  // New question form state
-  const [statement, setStatement] = useState('');
-  const [opts, setOpts] = useState(['', '', '', '']);
-  const [correctAnswer, setCorrectAnswer] = useState('0');
-  const [explanation, setExplanation] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const [difficulty, setDifficulty] = useState('medium');
+  const [activeFilter, setActiveFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const [department, setDepartment] = useState('All');
+  const [category, setCategory] = useState('All');
+
+  // Create Discussion Modal State
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [dept, setDept] = useState('Computer Science & Engineering');
+  const [cat, setCat] = useState('DSA & Programming');
+  const [tagsInput, setTagsInput] = useState('dsa, algorithms, interview');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const loadQuestions = useCallback(async () => {
+  const loadDiscussions = useCallback(async () => {
+    setLoading(true);
     try {
-      const res = await communityService.listQuestions({
-        page, limit: 10, status: activeTab
+      const res = await communityService.listDiscussions({
+        page,
+        limit: 12,
+        search,
+        department: department === 'All' ? undefined : department,
+        category: category === 'All' ? undefined : category,
+        filterType: activeFilter
       });
-      setQuestions(res.questions || []);
+      setDiscussions(res.discussions || []);
       setTotal(res.total || 0);
       setTotalPages(res.totalPages || 1);
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to load discussions');
+    } finally {
+      setLoading(false);
     }
-  }, [page, activeTab]);
+  }, [page, search, department, category, activeFilter, toast]);
 
   useEffect(() => {
-    loadQuestions();
-  }, [loadQuestions]);
+    loadDiscussions();
+  }, [loadDiscussions]);
 
-  useEffect(() => {
-    const loadCats = async () => {
-      const { data } = await supabase.from('categories').select('id, name').order('name');
-      setCategories(data || []);
-    };
-    loadCats();
-  }, []);
-
-  const handleReview = async (id, action) => {
-    const notes = await confirm({
-      title: 'Review Question',
-      message: 'Enter review notes (optional):',
-      showInput: true,
-      inputPlaceholder: 'E.g. Approved/Rejected reason...',
-      confirmText: action === 'approve' ? 'Approve' : 'Reject',
-      type: action === 'approve' ? 'info' : 'danger'
-    });
-    if (notes === null) return;
+  const handleReaction = async (e, discussionId) => {
+    e.preventDefault();
+    e.stopPropagation();
     try {
-      await communityService.reviewQuestion(id, { action, review_notes: notes });
-      toast.success(`Question ${action}d successfully.`);
-      loadQuestions();
-    } catch (e) {
-      toast.error('Review failed: ' + e.message);
+      const res = await communityService.toggleReaction({ discussionId, reactionType: 'upvote' });
+      setDiscussions(prev => prev.map(d => {
+        if (d.id === discussionId) {
+          const delta = res.reacted ? 1 : -1;
+          return { ...d, upvotes_count: Math.max(0, (d.upvotes_count || 0) + delta) };
+        }
+        return d;
+      }));
+    } catch (err) {
+      toast.error('Upvote failed');
     }
   };
 
-  const handleAddQuestion = async (e) => {
+  const handleBookmark = async (e, discussionId, currentBookmarked) => {
     e.preventDefault();
-    if (!statement || opts.some(o => !o)) return;
+    e.stopPropagation();
+    try {
+      const res = await communityService.toggleBookmark(discussionId);
+      toast.success(res.bookmarked ? 'Discussion bookmarked' : 'Bookmark removed');
+      setDiscussions(prev => prev.map(d => d.id === discussionId ? { ...d, is_bookmarked: res.bookmarked } : d));
+    } catch (err) {
+      toast.error('Bookmark toggle failed');
+    }
+  };
+
+  const handleCreateDiscussion = async (e) => {
+    e.preventDefault();
+    if (!title || !content) return;
     setIsSubmitting(true);
     try {
-      await communityService.submitQuestion({
-        statement,
-        options: opts.map((content, idx) => ({ label: String.fromCharCode(65 + idx), content })),
-        correct_answer: correctAnswer,
-        explanation,
-        category_id: categoryId || undefined,
-        difficulty
+      const tags = tagsInput.split(',').map(t => t.trim()).filter(Boolean);
+      await communityService.createDiscussion({
+        title,
+        content,
+        department: dept,
+        category: cat,
+        tags
       });
       setShowAddModal(false);
-      setStatement('');
-      setOpts(['', '', '', '']);
-      setCorrectAnswer('0');
-      setExplanation('');
-      setCategoryId('');
-      toast.success('Question submitted successfully!');
-      loadQuestions();
+      setTitle('');
+      setContent('');
+      toast.success('Discussion posted successfully');
+      loadDiscussions();
     } catch (err) {
-      toast.error('Failed to submit: ' + err.message);
+      toast.error('Failed to post discussion: ' + err.message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const isEditor = user && ['super_admin', 'college_admin', 'host'].includes(user.role);
-  const getInitials = (name) => name ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '?';
-
   return (
     <div className={styles.container}>
+      {/* Header */}
       <div className={styles.header}>
         <div className={styles.titleSection}>
-          <h1>Community Repository</h1>
-          <p>Crowdsourced practice questions, solutions, and community notes.</p>
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Users size={26} style={{ color: 'var(--accent-primary)' }} /> Community & Collaboration Forum
+          </h1>
+          <p>Ask coding doubts, discuss interview preparation, share DSA & SQL solutions, and collaborate.</p>
         </div>
+
         <button onClick={() => setShowAddModal(true)}
           style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: 'var(--radius-md)', background: 'var(--gradient-primary)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }}>
-          <Plus size={16} /> Contribute Question
+          <Plus size={16} /> Start Discussion
         </button>
       </div>
 
-      {/* Tabs */}
-      <div className={styles.tabBar} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button className={`${styles.tab} ${activeTab === 'approved' ? styles.tabActive : ''}`}
-            onClick={() => setActiveTab('approved')}>
-            Approved Repository
+      {/* Filter Tabs */}
+      <div className={styles.tabBar}>
+        {FILTER_TABS.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => { setActiveFilter(tab.id); setPage(1); }}
+            className={`${styles.tab} ${activeFilter === tab.id ? styles.tabActive : ''}`}
+          >
+            {tab.label}
           </button>
-          <button className={`${styles.tab} ${activeTab === 'pending' ? styles.tabActive : ''}`}
-            onClick={() => setActiveTab('pending')}>
-            Pending Reviews {isEditor && <span style={{ color: 'var(--accent-warning)', fontSize: '11px', marginLeft: '4px' }}>●</span>}
-          </button>
-          <button className={`${styles.tab} ${activeTab === 'my_submissions' ? styles.tabActive : ''}`}
-            onClick={() => setActiveTab('my_submissions')}>
-            My Submissions
-          </button>
-          {isEditor && (
-            <button className={`${styles.tab} ${activeTab === 'rejected' ? styles.tabActive : ''}`}
-              onClick={() => setActiveTab('rejected')}>
-              Rejected
-            </button>
-          )}
-        </div>
-
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={() => router.push('/community/upload')}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-glass)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>
-            Upload File (OCR)
-          </button>
-          {isEditor && (
-            <button onClick={() => router.push('/community/review')}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-glass)', border: '1px solid var(--border-color)', color: 'var(--accent-warning)', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>
-              Moderation Queue
-            </button>
-          )}
-        </div>
+        ))}
       </div>
 
-      {/* Question Grid */}
-      {activeTab === 'my_submissions' ? (
-        <MySubmissionsList />
-      ) : questions.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-          No questions in this section yet.
+      {/* Filter Bar */}
+      <div className={styles.filterBar}>
+        <Search size={16} style={{ color: 'var(--text-muted)' }} />
+        <input
+          type="text"
+          placeholder="Search questions, topics, or code snippets..."
+          className={styles.searchField}
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+        
+        <select className={styles.selectField} value={department} onChange={e => setDepartment(e.target.value)}>
+          <option value="All">All Departments</option>
+          <option value="Computer Science & Engineering">CSE</option>
+          <option value="Electronics & Communication">ECE</option>
+          <option value="Electrical & Electronics">EEE</option>
+          <option value="Mechanical Engineering">ME</option>
+          <option value="Civil Engineering">CE</option>
+        </select>
+
+        <select className={styles.selectField} value={category} onChange={e => setCategory(e.target.value)}>
+          <option value="All">All Categories</option>
+          <option value="DSA & Programming">DSA & Coding</option>
+          <option value="DBMS & SQL">DBMS & SQL</option>
+          <option value="Operating Systems">Operating Systems</option>
+          <option value="Computer Networks">Networks</option>
+          <option value="Placement & Interview Prep">Placement & Interview</option>
+          <option value="Aptitude & Reasoning">Aptitude</option>
+          <option value="Web & Fullstack">Web Development</option>
+          <option value="Machine Learning">Machine Learning</option>
+        </select>
+      </div>
+
+      {/* Discussion List */}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
+          <Sparkles size={24} style={{ animation: 'spin 1s linear infinite', marginBottom: '12px' }} />
+          <p>Loading community discussions...</p>
+        </div>
+      ) : discussions.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--bg-glass)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)' }}>
+          <MessageSquare size={40} style={{ color: 'var(--text-muted)', marginBottom: '12px' }} />
+          <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>No discussions found</h3>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>Be the first student or faculty member to start a discussion in this topic.</p>
+          <button onClick={() => setShowAddModal(true)} style={{ marginTop: '16px', padding: '8px 16px', borderRadius: 'var(--radius-md)', background: 'var(--accent-primary)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>
+            Start a Discussion
+          </button>
         </div>
       ) : (
         <div className={styles.grid}>
-          {questions.map(q => (
-            <div key={q.id} className={styles.card}>
-              <div className={styles.userLine}>
-                <div className={styles.userAvatar}>{getInitials(q.users?.full_name)}</div>
-                <div>
-                  <div>Contributed by {q.users?.full_name || 'Anonymous'}</div>
-                  <div style={{ fontSize: '10px' }}>{new Date(q.created_at).toLocaleDateString()}</div>
-                </div>
-                <span className={`${styles.badge} ${q.status === 'approved' ? styles.badgeApproved : q.status === 'rejected' ? styles.badgeRejected : styles.badgePending}`}>
-                  {q.status}
-                </span>
-              </div>
-
-              <div className={styles.statement}>{q.statement}</div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {(q.options || []).map((o, idx) => {
-                  const isCorrect = String(idx) === String(q.correct_answer) || o.label === q.correct_answer;
-                  return (
-                    <div key={idx} className={`${styles.option} ${isCorrect && q.status === 'approved' ? styles.correctOption : ''}`}>
-                      <strong>{o.label || String.fromCharCode(65 + idx)}.</strong> {o.content || o}
+          {discussions.map(disc => (
+            <Link key={disc.id} href={`/community/${disc.id}`} style={{ textDecoration: 'none' }}>
+              <div className={styles.card}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div className={styles.userLine}>
+                    <div className={styles.userAvatar}>
+                      {disc.users?.full_name?.charAt(0) || 'U'}
                     </div>
-                  );
-                })}
+                    <div>
+                      <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{disc.users?.full_name || 'Student'}</span>
+                      <span style={{ display: 'block', fontSize: '10px', color: 'var(--text-muted)' }}>{disc.users?.role || 'Member'} • {new Date(disc.created_at).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    {disc.is_pinned && <span className={`${styles.badge} ${styles.badgePinned}`}><Pin size={10} /> Pinned</span>}
+                    {disc.is_solved && <span className={`${styles.badge} ${styles.badgeSolved}`}><CheckCircle2 size={10} /> Solved</span>}
+                    <button
+                      onClick={e => handleBookmark(e, disc.id, disc.is_bookmarked)}
+                      style={{ background: 'none', border: 'none', color: disc.is_bookmarked ? '#f59e0b' : 'var(--text-muted)', cursor: 'pointer', padding: '2px' }}
+                    >
+                      <Bookmark size={16} fill={disc.is_bookmarked ? '#f59e0b' : 'none'} />
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className={styles.statement}>{disc.title}</h3>
+                  <p className={styles.contentPreview}>{disc.content}</p>
+                </div>
+
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  <span className={`${styles.badge} ${styles.badgeCategory}`}>{disc.category}</span>
+                  {disc.department && <span style={{ padding: '2px 8px', borderRadius: '4px', background: 'var(--bg-tertiary)', fontSize: '11px', color: 'var(--text-secondary)' }}>{disc.department}</span>}
+                </div>
+
+                <div className={styles.cardFooter}>
+                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                    <button onClick={e => handleReaction(e, disc.id)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: '600' }}>
+                      <ThumbsUp size={14} style={{ color: 'var(--accent-primary)' }} /> {disc.upvotes_count || 0}
+                    </button>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
+                      <MessageSquare size={14} /> {disc.replies_count || 0} replies
+                    </span>
+                  </div>
+
+                  <span style={{ color: 'var(--accent-primary)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
+                    View Post <ArrowRight size={12} />
+                  </span>
+                </div>
               </div>
-
-              {q.explanation && q.status === 'approved' && (
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                  <strong>Explanation:</strong> {q.explanation}
-                </div>
-              )}
-
-              {/* Admin review controls */}
-              {isEditor && q.status === 'pending' && (
-                <div style={{ display: 'flex', gap: '10px', marginTop: '10px', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
-                  <button onClick={() => handleReview(q.id, 'rejected')}
-                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-danger)', background: 'transparent', color: 'var(--accent-danger)', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>
-                    <X size={14} /> Reject
-                  </button>
-                  <button onClick={() => handleReview(q.id, 'approved')}
-                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px', borderRadius: 'var(--radius-md)', border: 'none', background: 'var(--gradient-success)', color: '#fff', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>
-                    <Check size={14} /> Approve
-                  </button>
-                </div>
-              )}
-            </div>
+            </Link>
           ))}
         </div>
       )}
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '20px' }}>
           <button disabled={page === 1} onClick={() => setPage(page - 1)}
-            style={{ padding: '8px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+            style={{ padding: '8px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-secondary)', cursor: page === 1 ? 'not-allowed' : 'pointer' }}>
             Previous
           </button>
-          <span style={{ padding: '8px', fontSize: '13px', color: 'var(--text-muted)' }}>Page {page} of {totalPages}</span>
+          <span style={{ padding: '8px 12px', fontSize: '13px', color: 'var(--text-muted)' }}>Page {page} of {totalPages}</span>
           <button disabled={page === totalPages} onClick={() => setPage(page + 1)}
-            style={{ padding: '8px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+            style={{ padding: '8px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-secondary)', cursor: page === totalPages ? 'not-allowed' : 'pointer' }}>
             Next
           </button>
         </div>
       )}
 
-      {/* Add Modal */}
+      {/* Start Discussion Modal */}
       {showAddModal && (
         <div className={styles.modalOverlay}>
-          <form className={styles.modal} onSubmit={handleAddQuestion}>
-            <h2 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)' }}>Contribute a Question</h2>
+          <form className={styles.modal} onSubmit={handleCreateDiscussion}>
+            <h2 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>Start New Discussion</h2>
             
             <div className={styles.formGroup}>
-              <label>Question Statement</label>
-              <textarea className={styles.formInput} required placeholder="Type the question statement here..." rows={3}
-                value={statement} onChange={e => setStatement(e.target.value)} />
+              <label>Discussion Title</label>
+              <input type="text" className={styles.formInput} required placeholder="E.g., How to optimize Dijkstra's Algorithm for min heap?"
+                value={title} onChange={e => setTitle(e.target.value)} />
             </div>
 
-            {opts.map((opt, idx) => (
-              <div key={idx} className={styles.formGroup}>
-                <label>Option {String.fromCharCode(65 + idx)}</label>
-                <input type="text" className={styles.formInput} required placeholder={`Option ${String.fromCharCode(65 + idx)} content`}
-                  value={opt} onChange={e => {
-                    const newOpts = [...opts];
-                    newOpts[idx] = e.target.value;
-                    setOpts(newOpts);
-                  }} />
+            <div className={styles.formGroup}>
+              <label>Discussion Content / Problem Description</label>
+              <textarea className={styles.formInput} required rows={5} placeholder="Explain your question, code problem, or concept query in detail..."
+                value={content} onChange={e => setContent(e.target.value)} />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div className={styles.formGroup}>
+                <label>Category</label>
+                <select className={styles.formInput} value={cat} onChange={e => setCat(e.target.value)}>
+                  <option value="DSA & Programming">DSA & Coding</option>
+                  <option value="DBMS & SQL">DBMS & SQL</option>
+                  <option value="Operating Systems">Operating Systems</option>
+                  <option value="Computer Networks">Networks</option>
+                  <option value="Placement & Interview Prep">Placement & Interview</option>
+                  <option value="Aptitude & Reasoning">Aptitude</option>
+                  <option value="Web & Fullstack">Web Development</option>
+                  <option value="Machine Learning">Machine Learning</option>
+                </select>
               </div>
-            ))}
 
-            <div className={styles.formGroup}>
-              <label>Correct Option</label>
-              <select className={styles.formInput} value={correctAnswer} onChange={e => setCorrectAnswer(e.target.value)}>
-                <option value="0">Option A</option>
-                <option value="1">Option B</option>
-                <option value="2">Option C</option>
-                <option value="3">Option D</option>
-              </select>
+              <div className={styles.formGroup}>
+                <label>Department</label>
+                <select className={styles.formInput} value={dept} onChange={e => setDept(e.target.value)}>
+                  <option value="Computer Science & Engineering">CSE</option>
+                  <option value="Electronics & Communication">ECE</option>
+                  <option value="Electrical & Electronics">EEE</option>
+                  <option value="Mechanical Engineering">ME</option>
+                  <option value="Civil Engineering">CE</option>
+                </select>
+              </div>
             </div>
 
             <div className={styles.formGroup}>
-              <label>Difficulty</label>
-              <select className={styles.formInput} value={difficulty} onChange={e => setDifficulty(e.target.value)}>
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-              </select>
-            </div>
-
-            <div className={styles.formGroup}>
-              <label>Category (optional)</label>
-              <select className={styles.formInput} value={categoryId} onChange={e => setCategoryId(e.target.value)}>
-                <option value="">Select Category</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </div>
-
-            <div className={styles.formGroup}>
-              <label>Explanation (optional)</label>
-              <textarea className={styles.formInput} placeholder="Why is this option correct?" rows={2}
-                value={explanation} onChange={e => setExplanation(e.target.value)} />
+              <label>Tags (comma separated)</label>
+              <input type="text" className={styles.formInput} placeholder="dsa, heap, shortest-path, java"
+                value={tagsInput} onChange={e => setTagsInput(e.target.value)} />
             </div>
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '12px' }}>
@@ -295,92 +334,12 @@ export default function CommunityPage() {
               </button>
               <button type="submit" disabled={isSubmitting}
                 style={{ padding: '8px 24px', borderRadius: 'var(--radius-md)', background: 'var(--gradient-primary)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>
-                {isSubmitting ? 'Submitting...' : 'Submit'}
+                {isSubmitting ? 'Posting...' : 'Post Discussion'}
               </button>
             </div>
           </form>
         </div>
       )}
-    </div>
-  );
-}
-
-function MySubmissionsList() {
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const loadHistory = async () => {
-    setLoading(true);
-    try {
-      const res = await communityService.getHistory();
-      setHistory(res.history || []);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadHistory();
-  }, []);
-
-  const handleWithdraw = async (id) => {
-    try {
-      await communityService.withdrawSubmission(id);
-      loadHistory();
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  if (loading) return <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-secondary)' }}>Loading submissions...</div>;
-
-  if (history.length === 0) {
-    return (
-      <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)', background: 'var(--bg-glass)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)' }}>
-        You haven&apos;t contributed any submissions yet.
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      {history.map(item => (
-        <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-glass)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '20px' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', color: item.type === 'question' ? 'var(--accent-primary)' : 'var(--accent-success)' }}>
-                {item.type}
-              </span>
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                Submitted on {new Date(item.created_at).toLocaleDateString()}
-              </span>
-            </div>
-            <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginTop: '6px' }}>{item.title}</h4>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <span style={{
-              fontSize: '11px',
-              fontWeight: '700',
-              textTransform: 'capitalize',
-              color: item.status === 'approved' ? 'var(--accent-success)' : item.status === 'rejected' ? 'var(--accent-danger)' : 'var(--accent-warning)'
-            }}>
-              {item.status}
-            </span>
-
-            {['submitted', 'under_review'].includes(item.status) && (
-              <button
-                onClick={() => handleWithdraw(item.id)}
-                style={{ padding: '6px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--accent-danger)', background: 'transparent', color: 'var(--accent-danger)', fontSize: '12px', cursor: 'pointer', fontWeight: '600' }}
-              >
-                Withdraw
-              </button>
-            )}
-          </div>
-        </div>
-      ))}
     </div>
   );
 }
