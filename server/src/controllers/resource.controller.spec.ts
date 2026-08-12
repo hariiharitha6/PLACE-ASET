@@ -1,11 +1,19 @@
 import { expect } from 'chai';
 import {
   listResources,
+  getHubSections,
   getResource,
   createResource,
   updateResource,
   deleteResource,
-  downloadResource
+  downloadResource,
+  addBookmark,
+  removeBookmark,
+  getUserBookmarks,
+  processResourceAI,
+  runResourceAIPrompt,
+  getFacultyAnalytics,
+  getAdminAnalytics
 } from './resource.controller';
 import { ResourceService } from '../services/resource.service';
 import { Response } from 'express';
@@ -39,6 +47,22 @@ describe('Resource Controller Unit Tests', () => {
     expect(resStatus).to.equal(200);
     expect(resJson.success).to.be.true;
     ResourceService.searchResources = original;
+  });
+
+  it('getHubSections should return 200 on success', async () => {
+    const original = ResourceService.getHubSections;
+    ResourceService.getHubSections = async () => ({
+      featured: [], recentlyAdded: [], mostViewed: [], mostBookmarked: [], recommended: [],
+      departmentResources: [], subjectResources: [], placementResources: [], interviewResources: [],
+      programmingResources: [], examPreparation: [], facultyResources: []
+    } as any);
+    mockReq = {
+      user: { id: 'u1', email: 'test@e.com', role: 'student', collegeId: 'c1' }
+    };
+    await getHubSections(mockReq as AuthenticatedRequest, mockRes as Response, () => {});
+    expect(resStatus).to.equal(200);
+    expect(resJson.success).to.be.true;
+    ResourceService.getHubSections = original;
   });
 
   it('getResource should return 200 on success', async () => {
@@ -98,5 +122,84 @@ describe('Resource Controller Unit Tests', () => {
     expect(resStatus).to.equal(200);
     expect(resJson.success).to.be.true;
     ResourceService.recordDownload = original;
+  });
+
+  it('addBookmark should return 201 on success', async () => {
+    const original = ResourceService.addBookmark;
+    ResourceService.addBookmark = async () => ({ bookmarked: true } as any);
+    mockReq = {
+      user: { id: 'u1', email: 'test@e.com', role: 'student', collegeId: 'c1' },
+      params: { id: 'r1' }
+    };
+    await addBookmark(mockReq as AuthenticatedRequest, mockRes as Response, () => {});
+    expect(resStatus).to.equal(201);
+    expect(resJson.success).to.be.true;
+    ResourceService.addBookmark = original;
+  });
+
+  it('removeBookmark should return 200 on success', async () => {
+    const original = ResourceService.removeBookmark;
+    ResourceService.removeBookmark = async () => ({ bookmarked: false });
+    mockReq = {
+      user: { id: 'u1', email: 'test@e.com', role: 'student', collegeId: 'c1' },
+      params: { id: 'r1' }
+    };
+    await removeBookmark(mockReq as AuthenticatedRequest, mockRes as Response, () => {});
+    expect(resStatus).to.equal(200);
+    expect(resJson.success).to.be.true;
+    ResourceService.removeBookmark = original;
+  });
+
+  it('getUserBookmarks should return 200 on success', async () => {
+    const original = ResourceService.getUserBookmarks;
+    ResourceService.getUserBookmarks = async () => ({ resources: [], total: 0, page: 1, limit: 12, totalPages: 0 });
+    mockReq = {
+      user: { id: 'u1', email: 'test@e.com', role: 'student', collegeId: 'c1' },
+      query: {}
+    };
+    await getUserBookmarks(mockReq as AuthenticatedRequest, mockRes as Response, () => {});
+    expect(resStatus).to.equal(200);
+    expect(resJson.success).to.be.true;
+    ResourceService.getUserBookmarks = original;
+  });
+
+  it('processResourceAI should return 200 on success', async () => {
+    const original = ResourceService.processResourceWithAI;
+    ResourceService.processResourceWithAI = async () => ({ processed: true, ai_summary: 'Summary' });
+    mockReq = { params: { id: 'r1' } };
+    await processResourceAI(mockReq as AuthenticatedRequest, mockRes as Response, () => {});
+    expect(resStatus).to.equal(200);
+    expect(resJson.success).to.be.true;
+    ResourceService.processResourceWithAI = original;
+  });
+
+  it('runResourceAIPrompt should return 200 on success', async () => {
+    const original = ResourceService.runResourceAIPrompt;
+    ResourceService.runResourceAIPrompt = async () => ({ promptType: 'summarize', response: 'AI response', provider: 'gemini' });
+    mockReq = { params: { id: 'r1' }, body: { promptType: 'summarize' } };
+    await runResourceAIPrompt(mockReq as AuthenticatedRequest, mockRes as Response, () => {});
+    expect(resStatus).to.equal(200);
+    expect(resJson.success).to.be.true;
+    ResourceService.runResourceAIPrompt = original;
+  });
+
+  it('getFacultyAnalytics should return 200 on success', async () => {
+    const original = ResourceService.getFacultyAnalytics;
+    ResourceService.getFacultyAnalytics = async () => ({ totalResources: 5, totalViews: 100, totalDownloads: 20, totalBookmarks: 10, publishedCount: 5, topResources: [], recentActivity: [] });
+    mockReq = { user: { id: 'u1', email: 'faculty@e.com', role: 'faculty', collegeId: 'c1' } };
+    await getFacultyAnalytics(mockReq as AuthenticatedRequest, mockRes as Response, () => {});
+    expect(resStatus).to.equal(200);
+    expect(resJson.success).to.be.true;
+    ResourceService.getFacultyAnalytics = original;
+  });
+
+  it('getAdminAnalytics should return 200 on success', async () => {
+    const original = ResourceService.getAdminAnalytics;
+    ResourceService.getAdminAnalytics = async () => ({ totalResources: 50, totalViews: 1000, totalDownloads: 200, publishedCount: 45, byDepartment: {}, byType: {}, topViewed: [] });
+    mockReq = { user: { id: 'u1', email: 'admin@e.com', role: 'super_admin', collegeId: 'c1' } };
+    await getAdminAnalytics(mockReq as AuthenticatedRequest, mockRes as Response, () => {});
+    expect(resStatus).to.equal(200);
+    expect(resJson.success).to.be.true;
+    ResourceService.getAdminAnalytics = original;
   });
 });
