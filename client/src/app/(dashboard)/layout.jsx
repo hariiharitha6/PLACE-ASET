@@ -4,6 +4,7 @@ import { useState } from 'react';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
+import MobileNavigation from '../../components/ui/MobileNavigation';
 
 export default function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -39,7 +40,7 @@ export default function DashboardLayout({ children }) {
           {/* Page body content wrapper */}
           <main style={{
             flex: 1,
-            padding: '32px 24px',
+            padding: '28px 24px 80px 24px',
             maxWidth: '1440px',
             width: '100%',
             margin: '0 auto',
@@ -47,6 +48,9 @@ export default function DashboardLayout({ children }) {
           }}>
             {children}
           </main>
+
+          {/* Mobile Bottom Navigation */}
+          <MobileNavigation />
         </div>
 
         {/* Global style inject for sidebar offset */}

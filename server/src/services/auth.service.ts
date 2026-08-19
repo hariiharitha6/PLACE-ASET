@@ -18,11 +18,16 @@ const isUUID = (str: string | null | undefined): boolean => {
 };
 
 export class AuthService {
+  /**
+   * Complete registration flow: Supabase Auth -> public.users -> notification_preferences -> user_roles -> active session
+   */
   static async register(input: RegisterInput, requestId?: string) {
     const supabaseAdmin = getSupabaseAdmin();
+    const supabase = getSupabase();
 
     logger.info('[REGISTRATION TRACE] AuthService.register execution started', { requestId, inputEmail: input.email });
 
+    // 1. Resolve college ID
     let resolvedCollegeId = input.collegeId;
     if (!isUUID(resolvedCollegeId)) {
       const { data: col } = await supabaseAdmin
@@ -47,6 +52,7 @@ export class AuthService {
       }
     }
 
+    // 2. Resolve department ID
     let resolvedDepartmentId: string | null = input.departmentId || null;
     if (resolvedDepartmentId && !isUUID(resolvedDepartmentId)) {
       let deptQuery = supabaseAdmin
@@ -76,6 +82,7 @@ export class AuthService {
       }
     }
 
+    // 3. Create user in Supabase Auth via admin client
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: input.email,
       password: input.password,
@@ -100,12 +107,13 @@ export class AuthService {
 
     const userId = authData.user.id;
 
+    // 4. Create or Upsert user profile in public.users
     try {
       const userPayload = {
         id: userId,
         email: input.email,
         full_name: input.fullName,
-        college_id: resolvedCollegeId,
+        college_id: isUUID(resolvedCollegeId) ? resolvedCollegeId : null,
         department_id: resolvedDepartmentId,
         role: 'student' as const,
         year: input.year ? String(input.year) : null,
@@ -118,9 +126,10 @@ export class AuthService {
 
       const { error: profileError } = await supabaseAdmin
         .from('users')
-        .insert(userPayload);
+        .upsert(userPayload, { onConflict: 'id' });
 
       if (profileError) {
+        logger.error('Failed to create public.users profile, cleaning up auth user', { userId, error: profileError.message });
         await supabaseAdmin.auth.admin.deleteUser(userId);
         if (profileError.code === '23505' || profileError.message?.includes('users_pkey') || profileError.message?.includes('users_email_key')) {
           throw new Error('User already registered');
@@ -128,9 +137,10 @@ export class AuthService {
         throw new Error(profileError.message);
       }
 
+      // 5. Create default notification preferences
       await supabaseAdmin
         .from('notification_preferences')
-        .insert({
+        .upsert({
           user_id: userId,
           challenge_reminders: true,
           challenge_results: true,
@@ -138,8 +148,9 @@ export class AuthService {
           resource_alerts: true,
           community_updates: true,
           email_notifications: true,
-        });
+        }, { onConflict: 'user_id' });
 
+      // 6. Assign student role in user_roles
       const { data: roleData } = await supabaseAdmin
         .from('roles')
         .select('id')
@@ -149,22 +160,43 @@ export class AuthService {
       if (roleData) {
         await supabaseAdmin
           .from('user_roles')
-          .insert({
+          .upsert({
             user_id: userId,
             role_id: roleData.id,
-          });
+          }, { onConflict: 'user_id,role_id' });
       }
+
+      // 7. Generate active login session for instant login after registration
+      let sessionData = null;
+      try {
+        const { data: loginData } = await supabase.auth.signInWithPassword({
+          email: input.email,
+          password: input.password,
+        });
+        if (loginData?.session) {
+          sessionData = {
+            accessToken: loginData.session.access_token,
+            refreshToken: loginData.session.refresh_token,
+            expiresAt: loginData.session.expires_at,
+          };
+        }
+      } catch (loginErr) {
+        logger.warn('Auto-session generation after registration skipped', loginErr);
+      }
+
+      return {
+        userId,
+        email: authData.user.email,
+        session: sessionData as any,
+      };
     } catch (dbError: any) {
       throw new Error(dbError.message || 'Database user registration failed');
     }
-
-    return {
-      userId,
-      email: authData.user.email,
-      session: null as any,
-    };
   }
 
+  /**
+   * Faculty Registration
+   */
   static async registerFaculty(input: {
     email: string;
     password: string;
@@ -177,7 +209,6 @@ export class AuthService {
   }) {
     const supabaseAdmin = getSupabaseAdmin();
 
-    // Determine mapped role from designation
     let mappedRole = 'faculty';
     if (input.designation) {
       const { data: des } = await supabaseAdmin
@@ -206,25 +237,28 @@ export class AuthService {
 
     const userId = authData.user.id;
 
-    const { error: profileError } = await supabaseAdmin.from('users').insert({
+    const { error: profileError } = await supabaseAdmin.from('users').upsert({
       id: userId,
       email: input.email,
       full_name: input.fullName,
-      role: mappedRole,
+      role: mappedRole as any,
       department_id: input.departmentId || null,
       college_id: input.collegeId || null,
       is_active: true,
-    });
+    }, { onConflict: 'id' });
 
     if (profileError) {
       await supabaseAdmin.auth.admin.deleteUser(userId);
       throw new Error(profileError.message);
     }
 
-    logger.info(`Faculty account registered: ${input.email} [Designation: ${input.designation}, Role: ${mappedRole}]`);
+    logger.info(`Faculty account registered: ${input.email} [Role: ${mappedRole}]`);
     return { userId, email: input.email, role: mappedRole };
   }
 
+  /**
+   * User login with auto-healing for orphaned auth users
+   */
   static async login(email: string, password: string) {
     const supabase = getSupabase();
     const supabaseAdmin = getSupabaseAdmin();
@@ -239,20 +273,43 @@ export class AuthService {
       throw new Error(error?.message || 'Invalid email or password');
     }
 
-    // Fetch exact user role from public.users table or user_metadata
-    let userRole = data.user.app_metadata?.user_role;
+    // Auto-heal missing public.users profile if orphaned
+    let userRole = data.user.app_metadata?.user_role || data.user.user_metadata?.user_role;
     let fullName = data.user.user_metadata?.full_name;
+    let collegeId = data.user.app_metadata?.college_id || data.user.user_metadata?.college_id;
 
-    if (!userRole && supabaseAdmin) {
+    if (supabaseAdmin) {
       const { data: profile } = await supabaseAdmin
         .from('users')
-        .select('role, full_name')
+        .select('*')
         .eq('id', data.user.id)
         .maybeSingle();
 
       if (profile) {
         userRole = profile.role;
         fullName = profile.full_name;
+        collegeId = profile.college_id;
+      } else {
+        // Auto-heal missing profile
+        logger.info('Auto-healing missing public.users profile for authenticated user', { userId: data.user.id });
+        
+        let defaultCollegeId = collegeId;
+        if (!isUUID(defaultCollegeId)) {
+          const { data: col } = await supabaseAdmin.from('colleges').select('id').limit(1).maybeSingle();
+          defaultCollegeId = col?.id || null;
+        }
+
+        await supabaseAdmin.from('users').upsert({
+          id: data.user.id,
+          email: data.user.email!,
+          full_name: fullName || data.user.email!.split('@')[0],
+          college_id: defaultCollegeId,
+          role: (userRole || 'student') as any,
+          is_active: true,
+        }, { onConflict: 'id' });
+
+        userRole = userRole || 'student';
+        fullName = fullName || data.user.email!.split('@')[0];
       }
     }
 
@@ -260,9 +317,9 @@ export class AuthService {
       user: {
         id: data.user.id,
         email: data.user.email || '',
-        fullName: fullName || data.user.user_metadata?.full_name || 'User',
+        fullName: fullName || 'Candidate',
         role: userRole || 'student',
-        collegeId: data.user.app_metadata?.college_id || null,
+        collegeId: collegeId || null,
       },
       session: {
         accessToken: data.session.access_token,

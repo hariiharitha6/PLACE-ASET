@@ -8,6 +8,7 @@ import SearchableCollegeSelect from '../../components/SearchableCollegeSelect';
 import SearchableDepartmentSelect from '../../components/SearchableDepartmentSelect';
 import styles from './register.module.css';
 import Link from 'next/link';
+import { UserCheck, Sparkles, AlertCircle, ArrowRight } from 'lucide-react';
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -62,7 +63,7 @@ export default function RegisterPage() {
         }
 
         const processedCols = fetchedCols.map(c => {
-          if (c.slug === 'aset' || c.name.toLowerCase().includes('ahalia')) {
+          if (c.slug === 'aset' || (c.name && c.name.toLowerCase().includes('ahalia'))) {
             return {
               ...c,
               name: 'ASET',
@@ -148,7 +149,7 @@ export default function RegisterPage() {
     setLocalError(null);
 
     try {
-      await register({
+      const res = await register({
         fullName,
         email,
         password,
@@ -159,10 +160,15 @@ export default function RegisterPage() {
         rollNumber: rollNumber || null,
       });
 
-      router.push('/verify-email');
+      if (res?.session) {
+        router.push('/dashboard');
+      } else {
+        router.push('/login?registered=true');
+      }
     } catch (err) {
       console.error('[FRONTEND REGISTRATION TRACE] Registration error', err);
-      setLocalError(err.error || 'Registration failed. Please check your inputs and try again.');
+      const errMsg = err.error || err.message || 'Registration failed. Please check your inputs and try again.';
+      setLocalError(errMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -175,13 +181,16 @@ export default function RegisterPage() {
 
       <div className={styles.card}>
         <div className={styles.header}>
-          <h1 className={styles.title}>PLACE@ASET</h1>
-          <p className={styles.subtitle}>Create your candidate account to get started</p>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '4px 12px', background: 'rgba(6, 182, 212, 0.1)', border: '1px solid rgba(6, 182, 212, 0.25)', borderRadius: '20px', color: '#06b6d4', fontSize: '12px', fontWeight: '700', marginBottom: '12px' }}>
+            <Sparkles size={14} /> PLACE@ASET Portal
+          </div>
+          <h1 className={styles.title}>Candidate Registration</h1>
+          <p className={styles.subtitle}>Create your profile to access challenges, AI mentoring & placement prep</p>
         </div>
 
         {localError && (
-          <div className={styles.errorAlert} role="alert">
-            <span>⚠️</span>
+          <div className={styles.errorAlert} role="alert" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <AlertCircle size={18} style={{ flexShrink: 0 }} />
             <span>{localError}</span>
           </div>
         )}
@@ -193,7 +202,7 @@ export default function RegisterPage() {
               type="text"
               id="fullName"
               className={styles.input}
-              placeholder="John Doe"
+              placeholder="e.g. Ananya Ramesh"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               disabled={isSubmitting}
@@ -207,7 +216,7 @@ export default function RegisterPage() {
               type="email"
               id="email"
               className={styles.input}
-              placeholder="john.doe@ahalia.edu"
+              placeholder="e.g. ananya.cse@ahalia.edu"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isSubmitting}
@@ -299,7 +308,7 @@ export default function RegisterPage() {
               type="text"
               id="rollNumber"
               className={styles.input}
-              placeholder="A2305221001"
+              placeholder="e.g. ATP22CS001"
               value={rollNumber}
               onChange={(e) => setRollNumber(e.target.value)}
               disabled={isSubmitting}
@@ -312,14 +321,14 @@ export default function RegisterPage() {
             disabled={isSubmitting}
             id="register-submit-btn"
           >
-            {isSubmitting ? 'Creating account...' : 'Create Account'}
+            {isSubmitting ? 'Registering Account...' : 'Complete Registration →'}
           </button>
         </form>
 
         <div className={styles.footer}>
           <span>Already have an account? </span>
           <Link href="/login" className={styles.loginLink} id="register-to-login-link">
-            Sign In
+            Sign In to Workspace
           </Link>
         </div>
       </div>

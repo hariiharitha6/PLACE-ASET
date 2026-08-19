@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import gsap from 'gsap';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../context/AuthContext';
 import { dashboardService } from '../../../lib/dashboardService';
+import FocusCard from '../../../components/ui/FocusCard';
 import PlacementReadinessWidget from '../../../components/widgets/PlacementReadinessWidget';
 import PlacementDrivesWidget from '../../../components/widgets/PlacementDrivesWidget';
 import ChallengeWidget from '../../../components/widgets/ChallengeWidget';
@@ -12,41 +14,39 @@ import LeaderboardWidget from '../../../components/widgets/LeaderboardWidget';
 import RecentQuestionsWidget from '../../../components/widgets/RecentQuestionsWidget';
 import ResourcesWidget from '../../../components/widgets/ResourcesWidget';
 import UpcomingEventsWidget from '../../../components/widgets/UpcomingEventsWidget';
+import { 
+  Sparkles, 
+  ArrowRight, 
+  Code2, 
+  Database, 
+  Layers, 
+  Cpu, 
+  Award, 
+  Trophy, 
+  Flame, 
+  CheckCircle2, 
+  BookOpen,
+  Bot
+} from 'lucide-react';
 import styles from './studentDashboard.module.css';
-import { useRouter } from 'next/navigation';
-
-const QUOTES = [
-  '"Success is not final, failure is not fatal: it is the courage to continue that counts." – Winston Churchill',
-  '"The secret of getting ahead is getting started." – Mark Twain',
-  '"Opportunities don\'t happen, you create them." – Chris Grosser',
-  '"Code is like humor. When you have to explain it, it’’s bad." – Cory House',
-  '"Continuous learning is the minimum requirement for success in any field." – Brian Tracy',
-];
 
 export default function StudentDashboardPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const containerRef = useRef(null);
-
-  const [quoteIndex, setQuoteIndex] = useState(0);
 
   useEffect(() => {
-    setQuoteIndex(Math.floor(Math.random() * QUOTES.length));
-    const loadDashboard = async () => {
+    async function loadDashboard() {
       try {
         const res = await dashboardService.getSummary();
         setData(res);
       } catch (err) {
-        console.error('Failed to load student dashboard metrics:', err);
-        setError('Could not fetch dashboard summary data.');
+        console.error('Failed to load student dashboard summary:', err);
       } finally {
         setIsLoading(false);
       }
-    };
-
+    }
     loadDashboard();
   }, []);
 
@@ -54,20 +54,9 @@ export default function StudentDashboardPage() {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.spinner} />
-        <span>Initializing World-Class Student Arena...</span>
+        <span>Loading Learning Command Center...</span>
       </div>
     );
-  }
-
-  // GSAP Animation Trigger
-  if (!isLoading && containerRef.current) {
-    const ctx = gsap.context(() => {
-      gsap.fromTo('.gsap-animate-up', 
-        { y: 50, opacity: 0 }, 
-        { y: 0, opacity: 1, stagger: 0.1, duration: 0.8, ease: 'power3.out', delay: 0.1 }
-      );
-    }, containerRef);
-    // Cleanup if component unmounts before animation finishes is handled by context but we'll let it run.
   }
 
   const {
@@ -78,243 +67,149 @@ export default function StudentDashboardPage() {
     latestResources = [],
   } = data || {};
 
-  const todayFormatted = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const streakDays = user?.daily_streak || profile?.streak_days || 1;
+  const solvedCount = profile?.solved_count || 0;
+  const rank = profile?.rank || 1;
+  const readinessScore = profile?.readiness_score || 85;
 
   return (
-    <div className={styles.dashboardContainer} ref={containerRef}>
+    <div className={styles.dashboardContainer}>
 
-      {/* 1. WELCOME & MOTIVATIONAL HEADER */}
-      <div className={`${styles.welcomeBanner} gsap-animate-up`}>
-        <div className={styles.welcomeGlow} />
-        <div className={styles.welcomeContent}>
-          <div className={styles.greetingHeader}>
-            <div>
-              <span className={styles.dateBadge}>📅 {todayFormatted}</span>
-              <h1 className={styles.welcomeTitle}>
-                Welcome back, {user?.full_name || 'Candidate'}! 👋
-              </h1>
-              <p className={styles.welcomeSub}>
-                <strong>Dept:</strong> {profile.department_code || 'CSE'} &bull; <strong>Year:</strong> {profile.year || '4th Year'} &bull; <strong>Section:</strong> {profile.section || 'A'} &bull; <strong>Roll No:</strong> {profile.roll_number || 'ATP22CS006'}
-              </p>
-            </div>
-            <div className={styles.readinessPillCard}>
-              <span className={styles.readinessTitle}>Readiness Score</span>
-              <span className={styles.readinessScoreVal}>87 / 100</span>
-              <div className={styles.miniProgressTrack}>
-                <div className={styles.miniProgressFill} style={{ width: '87%' }} />
-              </div>
-            </div>
-          </div>
+      {/* 1. DOMINANT FOCUS COMMAND CARD */}
+      <FocusCard
+        greeting="Good day"
+        userName={user?.full_name || 'Candidate'}
+        streak={streakDays}
+        focusTitle="Continue Active Learning"
+        focusDescription="Pick up right where you left off. Recommended focus today is Technical Core (DSA & DBMS)."
+        ctaText="Resume Practice →"
+        ctaHref="/practice"
+        goalTarget={5}
+        completedCount={Math.min(5, solvedCount > 0 ? (solvedCount % 5) || 3 : 2)}
+      />
 
-          <div className={styles.quoteBox}>
-            <span>💡 <em>{QUOTES[quoteIndex]}</em></span>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. 10 EXECUTIVE KPI DASHBOARD CARDS */}
-      <div className={`${styles.kpiGrid} gsap-animate-up`}>
-        <div className={styles.kpiCard} onClick={() => router.push('/placement-drives')}>
+      {/* 2. EXECUTIVE STUDY TELEMETRY KPIS */}
+      <div className={styles.kpiGrid}>
+        <div className={styles.kpiCard} onClick={() => router.push('/practice')}>
           <div className={styles.kpiHeader}>
-            <span className={styles.kpiIcon}>💼</span>
-            <span className={styles.kpiTagActive}>3 Open</span>
+            <span className={styles.kpiIcon}>⚡</span>
+            <span className={styles.kpiTagSuccess}>Active</span>
           </div>
-          <span className={styles.kpiVal}>3 Drives</span>
-          <span className={styles.kpiLabel}>Upcoming Placement Drives</span>
+          <span className={styles.kpiVal}>{solvedCount} Solved</span>
+          <span className={styles.kpiLabel}>Total Practice Questions</span>
         </div>
 
         <div className={styles.kpiCard} onClick={() => router.push('/challenges')}>
           <div className={styles.kpiHeader}>
-            <span className={styles.kpiIcon}>📝</span>
-            <span className={styles.kpiTagUrgent}>2 Scheduled</span>
-          </div>
-          <span className={styles.kpiVal}>2 Tests</span>
-          <span className={styles.kpiLabel}>Upcoming Mock Tests</span>
-        </div>
-
-        <div className={styles.kpiCard} onClick={() => router.push('/practice')}>
-          <div className={styles.kpiHeader}>
-            <span className={styles.kpiIcon}>⚡</span>
-            <span className={styles.kpiTag}>Pending</span>
-          </div>
-          <span className={styles.kpiVal}>14 Sets</span>
-          <span className={styles.kpiLabel}>Pending Practice Modules</span>
-        </div>
-
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiHeader}>
-            <span className={styles.kpiIcon}>✅</span>
-            <span className={styles.kpiTagSuccess}>+12 this week</span>
-          </div>
-          <span className={styles.kpiVal}>{profile.solved_count || 142}</span>
-          <span className={styles.kpiLabel}>Total Solved Questions</span>
-        </div>
-
-        <div className={styles.kpiCard} onClick={() => router.push('/leaderboard')}>
-          <div className={styles.kpiHeader}>
             <span className={styles.kpiIcon}>🏆</span>
-            <span className={styles.kpiTagGold}>Campus Rank</span>
+            <span className={styles.kpiTagActive}>Weekly</span>
           </div>
-          <span className={styles.kpiVal}>#{profile.rank || 4}</span>
-          <span className={styles.kpiLabel}>Overall Leaderboard Rank</span>
+          <span className={styles.kpiVal}>Rank #{rank}</span>
+          <span className={styles.kpiLabel}>Campus Leaderboard</span>
         </div>
 
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiHeader}>
-            <span className={styles.kpiIcon}>🔥</span>
-            <span className={styles.kpiTagOrange}>Active</span>
-          </div>
-          <span className={styles.kpiVal}>{profile.streak_days || 14} Days</span>
-          <span className={styles.kpiLabel}>Daily Coding Streak</span>
-        </div>
-
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiHeader}>
-            <span className={styles.kpiIcon}>📈</span>
-            <span className={styles.kpiTag}>Level {profile.level || 4}</span>
-          </div>
-          <span className={styles.kpiVal}>78%</span>
-          <span className={styles.kpiLabel}>Overall Placement Progress</span>
-        </div>
-
-        <div className={styles.kpiCard} onClick={() => router.push('/achievements')}>
-          <div className={styles.kpiHeader}>
-            <span className={styles.kpiIcon}>📜</span>
-            <span className={styles.kpiTagSuccess}>Verified</span>
-          </div>
-          <span className={styles.kpiVal}>5 Badges</span>
-          <span className={styles.kpiLabel}>Certificates & Achievements</span>
-        </div>
-
-        <div className={styles.kpiCard}>
+        <div className={styles.kpiCard} onClick={() => router.push('/dashboard/readiness')}>
           <div className={styles.kpiHeader}>
             <span className={styles.kpiIcon}>🎯</span>
-            <span className={styles.kpiTagPurple}>AI Index</span>
+            <span className={styles.kpiTagActive}>{readinessScore}%</span>
           </div>
-          <span className={styles.kpiVal}>87 / 100</span>
+          <span className={styles.kpiVal}>{readinessScore} / 100</span>
           <span className={styles.kpiLabel}>Placement Readiness Score</span>
         </div>
 
-        <div className={styles.kpiCard} onClick={() => router.push('/practice/bookmarks')}>
+        <div className={styles.kpiCard} onClick={() => router.push('/personal')}>
           <div className={styles.kpiHeader}>
-            <span className={styles.kpiIcon}>🔖</span>
-            <span className={styles.kpiTag}>Saved</span>
+            <span className={styles.kpiIcon}>✨</span>
+            <span className={styles.kpiTagAmber}>Studio</span>
           </div>
-          <span className={styles.kpiVal}>18 Items</span>
-          <span className={styles.kpiLabel}>Saved Bookmarks & Notes</span>
+          <span className={styles.kpiVal}>Personal Hub</span>
+          <span className={styles.kpiLabel}>Notes & Private Flashcards</span>
         </div>
       </div>
 
-      {/* 3. PLACEMENT READINESS & PLACEMENT DRIVES ROW */}
-      <div className={`${styles.sectionRowTwo} gsap-animate-up`}>
-        <PlacementReadinessWidget readinessScore={87} />
+      {/* 3. AI WEAK AREA RECOMMENDATION & TOPIC LAUNCHPAD */}
+      <div className={styles.sectionRowTwo}>
+        <div className={styles.aiRecCard}>
+          <div className={styles.aiRecHeader}>
+            <span className={styles.aiRecBadge}>
+              <Bot size={14} /> AI Diagnostic Recommendation
+            </span>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Adaptive Engine</span>
+          </div>
+          <div>
+            <h3 className={styles.aiRecTitle}>Recommended Focus: SQL Joins & Query Tuning</h3>
+            <p className={styles.aiRecText}>
+              Based on your recent assessment history, spending 15 minutes reviewing Relational DBMS indexing and Multi-table Joins will optimize your core technical score.
+            </p>
+          </div>
+          <Link href="/practice" className={styles.aiRecActionBtn}>
+            Start 15-Minute Topic Practice <ArrowRight size={14} />
+          </Link>
+        </div>
+
+        <div className={styles.topicCard}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#fff', margin: 0 }}>Core Learning Tracks</h3>
+            <Link href="/practice" style={{ fontSize: '12px', color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: '600' }}>
+              View All →
+            </Link>
+          </div>
+          <div className={styles.topicGrid}>
+            <Link href="/practice" className={styles.topicItem}>
+              <span className={styles.topicIcon}>💻</span>
+              <div>
+                <h4 className={styles.topicName}>Data Structures</h4>
+                <span className={styles.topicCount}>Trees, Graphs, DP</span>
+              </div>
+            </Link>
+
+            <Link href="/practice" className={styles.topicItem}>
+              <span className={styles.topicIcon}>🗄️</span>
+              <div>
+                <h4 className={styles.topicName}>DBMS & SQL</h4>
+                <span className={styles.topicCount}>Queries, Indexing</span>
+              </div>
+            </Link>
+
+            <Link href="/practice" className={styles.topicItem}>
+              <span className={styles.topicIcon}>⚙️</span>
+              <div>
+                <h4 className={styles.topicName}>Operating Systems</h4>
+                <span className={styles.topicCount}>Threads, Memory</span>
+              </div>
+            </Link>
+
+            <Link href="/practice" className={styles.topicItem}>
+              <span className={styles.topicIcon}>🧠</span>
+              <div>
+                <h4 className={styles.topicName}>General Aptitude</h4>
+                <span className={styles.topicCount}>Quants & Reasoning</span>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. PLACEMENT READINESS & PLACEMENT DRIVES */}
+      <div className={styles.sectionRowTwo}>
+        <PlacementReadinessWidget readinessScore={readinessScore} />
         <PlacementDrivesWidget drives={[]} />
       </div>
 
-      {/* 4. MY PROFILE SUMMARY & QUICK PRACTICE NAVIGATOR */}
-      <div className={`${styles.sectionRowTwo} gsap-animate-up`}>
-        
-        {/* Profile Card */}
-        <div className={styles.profileCard}>
-          <div className={styles.profileHeader}>
-            <div className={styles.avatarBox}>
-              {user?.full_name ? user.full_name.substring(0, 2).toUpperCase() : 'ST'}
-            </div>
-            <div>
-              <h3 className={styles.profileName}>{user?.full_name || 'D Haritha'}</h3>
-              <p className={styles.profileEmail}>{user?.email || 'hariiharitha05@gmail.com'}</p>
-              <div className={styles.badgeRow}>
-                <span className={styles.pillDept}>CSE Dept</span>
-                <span className={styles.pillCgpa}>CGPA: 8.9 / 10</span>
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.profileMetaGrid}>
-            <div><span>College:</span> <strong>ASET Campus</strong></div>
-            <div><span>Roll No:</span> <code>ATP22CS006</code></div>
-            <div><span>Phone:</span> <strong>+91 98470 12345</strong></div>
-            <div><span>Resume:</span> <span className={styles.resumeStatus}>✓ Uploaded (PDF)</span></div>
-          </div>
-
-          <div className={styles.socialRow}>
-            <a href="https://linkedin.com" target="_blank" rel="noreferrer" className={styles.socialLink}>💼 LinkedIn</a>
-            <a href="https://github.com" target="_blank" rel="noreferrer" className={styles.socialLink}>🐙 GitHub</a>
-            <button className={styles.editProfileBtn} onClick={() => router.push('/profile-setup')}>✏️ Edit Profile</button>
-          </div>
-        </div>
-
-        {/* Question Bank Shortcuts */}
-        <div className={styles.qBankCard}>
-          <div className={styles.cardHeader}>
-            <div>
-              <h3 className={styles.cardTitle}>Question Bank & Arena Shortcuts</h3>
-              <p className={styles.cardSub}>Practice company-curated questions by difficulty and topic</p>
-            </div>
-            <button className={styles.viewAllBtn} onClick={() => router.push('/questions')}>Explore All</button>
-          </div>
-
-          <div className={styles.companyShortcuts}>
-            <span className={styles.companyBadge} onClick={() => router.push('/questions')}>Amazon (42)</span>
-            <span className={styles.companyBadge} onClick={() => router.push('/questions')}>TCS Digital (85)</span>
-            <span className={styles.companyBadge} onClick={() => router.push('/questions')}>Infosys (60)</span>
-            <span className={styles.companyBadge} onClick={() => router.push('/questions')}>Wipro (50)</span>
-            <span className={styles.companyBadge} onClick={() => router.push('/questions')}>Google (24)</span>
-          </div>
-
-          <div className={styles.categoryGrid}>
-            <div className={styles.catBox} onClick={() => router.push('/practice')}>
-              <span>💻</span>
-              <div>
-                <strong>Coding Arena</strong>
-                <p>Data Structures, Algo</p>
-              </div>
-            </div>
-            <div className={styles.catBox} onClick={() => router.push('/practice')}>
-              <span>🧠</span>
-              <div>
-                <strong>Aptitude Test</strong>
-                <p>Quants, Reasoning</p>
-              </div>
-            </div>
-            <div className={styles.catBox} onClick={() => router.push('/practice')}>
-              <span>⚙️</span>
-              <div>
-                <strong>Technical Core</strong>
-                <p>OS, DBMS, Networks</p>
-              </div>
-            </div>
-            <div className={styles.catBox} onClick={() => router.push('/practice')}>
-              <span>🗣️</span>
-              <div>
-                <strong>HR & Behavioral</strong>
-                <p>Interview Prep & Tips</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
       {/* 5. WEEKLY CHALLENGE & PROGRESS LEVEL */}
-      <div className={`${styles.sectionRowTwo} gsap-animate-up`}>
+      <div className={styles.sectionRowTwo}>
         <ChallengeWidget challenge={weeklyChallenge} />
-        <ProgressWidget progress={profile} level={profile.level} />
+        <ProgressWidget progress={profile} level={profile.level || 1} />
       </div>
 
       {/* 6. LEADERBOARD PREVIEW & RECENT QUESTIONS */}
-      <div className={`${styles.sectionRowTwo} gsap-animate-up`}>
+      <div className={styles.sectionRowTwo}>
         <LeaderboardWidget leaderboard={leaderboardPreview} />
         <RecentQuestionsWidget />
       </div>
 
-      {/* 7. STUDY MATERIALS, CONTRIBUTIONS & EVENTS */}
-      <div className={`${styles.sectionRowThree} gsap-animate-up`}>
+      {/* 7. STUDY MATERIALS & UPCOMING EVENTS */}
+      <div className={styles.sectionRowThree}>
         <ResourcesWidget resources={latestResources} />
         <UpcomingEventsWidget events={upcomingEvents} />
       </div>

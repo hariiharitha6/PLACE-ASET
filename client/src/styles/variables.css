@@ -1,51 +1,70 @@
 :root {
-  /* Colors - Premium dark theme */
-  --bg-primary: #0a0a0f;
-  --bg-secondary: #12121a;
-  --bg-tertiary: #1a1a2e;
-  --bg-card: rgba(26, 26, 46, 0.7);
-  --bg-glass: rgba(255, 255, 255, 0.05);
-  --bg-glass-hover: rgba(255, 255, 255, 0.08);
+  /* PLACE@ASET Educational & Productivity Design System */
   
-  --text-primary: #f0f0f5;
-  --text-secondary: #a0a0b8;
-  --text-muted: #6b6b80;
-  --text-accent: #818cf8;
-  
-  --accent-primary: #818cf8;
-  --accent-secondary: #a78bfa;
-  --accent-success: #34d399;
-  --accent-warning: #fbbf24;
-  --accent-danger: #f87171;
-  --accent-info: #38bdf8;
-  
-  --gradient-primary: linear-gradient(135deg, #818cf8 0%, #a78bfa 50%, #c084fc 100%);
-  --gradient-success: linear-gradient(135deg, #34d399 0%, #2dd4bf 100%);
-  --gradient-danger: linear-gradient(135deg, #f87171 0%, #fb923c 100%);
-  --gradient-card: linear-gradient(135deg, rgba(129, 140, 248, 0.1) 0%, rgba(167, 139, 250, 0.05) 100%);
-  
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-color-hover: rgba(255, 255, 255, 0.15);
-  --border-accent: rgba(129, 140, 248, 0.3);
-  
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 20px rgba(129, 140, 248, 0.15);
-  
+  /* Background Foundations - Deep charcoal & dark neutral */
+  --bg-primary: #070b14;
+  --bg-secondary: #0c1220;
+  --bg-tertiary: #131c2e;
+  --bg-card: rgba(19, 28, 46, 0.75);
+  --bg-card-hover: rgba(28, 40, 64, 0.85);
+  --bg-glass: rgba(255, 255, 255, 0.04);
+  --bg-glass-hover: rgba(255, 255, 255, 0.07);
+  --bg-focus: rgba(6, 182, 212, 0.08);
+
+  /* Typography Colors */
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-accent: #38bdf8;
+
+  /* Restrained Accent Palette */
+  --accent-primary: #0ea5e9;
+  --accent-secondary: #14b8a6;
+  --accent-teal: #06b6d4;
+  --accent-indigo: #6366f1;
+  --accent-success: #10b981;
+  --accent-warning: #f59e0b;
+  --accent-danger: #ef4444;
+  --accent-info: #0284c7;
+
+  /* Educational Gradients */
+  --gradient-primary: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #14b8a6 100%);
+  --gradient-focus: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+  --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --gradient-amber: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  --gradient-card: linear-gradient(180deg, rgba(19, 28, 46, 0.85) 0%, rgba(12, 18, 32, 0.95) 100%);
+
+  /* Borders & Dividers */
+  --border-color: rgba(255, 255, 255, 0.09);
+  --border-color-hover: rgba(56, 189, 248, 0.35);
+  --border-accent: rgba(14, 165, 233, 0.3);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 10px 32px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 24px rgba(14, 165, 233, 0.2);
+
+  /* Border Radii */
+  --radius-xs: 4px;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
-  --radius-xl: 24px;
+  --radius-xl: 20px;
   --radius-full: 9999px;
-  
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  
-  --transition-fast: 150ms ease;
-  --transition-normal: 250ms ease;
-  --transition-slow: 400ms ease;
-  
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Z-Index Hierarchy */
   --z-dropdown: 100;
   --z-sticky: 200;
   --z-modal-backdrop: 300;
@@ -54,38 +73,35 @@
 }
 
 [data-theme="light"] {
-  /* Colors - Premium light theme */
   --bg-primary: #f8fafc;
   --bg-secondary: #ffffff;
   --bg-tertiary: #f1f5f9;
-  --bg-card: rgba(255, 255, 255, 0.8);
-  --bg-glass: rgba(255, 255, 255, 0.4);
-  --bg-glass-hover: rgba(255, 255, 255, 0.6);
-  
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-  --text-accent: #6366f1;
-  
-  --accent-primary: #6366f1;
-  --accent-secondary: #4f46e5;
-  --accent-success: #10b981;
-  --accent-warning: #f59e0b;
-  --accent-danger: #ef4444;
-  --accent-info: #0ea5e9;
-  
-  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #818cf8 50%, #a78bfa 100%);
-  --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  --gradient-danger: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
-  --gradient-card: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(167, 139, 250, 0.03) 100%);
-  
-  --border-color: rgba(15, 23, 42, 0.08);
-  --border-color-hover: rgba(15, 23, 42, 0.14);
-  --border-accent: rgba(99, 102, 241, 0.2);
-  
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
-  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.1);
-}
+  --bg-card: rgba(255, 255, 255, 0.95);
+  --bg-card-hover: #ffffff;
+  --bg-glass: rgba(255, 255, 255, 0.6);
+  --bg-glass-hover: rgba(255, 255, 255, 0.8);
+  --bg-focus: rgba(14, 165, 233, 0.08);
 
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-accent: #0284c7;
+
+  --accent-primary: #0284c7;
+  --accent-secondary: #0d9488;
+  --accent-teal: #0891b2;
+  --accent-indigo: #4f46e5;
+  --accent-success: #059669;
+  --accent-warning: #d97706;
+  --accent-danger: #dc2626;
+
+  --border-color: rgba(15, 23, 42, 0.1);
+  --border-color-hover: rgba(14, 165, 233, 0.4);
+  --border-accent: rgba(14, 165, 233, 0.25);
+  --border-subtle: rgba(15, 23, 42, 0.05);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+  --shadow-glow: 0 0 20px rgba(14, 165, 233, 0.15);
+}

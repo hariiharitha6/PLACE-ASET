@@ -150,6 +150,13 @@ export function AuthProvider({ children }) {
     setError(null);
     try {
       const data = await authService.register(input);
+      if (data?.session && data?.user) {
+        setUser(data.user);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('user', JSON.stringify(data.user));
+        }
+      }
+      setIsLoading(false);
       return data;
     } catch (err) {
       setError(err.error || 'Registration failed');

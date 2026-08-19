@@ -6,6 +6,8 @@ import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 import { useConfirm } from '../../../context/ConfirmContext';
 import { challengeService } from '../../../lib/challengeService';
+import PageHeader from '../../../components/ui/PageHeader';
+import EmptyState from '../../../components/ui/EmptyState';
 import { 
   Trophy, 
   Calendar, 
@@ -15,7 +17,8 @@ import {
   Edit, 
   Trash2, 
   Copy,
-  ChevronRight
+  ChevronRight,
+  Sparkles
 } from 'lucide-react';
 import styles from './challenges.module.css';
 
@@ -64,30 +67,24 @@ export default function ChallengesListPage() {
     e.stopPropagation();
     const isConfirmed = await confirm({
       title: 'Delete Challenge',
-      message: 'Are you sure you want to delete this challenge permanently? This action cannot be undone.',
-      type: 'danger',
+      message: 'Are you sure you want to permanently delete this challenge?',
+      confirmText: 'Delete',
+      type: 'danger'
     });
+
     if (!isConfirmed) return;
+
     try {
       await challengeService.deleteChallenge(id);
-      toast.success('Challenge deleted.');
+      toast.success('Challenge deleted successfully.');
       loadChallenges();
     } catch (err) {
       toast.error('Failed to delete: ' + err.message);
     }
   };
 
-  const getStatusClass = (status) => {
-    switch (status) {
-      case 'active': return styles.statusActive;
-      case 'published': return styles.statusPublished;
-      case 'ended': return styles.statusEnded;
-      case 'draft': return styles.statusDraft;
-      default: return '';
-    }
-  };
-
   const formatDate = (dateStr) => {
+    if (!dateStr) return 'TBD';
     return new Date(dateStr).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -100,11 +97,16 @@ export default function ChallengesListPage() {
     <div className={styles.container}>
       
       {/* Header */}
-      <div className={styles.header}>
-        <div className={styles.titleSection}>
-          <h1>Weekly Preparation Challenges</h1>
-          <p>Compete with students in your college to build coding and aptitude speed.</p>
-        </div>
+      <PageHeader
+        badge="Competitive Arena"
+        badgeIcon={<Trophy size={14} />}
+        title="Weekly Placement Challenges"
+        subtitle="Timed campus assessments, live rankings, and verified certificate achievements."
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Challenges' }
+        ]}
+      >
         {isAdminOrHost && (
           <button 
             className={styles.btnPrimary}
@@ -113,24 +115,24 @@ export default function ChallengesListPage() {
             <Plus size={16} /> Create Challenge
           </button>
         )}
-      </div>
+      </PageHeader>
 
       {/* Grid List */}
       {isLoading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>
-          Loading challenges...
+        <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-secondary)' }}>
+          <Sparkles size={24} style={{ animation: 'spin 1s linear infinite', marginBottom: '10px' }} />
+          <p>Loading active challenge sessions...</p>
         </div>
       ) : challenges.length === 0 ? (
-        <div style={{
-          padding: '40px',
-          borderRadius: 'var(--radius-lg)',
-          background: 'var(--bg-glass)',
-          border: '1px solid var(--border-color)',
-          textAlign: 'center',
-          color: 'var(--text-secondary)'
-        }}>
-          No weekly challenges scheduled yet. Check back soon!
-        </div>
+        <EmptyState
+          icon={<Trophy size={28} />}
+          title="No Scheduled Challenges"
+          description="There are currently no active placement challenges scheduled for your department. Practice in the Arena while new contests are curated."
+          actionText="Explore Practice Arena"
+          actionHref="/practice"
+          secondaryText={isAdminOrHost ? "+ Create First Challenge" : undefined}
+          secondaryHref={isAdminOrHost ? "/challenges/new" : undefined}
+        />
       ) : (
         <div className={styles.grid}>
           {challenges.map((c) => (
@@ -140,11 +142,12 @@ export default function ChallengesListPage() {
               onClick={() => handleCardClick(c.id)}
             >
               <div className={styles.cardHeader}>
-                <span className={`${styles.statusBadge} ${getStatusClass(c.status)}`}>
-                  {c.status}
+                <span className={`${styles.statusBadge} ${styles[c.status]}`}>
+                  {c.status.toUpperCase()}
                 </span>
+                
                 {isAdminOrHost && (
-                  <div style={{ display: 'flex', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
+                  <div className={styles.adminActions}>
                     <button className={styles.btnAction} onClick={(e) => handleClone(e, c.id)} title="Clone">
                       <Copy size={12} />
                     </button>
