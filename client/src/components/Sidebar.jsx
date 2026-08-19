@@ -15,7 +15,10 @@ import {
   Brain,
   Target,
   FileText,
-  Mic
+  Mic,
+  Bot,
+  Calendar,
+  UserCheck
 } from 'lucide-react';
 import { APP_NAME } from '../lib/constants';
 
@@ -28,14 +31,17 @@ export default function Sidebar({ isOpen, onClose }) {
     { label: 'Question Bank', href: '/questions', icon: BookOpen },
     { label: 'Practice Arena', href: '/practice', icon: BookOpen },
     { label: 'Challenges', href: '/challenges', icon: Trophy },
+    { label: 'AI Personal Mentor', href: '/mentor', icon: Bot },
+    { label: 'Personal Studio', href: '/personal', icon: UserCheck },
     { label: 'Resource Library', href: '/resources', icon: Library },
     { label: 'Community', href: '/community', icon: Users },
+    { label: 'Calendar & Deadlines', href: '/calendar', icon: Calendar },
     { label: '🎯 Placement Readiness', href: '/dashboard/readiness', icon: Target },
     { label: 'AI Analytics', href: '/ai', icon: Brain },
-    { label: 'Achievements', href: '/achievements', icon: Award },
-    { label: 'Badges', href: '/badges', icon: Award },
-    { label: 'Interview Prep', href: '/interview-prep', icon: Mic },
-    { label: 'Resume Builder', href: '/resume', icon: FileText },
+    { label: 'Digital Credentials', href: '/certificates', icon: Award },
+    { label: 'Achievements & Badges', href: '/achievements', icon: Award },
+    { label: 'Interview Simulator', href: '/interview-prep', icon: Mic },
+    { label: 'AI Resume Builder', href: '/resume', icon: FileText },
   ];
 
   return (
@@ -91,7 +97,8 @@ export default function Sidebar({ isOpen, onClose }) {
             WebkitTextFillColor: 'transparent',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px'
+            gap: '8px',
+            textDecoration: 'none'
           }}>
             🎓 {APP_NAME}
           </Link>
@@ -116,10 +123,10 @@ export default function Sidebar({ isOpen, onClose }) {
         {/* Navigation Items */}
         <nav style={{
           flex: 1,
-          padding: '24px 16px',
+          padding: '16px 12px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '8px',
+          gap: '4px',
           overflowY: 'auto'
         }}>
           {navItems.map((item) => {
@@ -137,13 +144,14 @@ export default function Sidebar({ isOpen, onClose }) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
-                  padding: '12px 16px',
+                  padding: '10px 14px',
                   borderRadius: 'var(--radius-md)',
                   color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
                   backgroundColor: isActive ? 'var(--bg-glass-hover)' : 'transparent',
                   border: isActive ? '1px solid var(--border-accent)' : '1px solid transparent',
                   fontWeight: isActive ? '600' : '500',
-                  fontSize: '14px',
+                  fontSize: '13px',
+                  textDecoration: 'none',
                   transition: 'all var(--transition-fast)'
                 }}
                 onMouseOver={(e) => {
@@ -159,8 +167,8 @@ export default function Sidebar({ isOpen, onClose }) {
                   }
                 }}
               >
-                <Icon size={18} style={{ color: isActive ? 'var(--accent-primary)' : 'inherit' }} />
-                <span>{item.label}</span>
+                <Icon size={16} style={{ color: isActive ? 'var(--accent-primary)' : 'inherit', flexShrink: 0 }} />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
               </Link>
             );
           })}
@@ -168,17 +176,17 @@ export default function Sidebar({ isOpen, onClose }) {
 
         {/* Footer Candidate Info */}
         <div style={{
-          padding: '20px 16px',
+          padding: '16px',
           borderTop: '1px solid var(--border-color)',
           backgroundColor: 'rgba(0, 0, 0, 0.05)',
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px'
+          gap: '12px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
-              width: '40px',
-              height: '40px',
+              width: '36px',
+              height: '36px',
               borderRadius: 'var(--radius-full)',
               background: 'var(--gradient-primary)',
               display: 'flex',
@@ -186,18 +194,19 @@ export default function Sidebar({ isOpen, onClose }) {
               alignItems: 'center',
               fontWeight: '700',
               color: '#fff',
-              fontSize: '14px'
+              fontSize: '13px'
             }}>
               {user?.full_name?.charAt(0).toUpperCase() || 'U'}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{
-                fontSize: '14px',
+                fontSize: '13px',
                 fontWeight: '600',
                 color: 'var(--text-primary)',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
+                margin: 0,
                 lineHeight: '1.2'
               }}>
                 {user?.full_name || 'Candidate'}
@@ -208,6 +217,7 @@ export default function Sidebar({ isOpen, onClose }) {
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
+                margin: 0,
                 textTransform: 'capitalize'
               }}>
                 {user?.role || 'Student'}
@@ -220,22 +230,22 @@ export default function Sidebar({ isOpen, onClose }) {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
-              padding: '10px 16px',
+              gap: '10px',
+              padding: '8px 12px',
               width: '100%',
               borderRadius: 'var(--radius-md)',
               border: '1px solid transparent',
               backgroundColor: 'rgba(248, 113, 113, 0.05)',
               color: 'var(--accent-danger)',
               cursor: 'pointer',
-              fontSize: '14px',
+              fontSize: '13px',
               fontWeight: '600',
               transition: 'all var(--transition-fast)'
             }}
             onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(248, 113, 113, 0.1)'}
             onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(248, 113, 113, 0.05)'}
           >
-            <LogOut size={16} />
+            <LogOut size={15} />
             <span>Sign Out</span>
           </button>
         </div>

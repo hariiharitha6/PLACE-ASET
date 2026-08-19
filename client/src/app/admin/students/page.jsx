@@ -23,17 +23,10 @@ export default function StudentManagementPage() {
           status: statusFilter !== 'ALL' ? statusFilter : undefined,
         },
       });
-      setStudents(res.data || []);
+      setStudents(res.data?.data || res.data || []);
     } catch (err) {
       console.error('Failed to fetch students', err);
-      // Fallback mock students if API empty
-      setStudents([
-        { id: '1', full_name: 'Ananya Ramesh', email: 'ananya.cse@ahalia.edu', departments: { code: 'CSE' }, year: '4', section: 'A', roll_number: 'ATP22CS001', colleges: { name: 'ASET' }, is_active: true },
-        { id: '2', full_name: 'Rahul Varma', email: 'rahul.ece@ahalia.edu', departments: { code: 'ECE' }, year: '4', section: 'B', roll_number: 'ATP22EC014', colleges: { name: 'ASET' }, is_active: true },
-        { id: '3', full_name: 'Kavya Nair', email: 'kavya.eee@ahalia.edu', departments: { code: 'EEE' }, year: '3', section: 'A', roll_number: 'ATP23EE008', colleges: { name: 'ASET' }, is_active: false },
-        { id: '4', full_name: 'Siddharth Menon', email: 'sid.mech@ahalia.edu', departments: { code: 'ME' }, year: '4', section: 'A', roll_number: 'ATP22ME019', colleges: { name: 'ASET' }, is_active: true },
-        { id: '5', full_name: 'Sneha Joseph', email: 'sneha.aids@ahalia.edu', departments: { code: 'AI&DS' }, year: '2', section: 'A', roll_number: 'ATP24AD003', colleges: { name: 'ASET' }, is_active: true },
-      ]);
+      setStudents([]);
     } finally {
       setLoading(false);
     }
@@ -71,8 +64,9 @@ export default function StudentManagementPage() {
   };
 
   const exportCSV = () => {
+    if (students.length === 0) return;
     const headers = ['ID,Name,Email,Department,Year,Section,RollNumber,Status\n'];
-    const rows = students.map(s => `${s.id},"${s.full_name}",${s.email},${s.departments?.code || 'CSE'},${s.year || 4},${s.section || 'A'},${s.roll_number || 'N/A'},${s.is_active ? 'Active' : 'Suspended'}`).join('\n');
+    const rows = students.map(s => `${s.id},"${s.full_name || ''}",${s.email || ''},${s.departments?.code || 'CSE'},${s.year || 4},${s.section || 'A'},${s.roll_number || 'N/A'},${s.is_active ? 'Active' : 'Suspended'}`).join('\n');
     const blob = new Blob([headers + rows], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -95,9 +89,7 @@ export default function StudentManagementPage() {
           <p className={styles.subtitle}>Audit, suspend, activate, and manage enrolled candidates across departments</p>
         </div>
         <div className={styles.actions}>
-          <button className={styles.secondaryBtn} onClick={exportCSV}>📥 Export CSV</button>
-          <button className={styles.secondaryBtn}>📊 Import Excel</button>
-          <button className={styles.primaryBtn}>+ Add New Student</button>
+          <button className={styles.secondaryBtn} onClick={exportCSV} disabled={students.length === 0}>📥 Export CSV</button>
         </div>
       </div>
 
@@ -145,7 +137,6 @@ export default function StudentManagementPage() {
           <div className={styles.bulkActions}>
             <button className={styles.bulkBtnDanger}>Bulk Suspend</button>
             <button className={styles.bulkBtnSuccess}>Bulk Activate</button>
-            <button className={styles.bulkBtnPrimary}>Bulk Email</button>
           </div>
         </div>
       )}
@@ -177,11 +168,11 @@ export default function StudentManagementPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="10" className={styles.textCenter}>Loading student records...</td>
+                  <td colSpan="10" className={styles.textCenter}>Loading student records from Supabase...</td>
                 </tr>
               ) : filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan="10" className={styles.textCenter}>No matching student records found.</td>
+                  <td colSpan="10" className={styles.textCenter}>No registered student records found.</td>
                 </tr>
               ) : (
                 filteredStudents.map((st) => (
@@ -200,7 +191,7 @@ export default function StudentManagementPage() {
                     <td><span className={styles.deptBadge}>{st.departments?.code || 'CSE'}</span></td>
                     <td>Year {st.year || 4}</td>
                     <td>Sec {st.section || 'A'}</td>
-                    <td><code>{st.roll_number || 'ATP22CS001'}</code></td>
+                    <td><code>{st.roll_number || 'N/A'}</code></td>
                     <td>{st.colleges?.name || 'ASET'}</td>
                     <td>
                       <span className={st.is_active ? styles.statusActive : styles.statusSuspended}>
@@ -215,7 +206,6 @@ export default function StudentManagementPage() {
                         >
                           {st.is_active ? 'Suspend' : 'Activate'}
                         </button>
-                        <button className={styles.actionEdit}>Edit</button>
                       </div>
                     </td>
                   </tr>

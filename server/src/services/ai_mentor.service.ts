@@ -69,14 +69,31 @@ export class AIMentorService {
       message: userMessage
     });
 
-    // 2. Build system context for AI Router
-    const promptText = `You are PLACE@ASET's AI Personal Mentor. Provide encouraging, highly technical, and actionable guidance for an engineering student.
-Topic Category: ${category || 'General Computer Science'}
+    // 2. Fetch context from user's personal documents and learning profile
+    let contextSnippet = '';
+    try {
+      const { data: personalDocs } = await supabase
+        .from('personal_documents')
+        .select('title, ai_summary')
+        .eq('user_id', userId)
+        .limit(3);
+
+      if (personalDocs && personalDocs.length > 0) {
+        contextSnippet = `\nUser's Uploaded Personal Materials:\n` + personalDocs.map(d => `- ${d.title}: ${d.ai_summary?.substring(0, 150)}...`).join('\n');
+      }
+    } catch (e) {
+      // Continue without personal doc context if none
+    }
+
+    // 3. Build context-aware prompt for AI Router
+    const promptText = `You are PLACE@ASET's AI Personal Mentor & Career Copilot. Provide encouraging, technically rigorous, and actionable guidance for placement preparation.
+Topic Category: ${category || 'General Placement Engineering'}
+${contextSnippet}
 Student Query: "${userMessage}"`;
 
     const aiResult = await AIRouterService.executeTask('explanation', promptText);
 
-    // 3. Save assistant message
+    // 4. Save assistant message
     const { data: assistantMsg, error } = await supabase
       .from('ai_mentor_messages')
       .insert({
@@ -104,20 +121,36 @@ Student Query: "${userMessage}"`;
   /**
    * Execute One-Click Quick AI Mentor Actions
    */
-  static async executeQuickPrompt(_userId: string, mode: 'daily_plan' | 'weekly_review' | 'career_guide' | 'practice_recs') {
+  static async executeQuickPrompt(userId: string, mode: 'daily_plan' | 'weekly_review' | 'career_guide' | 'practice_recs') {
+    const supabase = getSupabase();
+    let userGoalContext = '';
+    try {
+      const { data: userProfile } = await supabase
+        .from('users')
+        .select('learning_mode, learning_goals, target_companies')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (userProfile?.target_companies?.length) {
+        userGoalContext = ` Targeting: ${userProfile.target_companies.join(', ')}.`;
+      }
+    } catch (e) {
+      // Ignore
+    }
+
     let promptText = '';
     switch (mode) {
       case 'daily_plan':
-        promptText = 'Create a targeted 24-hour daily study plan focusing on Data Structures, Algorithms, and Aptitude practice.';
+        promptText = `Create a targeted daily study plan for Data Structures, Algorithms, and Core Placement Aptitude.${userGoalContext}`;
         break;
       case 'weekly_review':
-        promptText = 'Provide a weekly performance review summarizing key focus areas for interview readiness.';
+        promptText = `Provide a weekly performance checklist and readiness recommendations for placement season.${userGoalContext}`;
         break;
       case 'career_guide':
-        promptText = 'Give me a roadmap for preparing for SDE-1 roles at tier-1 product companies.';
+        promptText = `Give me a structured preparation roadmap for Software Development Engineer (SDE-1) campus recruitment drives.${userGoalContext}`;
         break;
       case 'practice_recs':
-        promptText = 'Recommend 5 high-yield coding practice problems for Array, Dynamic Programming, and SQL.';
+        promptText = `Recommend 5 high-frequency coding and aptitude practice problem archetypes for technical assessments.${userGoalContext}`;
         break;
     }
 

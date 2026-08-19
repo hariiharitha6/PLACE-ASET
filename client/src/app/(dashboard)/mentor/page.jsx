@@ -4,9 +4,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 import { mentorService } from '../../../lib/mentorService';
+import { personalDocumentService } from '../../../lib/personalDocumentService';
 import { 
   Bot, Send, Plus, Sparkles, Calendar, TrendingUp, 
-  Compass, Code, BookOpen, User, Cpu, ShieldCheck 
+  Compass, Code, BookOpen, User, Cpu, ShieldCheck, FileText, Check 
 } from 'lucide-react';
 import styles from './mentor.module.css';
 
@@ -20,6 +21,17 @@ export default function AIMentorPage() {
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [personalDocs, setPersonalDocs] = useState([]);
+  const [selectedDocId, setSelectedDocId] = useState('');
+
+  const loadPersonalDocs = useCallback(async () => {
+    try {
+      const docs = await personalDocumentService.getUserDocuments();
+      setPersonalDocs(docs || []);
+    } catch (e) {
+      // Ignore
+    }
+  }, []);
 
   const loadChats = useCallback(async () => {
     try {
@@ -28,7 +40,6 @@ export default function AIMentorPage() {
       if (list && list.length > 0) {
         setActiveChatId(list[0].id);
       } else {
-        // Create initial session
         const newChat = await mentorService.createChatSession({ title: 'Welcome Session', category: 'general' });
         setChats([newChat]);
         setActiveChatId(newChat.id);
@@ -43,7 +54,8 @@ export default function AIMentorPage() {
 
   useEffect(() => {
     loadChats();
-  }, [loadChats]);
+    loadPersonalDocs();
+  }, [loadChats, loadPersonalDocs]);
 
   const loadMessages = useCallback(async (chatId) => {
     if (!chatId) return;
@@ -81,11 +93,26 @@ export default function AIMentorPage() {
     setSending(true);
 
     // Optimistic user message append
-    setMessages(prev => [...prev, { id: 'temp-user', sender: 'user', message: msgText }]);
+    setMessages(prev => [...prev, { id: `temp-${Date.now()}`, sender: 'user', message: msgText }]);
 
     try {
-      const res = await mentorService.sendMentorMessage(activeChatId, { message: msgText });
-      setMessages(prev => [...prev.filter(m => m.id !== 'temp-user'), { id: 'temp-user-real', sender: 'user', message: msgText }, res]);
+      if (selectedDocId) {
+        // Ground answer in selected personal document
+        const docAnswer = await personalDocumentService.askDocumentAI(selectedDocId, msgText);
+        setMessages(prev => [
+          ...prev.filter(m => !m.id.startsWith('temp-')),
+          { id: `u-${Date.now()}`, sender: 'user', message: msgText },
+          { 
+            id: `a-${Date.now()}`, 
+            sender: 'assistant', 
+            message: docAnswer.answer, 
+            metadata: { provider_used: docAnswer.provider || 'gemini', doc_grounded: docAnswer.documentTitle } 
+          }
+        ]);
+      } else {
+        const res = await mentorService.sendMentorMessage(activeChatId, { message: msgText });
+        setMessages(prev => [...prev.filter(m => !m.id.startsWith('temp-')), { id: `u-${Date.now()}`, sender: 'user', message: msgText }, res]);
+      }
     } catch (err) {
       toast.error('AI mentor failed to respond: ' + err.message);
     } finally {
@@ -118,7 +145,7 @@ export default function AIMentorPage() {
           <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Bot size={26} style={{ color: 'var(--accent-primary)' }} /> AI Personal Learning & Career Mentor
           </h1>
-          <p>Conversational AI mentor for daily study plans, weekly reviews, concept explanations, and placement guidance.</p>
+          <p>Conversational AI mentor for daily study plans, concept explanations, placement guidance, and personal document queries.</p>
         </div>
       </div>
 
@@ -128,6 +155,25 @@ export default function AIMentorPage() {
           <button onClick={handleNewChat} style={{ width: '100%', padding: '10px 16px', borderRadius: 'var(--radius-md)', background: 'var(--gradient-primary)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
             <Plus size={16} /> New Session
           </button>
+
+          {/* Personal Document Grounding Context */}
+          {personalDocs.length > 0 && (
+            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '10px' }}>
+              <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <FileText size={12} /> Ground in Material
+              </span>
+              <select
+                value={selectedDocId}
+                onChange={(e) => setSelectedDocId(e.target.value)}
+                style={{ width: '100%', marginTop: '6px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '6px', color: 'var(--text-primary)', padding: '6px 8px', fontSize: '12px', outline: 'none' }}
+              >
+                <option value="">Full Platform Knowledge Base</option>
+                {personalDocs.map(doc => (
+                  <option key={doc.id} value={doc.id}>📄 {doc.title}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Quick AI Actions</span>
@@ -167,18 +213,25 @@ export default function AIMentorPage() {
         <div className={styles.chatWindow}>
           <div className={styles.messagesArea}>
             {messages.length === 0 ? (
-              <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)', maxWidth: '400px' }}>
+              <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)', maxWidth: '440px', padding: '20px' }}>
                 <Bot size={48} style={{ color: 'var(--accent-primary)', marginBottom: '12px' }} />
                 <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>Welcome to your AI Personal Mentor</h3>
-                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>Ask any question about DSA, DBMS, System Design, placement interviews, or use a Quick AI Action on the sidebar.</p>
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                  Ask questions regarding Data Structures, Algorithms, DBMS, Operating Systems, Campus Placement Interviews, or use Quick AI Actions.
+                </p>
               </div>
             ) : (
               messages.map((m, idx) => (
                 <div key={m.id || idx} className={m.sender === 'user' ? styles.userBubble : styles.assistantBubble}>
                   {m.sender === 'assistant' && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--accent-primary)', fontWeight: '700' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--accent-primary)', fontWeight: '700', marginBottom: '4px' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Cpu size={12} /> AI Mentor Response
+                        {m.metadata?.doc_grounded && (
+                          <span style={{ color: '#38bdf8', fontWeight: 'normal' }}>
+                            (Grounded in: {m.metadata.doc_grounded})
+                          </span>
+                        )}
                       </span>
                       {m.metadata?.provider_used && (
                         <span style={{ padding: '2px 6px', borderRadius: '4px', background: 'rgba(99,102,241,0.1)', fontSize: '10px' }}>
@@ -187,7 +240,7 @@ export default function AIMentorPage() {
                       )}
                     </div>
                   )}
-                  {m.message}
+                  <div style={{ whiteSpace: 'pre-wrap' }}>{m.message}</div>
                 </div>
               ))
             )}
@@ -195,7 +248,7 @@ export default function AIMentorPage() {
             {sending && (
               <div className={styles.assistantBubble} style={{ opacity: 0.8 }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-muted)' }}>
-                  <Sparkles size={14} style={{ animation: 'spin 1s linear infinite' }} /> AI Personal Mentor is thinking...
+                  <Sparkles size={14} style={{ animation: 'spin 1s linear infinite' }} /> AI Personal Mentor is reasoning...
                 </span>
               </div>
             )}
@@ -205,7 +258,7 @@ export default function AIMentorPage() {
             <input
               type="text"
               className={styles.inputField}
-              placeholder="Ask your AI Mentor a question or request code help..."
+              placeholder={selectedDocId ? "Ask a question about your selected document..." : "Ask your AI Mentor a placement question or request concept explanation..."}
               value={inputMessage}
               onChange={e => setInputMessage(e.target.value)}
             />

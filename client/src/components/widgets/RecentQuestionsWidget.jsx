@@ -1,15 +1,32 @@
 'use client';
 
-import { HelpCircle, ExternalLink } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { HelpCircle, ExternalLink, Sparkles, BookOpen } from 'lucide-react';
 import Link from 'next/link';
+import { questionService } from '../../lib/questionService';
 
 export default function RecentQuestionsWidget() {
-  // Solved topics mock placeholder data matching placement tests
-  const mockQuestions = [
-    { id: 1, title: 'Reverse a Linked List in place', category: 'Technical (DSA)', difficulty: 'Medium' },
-    { id: 2, title: 'Find correct coding logic matching recursion tree', category: 'Logical Reasoning', difficulty: 'Easy' },
-    { id: 3, title: 'Calculate compound interest ratios', category: 'Quantitative Aptitude', difficulty: 'Hard' },
-  ];
+  const [questions, setQuestions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadRecent() {
+      try {
+        const res = await questionService.searchQuestions({ limit: 4 });
+        if (isMounted) {
+          setQuestions(res?.questions || res?.data || []);
+        }
+      } catch (err) {
+        // Fallback gracefully to empty array
+        if (isMounted) setQuestions([]);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+    loadRecent();
+    return () => { isMounted = false; };
+  }, []);
 
   return (
     <div style={{
@@ -24,44 +41,67 @@ export default function RecentQuestionsWidget() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h3 style={{ fontSize: '16px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <HelpCircle size={18} style={{ color: 'var(--accent-info)' }} />
-          <span>Recent Questions</span>
+          <span>Recent Practice Questions</span>
         </h3>
+        <Link href="/questions" style={{ fontSize: '12px', color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: '600' }}>
+          Explore Bank →
+        </Link>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {mockQuestions.map((q) => (
-          <div 
-            key={q.id}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '12px',
-              borderRadius: 'var(--radius-md)',
-              backgroundColor: 'rgba(255, 255, 255, 0.01)',
-              border: '1px solid var(--border-color)'
-            }}
-          >
-            <div>
-              <p style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '4px' }}>
-                {q.title}
-              </p>
-              <div style={{ display: 'flex', gap: '8px', fontSize: '10px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>{q.category}</span>
-                <span style={{ 
-                  color: q.difficulty === 'Easy' ? 'var(--accent-success)' : q.difficulty === 'Medium' ? 'var(--accent-warning)' : 'var(--accent-danger)' 
-                }}>
-                  {q.difficulty}
-                </span>
+      {loading ? (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', color: 'var(--text-muted)', fontSize: '12px', gap: '8px' }}>
+          <Sparkles size={14} style={{ animation: 'spin 1s linear infinite' }} /> Loading active questions...
+        </div>
+      ) : questions.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '20px 10px', color: 'var(--text-muted)', fontSize: '13px' }}>
+          <BookOpen size={24} style={{ opacity: 0.5, marginBottom: '6px' }} />
+          <p style={{ margin: 0 }}>No recent questions found.</p>
+          <Link href="/practice" style={{ display: 'inline-block', marginTop: '8px', fontSize: '12px', color: 'var(--accent-primary)', fontWeight: '600' }}>
+            Start a practice session
+          </Link>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {questions.map((q) => {
+            const title = q.statement || q.title || 'Practice Question';
+            const category = q.subject || q.category || 'General';
+            const difficulty = (q.difficulty || 'medium').toLowerCase();
+            return (
+              <div 
+                key={q.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px',
+                  borderRadius: 'var(--radius-md)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid var(--border-color)'
+                }}
+              >
+                <div style={{ maxWidth: '85%' }}>
+                  <p style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {title}
+                  </p>
+                  <div style={{ display: 'flex', gap: '8px', fontSize: '11px' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>{category}</span>
+                    <span style={{ 
+                      color: difficulty === 'easy' ? 'var(--accent-success)' : difficulty === 'medium' ? 'var(--accent-warning)' : 'var(--accent-danger)',
+                      textTransform: 'capitalize'
+                    }}>
+                      {difficulty}
+                    </span>
+                  </div>
+                </div>
+
+                <Link href={`/questions/${q.id}`} style={{ color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', padding: '6px' }} title="View Question">
+                  <ExternalLink size={14} />
+                </Link>
               </div>
-            </div>
-
-            <Link href="/practice" style={{ color: 'var(--accent-primary)', display: 'flex', alignItems: 'center' }}>
-              <ExternalLink size={14} />
-            </Link>
-          </div>
-        ))}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

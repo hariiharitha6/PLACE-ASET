@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { dashboardService } from '../lib/dashboardService';
+import { supabase } from '../lib/supabase';
 
 const NotificationContext = createContext({
   notifications: [],
@@ -14,7 +15,7 @@ const NotificationContext = createContext({
 });
 
 export function NotificationProvider({ children }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -33,19 +34,53 @@ export function NotificationProvider({ children }) {
     }
   }, [isAuthenticated]);
 
-  // Load on mount or auth change
+  // Load on mount & setup Supabase Realtime subscription
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchNotifications();
-      
-      // Setup periodic polling for notifications (every 60 seconds)
-      const interval = setInterval(fetchNotifications, 60000);
-      return () => clearInterval(interval);
-    } else {
+    if (!isAuthenticated) {
       setNotifications([]);
       setUnreadCount(0);
+      return;
     }
-  }, [isAuthenticated, fetchNotifications]);
+
+    fetchNotifications();
+
+    // Supabase Realtime subscription for real-time notification push
+    let channel = null;
+    try {
+      if (supabase && supabase.channel) {
+        channel = supabase
+          .channel(`user-notifications-${user?.id || 'guest'}`)
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'notifications',
+              filter: user?.id ? `user_id=eq.${user.id}` : undefined,
+            },
+            (payload) => {
+              if (payload.new) {
+                setNotifications((prev) => [payload.new, ...prev]);
+                setUnreadCount((prev) => prev + 1);
+              }
+            }
+          )
+          .subscribe();
+      }
+    } catch (realtimeErr) {
+      console.warn('Supabase Realtime not initialized:', realtimeErr);
+    }
+
+    // Safety polling fallback (every 90 seconds)
+    const interval = setInterval(fetchNotifications, 90000);
+
+    return () => {
+      clearInterval(interval);
+      if (channel && supabase && supabase.removeChannel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [isAuthenticated, user?.id, fetchNotifications]);
 
   const markAsRead = async (id) => {
     try {

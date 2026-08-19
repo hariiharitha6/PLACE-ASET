@@ -12,7 +12,9 @@ import {
   Sun, 
   Moon, 
   Bell, 
-  ChevronRight
+  ChevronRight,
+  GraduationCap,
+  UserCheck
 } from 'lucide-react';
 
 export default function Navbar({ onMenuClick }) {
@@ -21,13 +23,33 @@ export default function Navbar({ onMenuClick }) {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   
   const [showNotifications, setShowNotifications] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const pathname = usePathname();
   const router = useRouter();
+
+  const isPersonalMode = pathname.startsWith('/personal') || (typeof window !== 'undefined' && localStorage.getItem('placeaset_mode') === 'personal');
+
+  const toggleLearningMode = (mode) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('placeaset_mode', mode);
+    }
+    if (mode === 'personal') {
+      router.push('/personal');
+    } else {
+      router.push('/dashboard');
+    }
+  };
+
+  const handleSearchSubmit = (e) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      router.push(`/questions?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   const generateBreadcrumbs = () => {
     const paths = pathname.split('/').filter(p => p);
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: 'var(--text-secondary)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-secondary)' }}>
         <span 
           style={{ cursor: 'pointer' }} 
           onClick={() => router.push('/dashboard')}
@@ -98,10 +120,61 @@ export default function Navbar({ onMenuClick }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
         
+        {/* Mode Switcher Pill */}
+        <div className="hidden-mobile" style={{
+          display: 'flex',
+          alignItems: 'center',
+          background: 'rgba(255, 255, 255, 0.03)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '20px',
+          padding: '3px 4px',
+          gap: '4px'
+        }}>
+          <button
+            onClick={() => toggleLearningMode('institute')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 10px',
+              borderRadius: '16px',
+              border: 'none',
+              fontSize: '11px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              background: !isPersonalMode ? 'var(--gradient-primary)' : 'transparent',
+              color: !isPersonalMode ? '#fff' : 'var(--text-secondary)',
+              transition: 'all var(--transition-fast)'
+            }}
+          >
+            <GraduationCap size={13} /> Institute
+          </button>
+          <button
+            onClick={() => toggleLearningMode('personal')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 10px',
+              borderRadius: '16px',
+              border: 'none',
+              fontSize: '11px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              background: isPersonalMode ? 'var(--gradient-primary)' : 'transparent',
+              color: isPersonalMode ? '#fff' : 'var(--text-secondary)',
+              transition: 'all var(--transition-fast)'
+            }}
+          >
+            <UserCheck size={13} /> Personal
+          </button>
+        </div>
+
+        {/* Search */}
         <div className="hidden-mobile" style={{ position: 'relative' }}>
-          <Search size={16} style={{
+          <Search size={15} style={{
             position: 'absolute',
             left: '12px',
             top: '50%',
@@ -110,29 +183,33 @@ export default function Navbar({ onMenuClick }) {
           }} />
           <input 
             type="text" 
-            placeholder="Search Arena..." 
+            placeholder="Search Questions..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearchSubmit}
             style={{
-              padding: '8px 12px 8px 36px',
+              padding: '7px 12px 7px 34px',
               borderRadius: 'var(--radius-md)',
               border: '1px solid var(--border-color)',
               backgroundColor: 'rgba(255, 255, 255, 0.03)',
               color: 'var(--text-primary)',
-              fontSize: '14px',
-              width: '200px',
+              fontSize: '13px',
+              width: '180px',
               outline: 'none',
               transition: 'all var(--transition-fast)'
             }}
             onFocus={(e) => {
-              e.currentTarget.style.width = '240px';
+              e.currentTarget.style.width = '220px';
               e.currentTarget.style.borderColor = 'var(--accent-primary)';
             }}
             onBlur={(e) => {
-              e.currentTarget.style.width = '200px';
+              e.currentTarget.style.width = '180px';
               e.currentTarget.style.borderColor = 'var(--border-color)';
             }}
           />
         </div>
 
+        {/* Theme Toggle */}
         <button 
           onClick={toggleTheme}
           style={{
@@ -140,8 +217,8 @@ export default function Navbar({ onMenuClick }) {
             border: '1px solid var(--border-color)',
             color: 'var(--text-primary)',
             borderRadius: 'var(--radius-md)',
-            width: '38px',
-            height: '38px',
+            width: '36px',
+            height: '36px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -150,10 +227,12 @@ export default function Navbar({ onMenuClick }) {
           }}
           onMouseOver={(e) => e.currentTarget.style.background = 'var(--bg-glass-hover)'}
           onMouseOut={(e) => e.currentTarget.style.background = 'var(--bg-glass)'}
+          title="Toggle Theme"
         >
-          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
         </button>
 
+        {/* Realtime Notification Popover */}
         <div style={{ position: 'relative' }}>
           <button 
             onClick={() => setShowNotifications(!showNotifications)}
@@ -162,8 +241,8 @@ export default function Navbar({ onMenuClick }) {
               border: '1px solid var(--border-color)',
               color: 'var(--text-primary)',
               borderRadius: 'var(--radius-md)',
-              width: '38px',
-              height: '38px',
+              width: '36px',
+              height: '36px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -172,8 +251,9 @@ export default function Navbar({ onMenuClick }) {
             }}
             onMouseOver={(e) => e.currentTarget.style.background = 'var(--bg-glass-hover)'}
             onMouseOut={(e) => e.currentTarget.style.background = 'var(--bg-glass)'}
+            title="Notifications"
           >
-            <Bell size={18} />
+            <Bell size={16} />
             {unreadCount > 0 && (
               <span style={{
                 position: 'absolute',
@@ -195,7 +275,7 @@ export default function Navbar({ onMenuClick }) {
           {showNotifications && (
             <div style={{
               position: 'absolute',
-              top: '48px',
+              top: '46px',
               right: 0,
               width: '320px',
               backgroundColor: 'var(--bg-secondary)',
@@ -213,7 +293,7 @@ export default function Navbar({ onMenuClick }) {
                 borderBottom: '1px solid var(--border-color)',
                 paddingBottom: '8px'
               }}>
-                <span style={{ fontWeight: '600', fontSize: '14px' }}>Notifications</span>
+                <span style={{ fontWeight: '600', fontSize: '13px' }}>Notifications</span>
                 {unreadCount > 0 && (
                   <button 
                     onClick={markAllAsRead}
@@ -221,8 +301,8 @@ export default function Navbar({ onMenuClick }) {
                       background: 'none',
                       border: 'none',
                       color: 'var(--accent-primary)',
-                      fontSize: '12px',
-                      fontWeight: '500',
+                      fontSize: '11px',
+                      fontWeight: '600',
                       cursor: 'pointer'
                     }}
                   >
@@ -238,8 +318,8 @@ export default function Navbar({ onMenuClick }) {
                 gap: '8px'
               }}>
                 {notifications.length === 0 ? (
-                  <p style={{ textAlign: 'center', padding: '16px 0', fontSize: '13px', color: 'var(--text-muted)' }}>
-                    No notifications yet.
+                  <p style={{ textAlign: 'center', padding: '16px 0', fontSize: '12px', color: 'var(--text-muted)' }}>
+                    You&apos;re all caught up!
                   </p>
                 ) : (
                   notifications.map((n) => (
@@ -257,10 +337,10 @@ export default function Navbar({ onMenuClick }) {
                         transition: 'background var(--transition-fast)'
                       }}
                     >
-                      <p style={{ fontWeight: n.is_read ? '500' : '700', color: 'var(--text-primary)', marginBottom: '4px' }}>
+                      <p style={{ fontWeight: n.is_read ? '500' : '700', color: 'var(--text-primary)', marginBottom: '3px' }}>
                         {n.title}
                       </p>
-                      <p style={{ color: 'var(--text-secondary)', fontSize: '11px', lineHeight: '1.4' }}>
+                      <p style={{ color: 'var(--text-secondary)', fontSize: '11px', lineHeight: '1.4', margin: 0 }}>
                         {n.message}
                       </p>
                     </div>

@@ -10,6 +10,13 @@ import {
   getAIDashboard,
   scoreResume,
   submitMockInterview,
+  uploadPersonalDocument,
+  listPersonalDocuments,
+  getPersonalDocument,
+  deletePersonalDocument,
+  askPersonalDocument,
+  listPersonalCollections,
+  createPersonalCollection,
 } from '../../controllers/ai.controller';
 import {
   getAIProvidersStatus,
@@ -37,6 +44,15 @@ router.get('/dashboard', getAIDashboard as any);
 // Resume & Interview AI endpoints
 router.post('/resume/score', scoreResume as any);
 router.post('/interview/submit', submitMockInterview as any);
+
+// Personal Learning Mode Document Endpoints
+router.post('/personal/documents', uploadPersonalDocument as any);
+router.get('/personal/documents', listPersonalDocuments as any);
+router.get('/personal/documents/:id', getPersonalDocument as any);
+router.delete('/personal/documents/:id', deletePersonalDocument as any);
+router.post('/personal/documents/:id/ask', askPersonalDocument as any);
+router.get('/personal/collections', listPersonalCollections as any);
+router.post('/personal/collections', createPersonalCollection as any);
 
 // Multi-Provider Enterprise AI Engine Endpoints
 router.get('/providers', getAIProvidersStatus as any);

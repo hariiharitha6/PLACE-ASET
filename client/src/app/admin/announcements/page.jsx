@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import api from '../../../lib/api';
+import { Bell, Sparkles, Plus, Pin, Trash2 } from 'lucide-react';
 import styles from './announcements.module.css';
 
 export default function AnnouncementsPage() {
@@ -16,14 +17,10 @@ export default function AnnouncementsPage() {
     setLoading(true);
     try {
       const res = await api.get('/admin/announcements');
-      setAnnouncements(res.data || []);
+      setAnnouncements(res.data?.data || res.data || []);
     } catch (err) {
-      console.error(err);
-      setAnnouncements([
-        { id: 'anc-1', title: 'TCS Ninja & Digital Mock Assessment Schedule Released', category: 'Placement Update', content: 'All 4th-year CSE and ECE students are hereby instructed to take part in the mandatory mock assessment scheduled for Saturday.', isPinned: true, priority: 'Urgent', publishedAt: '2026-07-20 10:00 AM', author: 'Placement Cell (TPO)' },
-        { id: 'anc-2', title: 'Resume Verification & Placement Registration Extension', category: 'Important Notice', content: 'The deadline for updating complete academic details on PLACE@ASET profile has been extended till July 25th.', isPinned: true, priority: 'High', publishedAt: '2026-07-18 04:30 PM', author: 'Super Admin' },
-        { id: 'anc-3', title: 'Web Development & System Design Bootcamp Details', category: 'Training Schedule', content: 'Interactive 3-week bootcamp starting from August 1st. Attendance mandatory for pre-final year students.', isPinned: false, priority: 'Normal', publishedAt: '2026-07-15 11:15 AM', author: 'Department of CSE' },
-      ]);
+      console.error('Failed to load announcements from API', err);
+      setAnnouncements([]);
     } finally {
       setLoading(false);
     }
@@ -36,32 +33,36 @@ export default function AnnouncementsPage() {
           <h1 className={styles.title}>Campus Announcements & Urgents</h1>
           <p className={styles.subtitle}>Publish important notices, placement updates, and scheduled broadcasts</p>
         </div>
-        <button className={styles.primaryBtn}>+ Publish Notice</button>
       </div>
 
       <div className={styles.list}>
         {loading ? (
-          <div className={styles.textCenter}>Loading announcements...</div>
+          <div className={styles.textCenter} style={{ padding: '40px', color: 'var(--text-muted)' }}>
+            <Sparkles size={20} style={{ animation: 'spin 1s linear infinite', marginBottom: '8px' }} />
+            <p>Loading campus announcements...</p>
+          </div>
+        ) : announcements.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--bg-glass)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)' }}>
+            <Bell size={36} style={{ color: 'var(--text-muted)', marginBottom: '12px' }} />
+            <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>No announcements published</h3>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>Published placement updates and urgent notices will appear here in real-time.</p>
+          </div>
         ) : (
           announcements.map((anc) => (
             <div key={anc.id} className={`${styles.ancCard} ${anc.isPinned ? styles.pinned : ''}`}>
               <div className={styles.ancHeader}>
                 <div className={styles.titleArea}>
                   {anc.isPinned && <span className={styles.pinTag}>📌 PINNED</span>}
-                  <span className={`${styles.priorityTag} ${styles[anc.priority.toLowerCase()]}`}>{anc.priority}</span>
+                  <span className={`${styles.priorityTag} ${styles[(anc.priority || 'normal').toLowerCase()]}`}>{anc.priority || 'Normal'}</span>
                   <h3 className={styles.ancTitle}>{anc.title}</h3>
                 </div>
-                <span className={styles.categoryBadge}>{anc.category}</span>
+                <span className={styles.categoryBadge}>{anc.category || 'General'}</span>
               </div>
 
-              <p className={styles.ancContent}>{anc.content}</p>
+              <p className={styles.ancContent}>{anc.content || anc.message}</p>
 
               <div className={styles.ancFooter}>
-                <span>Published by {anc.author} &bull; {anc.publishedAt}</span>
-                <div className={styles.cardBtnRow}>
-                  <button className={styles.btnSecondary}>Unpin</button>
-                  <button className={styles.btnDanger}>Delete</button>
-                </div>
+                <span>Published by {anc.author || 'Placement Cell'} &bull; {anc.publishedAt ? new Date(anc.publishedAt).toLocaleDateString() : 'Recent'}</span>
               </div>
             </div>
           ))
