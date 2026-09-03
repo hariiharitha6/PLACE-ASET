@@ -39,48 +39,20 @@ export default function PlacementReadinessDashboard() {
     fetchReadinessData();
   }, []);
 
-  const readinessScore = aiProfile?.readiness_score || 85;
-  const streakDays = user?.daily_streak || profile?.streakDays || 1;
+  const readinessScore = aiProfile?.readiness_score || 0;
+  const streakDays = user?.daily_streak || profile?.streakDays || 0;
+  const hasActivityData = readinessScore > 0 || (aiProfile && Object.keys(aiProfile).length > 0);
 
   const skillProgress = [
-    { name: 'Technical Core (DSA & OOP)', val: aiProfile?.technical_score || 88, color: '#6366f1' },
-    { name: 'DBMS & Relational SQL', val: aiProfile?.dbms_score || 85, color: '#10b981' },
-    { name: 'Operating Systems & Networks', val: aiProfile?.os_score || 82, color: '#f59e0b' },
-    { name: 'Quantitative Aptitude', val: aiProfile?.aptitude_score || 80, color: '#06b6d4' },
-    { name: 'Verbal & Communication', val: aiProfile?.verbal_score || 85, color: '#f43f5e' },
-    { name: 'Mock Interview Performance', val: aiProfile?.interview_score || 84, color: '#8b5cf6' },
+    { name: 'Technical Core (DSA & OOP)', val: aiProfile?.technical_score || 0, color: '#6366f1' },
+    { name: 'DBMS & Relational SQL', val: aiProfile?.dbms_score || 0, color: '#10b981' },
+    { name: 'Operating Systems & Networks', val: aiProfile?.os_score || 0, color: '#f59e0b' },
+    { name: 'Quantitative Aptitude', val: aiProfile?.aptitude_score || 0, color: '#06b6d4' },
+    { name: 'Verbal & Communication', val: aiProfile?.verbal_score || 0, color: '#f43f5e' },
+    { name: 'Mock Interview Performance', val: aiProfile?.interview_score || 0, color: '#8b5cf6' },
   ];
 
-  const companyEligibility = [
-    {
-      company: 'TCS (Tata Consultancy Services)',
-      package: '7.0 - 11.5 LPA',
-      criteria: 'CGPA ≥ 7.0 • All Engineering Branches',
-      status: 'Eligible',
-      reason: 'Academic standards and practice threshold met.',
-    },
-    {
-      company: 'Infosys Specialist Programmer',
-      package: '9.5 LPA',
-      criteria: 'CGPA ≥ 7.5 • CSE, ECE, AI&DS',
-      status: 'Eligible',
-      reason: 'Coding mastery and core algorithm scores met.',
-    },
-    {
-      company: 'Wipro Elite & Turbo',
-      package: '6.5 LPA',
-      criteria: 'CGPA ≥ 6.5 • All Departments',
-      status: 'Eligible',
-      reason: 'Meets academic and aptitude test standards.',
-    },
-    {
-      company: 'Amazon SDE Campus Drive',
-      package: '28.0 LPA',
-      criteria: 'Advanced DSA & System Design',
-      status: 'In Progress',
-      reason: 'Complete 5 more Hard-tier DSA practice problems in Arena.',
-    },
-  ];
+  const companyEligibility = aiProfile?.company_eligibility || [];
 
   return (
     <div className={styles.container}>
@@ -123,16 +95,16 @@ export default function PlacementReadinessDashboard() {
           <div className={styles.gaugeContent}>
             <div className={styles.circularGauge}>
               <div className={styles.gaugeInner}>
-                <span className={styles.scoreNumber}>{readinessScore}</span>
+                <span className={styles.scoreNumber}>{readinessScore > 0 ? readinessScore : '—'}</span>
                 <span className={styles.scoreMax}>/ 100</span>
               </div>
             </div>
 
             <div className={styles.scoreMetaData}>
               <span className={styles.scoreLabel}>Current Assessment Metric</span>
-              <h3 className={styles.statusText}>{readinessScore >= 80 ? 'PLACEMENT READY' : 'INTERMEDIATE PROGRESS'}</h3>
+              <h3 className={styles.statusText}>{readinessScore >= 80 ? 'PLACEMENT READY' : readinessScore >= 40 ? 'BUILDING SKILLS' : readinessScore > 0 ? 'JUST GETTING STARTED' : 'NOT YET ASSESSED'}</h3>
               <p className={styles.statusSub}>
-                Calculated dynamically from recent challenge attempts, practice accuracy, and mock interviews.
+                {readinessScore > 0 ? 'Calculated from your practice accuracy, challenge performance, and study activity.' : 'Start practicing questions and completing challenges to build your readiness score.'}
               </p>
             </div>
           </div>
@@ -211,7 +183,7 @@ export default function PlacementReadinessDashboard() {
         </div>
 
         <div className={styles.companyList}>
-          {companyEligibility.map((c, idx) => (
+          {companyEligibility.length > 0 ? companyEligibility.map((c, idx) => (
             <div key={idx} className={styles.companyRow}>
               <div className={styles.cDetails}>
                 <div className={styles.cTitleRow}>
@@ -223,12 +195,17 @@ export default function PlacementReadinessDashboard() {
               </div>
 
               <div className={styles.cAction}>
-                <span className={`${styles.statusTag} ${styles[c.status.toLowerCase().replace(' ', '')]}`}>
+                <span className={`${styles.statusTag} ${styles[c.status?.toLowerCase().replace(' ', '')]}`}>
                   {c.status}
                 </span>
               </div>
             </div>
-          ))}
+          )) : (
+            <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <p style={{ fontSize: '15px', marginBottom: '8px' }}>No eligibility data available yet</p>
+              <p style={{ fontSize: '13px', opacity: 0.7 }}>Practice more questions and complete challenges to generate your eligibility profile for campus recruitment drives.</p>
+            </div>
+          )}
         </div>
       </div>
 

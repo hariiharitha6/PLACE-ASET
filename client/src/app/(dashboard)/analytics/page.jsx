@@ -126,17 +126,23 @@ export default function AnalyticsPage() {
           </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {(studentData?.skillBreakdown || []).map((sk, idx) => (
-              <div key={idx} className={styles.skillRow}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
-                  <span>{sk.skill}</span>
-                  <span>{sk.level}%</span>
+            {(studentData?.skillBreakdown || []).length > 0 ? (
+              studentData.skillBreakdown.map((sk, idx) => (
+                <div key={idx} className={styles.skillRow}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                    <span>{sk.skill}</span>
+                    <span>{sk.level}%</span>
+                  </div>
+                  <div className={styles.skillTrack}>
+                    <div className={styles.skillFill} style={{ width: `${sk.level}%` }} />
+                  </div>
                 </div>
-                <div className={styles.skillTrack}>
-                  <div className={styles.skillFill} style={{ width: `${sk.level}%` }} />
-                </div>
+              ))
+            ) : (
+              <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px', background: 'var(--bg-primary)', borderRadius: 'var(--radius-md)' }}>
+                No topic proficiency data yet. Complete question practice to measure domain skills.
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -147,24 +153,33 @@ export default function AnalyticsPage() {
               <Award size={18} style={{ color: '#10b981' }} /> Readiness Benchmark
             </h3>
 
-            <div style={{ background: 'var(--bg-primary)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Aptitude Benchmark</span>
-                <span style={{ fontWeight: '700', color: '#10b981' }}>Passed (85%)</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>DSA & Coding Benchmark</span>
-                <span style={{ fontWeight: '700', color: 'var(--accent-primary)' }}>Passed (78%)</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>SQL & DBMS Benchmark</span>
-                <span style={{ fontWeight: '700', color: '#f59e0b' }}>Advanced (90%)</span>
-              </div>
-            </div>
+            {summary.totalSessions > 0 ? (
+              <>
+                <div style={{ background: 'var(--bg-primary)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Overall Accuracy</span>
+                    <span style={{ fontWeight: '700', color: summary.accuracyRate >= 70 ? '#10b981' : '#f59e0b' }}>{summary.accuracyRate}%</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Readiness Assessment</span>
+                    <span style={{ fontWeight: '700', color: summary.readinessScore >= 80 ? 'var(--accent-primary)' : '#94a3b8' }}>{summary.readinessScore}/100</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Questions Solved</span>
+                    <span style={{ fontWeight: '700', color: '#10b981' }}>{summary.totalCorrect} / {summary.totalQuestions}</span>
+                  </div>
+                </div>
 
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-              🎯 <strong>Placement Advice:</strong> Focus next on solving 10 medium-difficulty Graph and Dynamic Programming problems to boost technical readiness.
-            </div>
+                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                  🎯 <strong>Placement Advice:</strong> {summary.accuracyRate >= 75 ? 'Strong progress. Continue active daily practice to maintain consistency.' : 'Focus on weaker topics and take timed practice sets to boost accuracy.'}
+                </div>
+              </>
+            ) : (
+              <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px', background: 'var(--bg-primary)', borderRadius: 'var(--radius-md)' }}>
+                <p style={{ marginBottom: '8px' }}>No practice benchmarks recorded yet.</p>
+                <p style={{ fontSize: '12px', opacity: 0.7 }}>Solve questions in the Practice Arena to unlock placement diagnostic metrics.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

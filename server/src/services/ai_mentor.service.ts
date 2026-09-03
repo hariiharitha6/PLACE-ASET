@@ -69,29 +69,75 @@ export class AIMentorService {
       message: userMessage
     });
 
-    // 2. Fetch context from user's personal documents and learning profile
-    let contextSnippet = '';
+    // 2. Fetch context from real practice activity, weak topics, personal documents, and profile
+    let telemetryContext = '';
+    let userLearningMode: 'personal' | 'institute' = 'institute';
+
     try {
+      // Fetch user profile and goals
+      const { data: userProfile } = await supabase
+        .from('users')
+        .select('learning_mode, learning_goals, target_companies, daily_streak, xp')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (userProfile?.learning_mode === 'personal') {
+        userLearningMode = 'personal';
+      }
+
+      // Fetch real practice sessions & accuracy
+      const { data: recentSessions } = await supabase
+        .from('practice_sessions')
+        .select('difficulty, total_questions, correct_answers, score_pct')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      // Fetch missed questions to identify weak areas
+      const { data: missedAnswers } = await supabase
+        .from('practice_answers')
+        .select('question_id, practice_sessions!inner(user_id)')
+        .eq('practice_sessions.user_id', userId)
+        .eq('is_correct', false)
+        .limit(8);
+
+      // Fetch personal docs
       const { data: personalDocs } = await supabase
         .from('personal_documents')
         .select('title, ai_summary')
         .eq('user_id', userId)
         .limit(3);
 
-      if (personalDocs && personalDocs.length > 0) {
-        contextSnippet = `\nUser's Uploaded Personal Materials:\n` + personalDocs.map(d => `- ${d.title}: ${d.ai_summary?.substring(0, 150)}...`).join('\n');
-      }
+      const sessionCount = recentSessions?.length || 0;
+      const totalAttempted = recentSessions?.reduce((acc, s) => acc + (s.total_questions || 0), 0) || 0;
+      const totalCorrect = recentSessions?.reduce((acc, s) => acc + (s.correct_answers || 0), 0) || 0;
+      const avgAccuracy = totalAttempted > 0 ? Math.round((totalCorrect / totalAttempted) * 100) : null;
+
+      telemetryContext = `
+Student Verified Telemetry:
+- Learning Mode: ${userLearningMode.toUpperCase()}
+- Current Streak: ${userProfile?.daily_streak || 0} days | XP: ${userProfile?.xp || 0}
+- Recent Practice Sessions: ${sessionCount} (${totalAttempted} questions attempted, overall accuracy: ${avgAccuracy !== null ? avgAccuracy + '%' : 'No practice data yet'})
+- Target Companies: ${userProfile?.target_companies?.length ? userProfile.target_companies.join(', ') : 'Not set'}
+- Recorded Missed Question Count: ${missedAnswers?.length || 0}
+${personalDocs && personalDocs.length > 0 ? 'Uploaded Study Materials:\n' + personalDocs.map(d => `  * ${d.title}: ${(d.ai_summary || '').substring(0, 120)}...`).join('\n') : 'No personal documents uploaded yet.'}`;
     } catch (e) {
-      // Continue without personal doc context if none
+      // Continue gracefully if telemetry lookup encounters an issue
     }
 
     // 3. Build context-aware prompt for AI Router
-    const promptText = `You are PLACE@ASET's AI Personal Mentor & Career Copilot. Provide encouraging, technically rigorous, and actionable guidance for placement preparation.
-Topic Category: ${category || 'General Placement Engineering'}
-${contextSnippet}
+    const promptText = `You are PLACE@ASET's AI Personal Mentor & Career Copilot.
+You give actionable, technically precise, and honest guidance grounded strictly in the student's actual learning telemetry below.
+Never invent fake progress statistics or assume tests the student hasn't taken. If telemetry indicates "No practice data yet", advise them to start practicing in the Arena.
+
+Category: ${category || 'General Placement Engineering'}
+${telemetryContext}
+
 Student Query: "${userMessage}"`;
 
-    const aiResult = await AIRouterService.executeTask('explanation', promptText);
+    const aiResult = await AIRouterService.executeTask('study_assistant', promptText, {
+      learningMode: userLearningMode
+    });
 
     // 4. Save assistant message
     const { data: assistantMsg, error } = await supabase
@@ -124,15 +170,21 @@ Student Query: "${userMessage}"`;
   static async executeQuickPrompt(userId: string, mode: 'daily_plan' | 'weekly_review' | 'career_guide' | 'practice_recs') {
     const supabase = getSupabase();
     let userGoalContext = '';
+    let userLearningMode: 'personal' | 'institute' = 'institute';
+
     try {
       const { data: userProfile } = await supabase
         .from('users')
-        .select('learning_mode, learning_goals, target_companies')
+        .select('learning_mode, learning_goals, target_companies, daily_streak')
         .eq('id', userId)
         .maybeSingle();
 
+      if (userProfile?.learning_mode === 'personal') {
+        userLearningMode = 'personal';
+      }
+
       if (userProfile?.target_companies?.length) {
-        userGoalContext = ` Targeting: ${userProfile.target_companies.join(', ')}.`;
+        userGoalContext = ` Targeting companies: ${userProfile.target_companies.join(', ')}.`;
       }
     } catch (e) {
       // Ignore
@@ -141,7 +193,7 @@ Student Query: "${userMessage}"`;
     let promptText = '';
     switch (mode) {
       case 'daily_plan':
-        promptText = `Create a targeted daily study plan for Data Structures, Algorithms, and Core Placement Aptitude.${userGoalContext}`;
+        promptText = `Create a realistic, targeted daily study plan for Data Structures, Algorithms, and Core Placement Aptitude.${userGoalContext}`;
         break;
       case 'weekly_review':
         promptText = `Provide a weekly performance checklist and readiness recommendations for placement season.${userGoalContext}`;
@@ -154,7 +206,9 @@ Student Query: "${userMessage}"`;
         break;
     }
 
-    const aiResult = await AIRouterService.executeTask('explanation', promptText);
+    const aiResult = await AIRouterService.executeTask('study_assistant', promptText, {
+      learningMode: userLearningMode
+    });
     return {
       mode,
       response: aiResult.text,

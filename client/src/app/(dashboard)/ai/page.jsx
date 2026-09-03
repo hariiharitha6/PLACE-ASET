@@ -160,18 +160,18 @@ export default function AIDashboardPage() {
   const studyPath = data?.studyPath || [];
   const ocrJobsCount = data?.ocrJobsCount || 0;
 
-  // Prepare chart data based on mastery or mock defaults if none exists yet
+  // Prepare chart data based on verified user topic accuracy
   const chartData = [
-    { subject: 'Quantitative Aptitude', A: profile.topic_accuracy?.['Quantitative Aptitude'] * 100 || 60, fullMark: 100 },
-    { subject: 'Logical Reasoning', A: profile.topic_accuracy?.['Logical Reasoning'] * 100 || 75, fullMark: 100 },
-    { subject: 'Verbal Aptitude', A: profile.topic_accuracy?.['Verbal Aptitude'] * 100 || 80, fullMark: 100 },
-    { subject: 'Technical Aptitude', A: profile.topic_accuracy?.['Technical Aptitude'] * 100 || 55, fullMark: 100 },
-    { subject: 'OOP Concepts', A: profile.topic_accuracy?.['OOP Concepts'] * 100 || 70, fullMark: 100 },
-    { subject: 'DSA', A: profile.topic_accuracy?.['Data Structures & Algorithms'] * 100 || 45, fullMark: 100 },
+    { subject: 'Quantitative Aptitude', A: Math.round((profile.topic_accuracy?.['Quantitative Aptitude'] || 0) * 100), fullMark: 100 },
+    { subject: 'Logical Reasoning', A: Math.round((profile.topic_accuracy?.['Logical Reasoning'] || 0) * 100), fullMark: 100 },
+    { subject: 'Verbal Aptitude', A: Math.round((profile.topic_accuracy?.['Verbal Aptitude'] || 0) * 100), fullMark: 100 },
+    { subject: 'Technical Aptitude', A: Math.round((profile.topic_accuracy?.['Technical Aptitude'] || 0) * 100), fullMark: 100 },
+    { subject: 'OOP Concepts', A: Math.round((profile.topic_accuracy?.['OOP Concepts'] || 0) * 100), fullMark: 100 },
+    { subject: 'DSA', A: Math.round((profile.topic_accuracy?.['Data Structures & Algorithms'] || 0) * 100), fullMark: 100 },
   ];
 
-  const weakTopicsList = profile.weak_topics || ['Data Structures & Algorithms', 'Technical Aptitude'];
-  const strongTopicsList = profile.strong_topics || ['Verbal Aptitude', 'Logical Reasoning'];
+  const weakTopicsList = Array.isArray(profile.weak_topics) ? profile.weak_topics : [];
+  const strongTopicsList = Array.isArray(profile.strong_topics) ? profile.strong_topics : [];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
@@ -244,7 +244,7 @@ export default function AIDashboardPage() {
               fontSize: '20px',
               fontWeight: '800'
             }}>
-              {profile.mastery_score || 10}%
+              {profile.mastery_score || 0}%
             </div>
           </div>
           <div>
@@ -274,7 +274,7 @@ export default function AIDashboardPage() {
           </div>
           <div>
             <h3 style={{ fontSize: '15px', color: 'var(--text-secondary)', fontWeight: '600' }}>Learning Velocity</h3>
-            <p style={{ fontSize: '24px', fontWeight: '800', marginTop: '4px' }}>{profile.learning_velocity || 1.0} Qs/day</p>
+            <p style={{ fontSize: '24px', fontWeight: '800', marginTop: '4px' }}>{profile.learning_velocity || 0} Qs/day</p>
             <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Average progress speed last 7 days</span>
           </div>
         </div>
@@ -353,14 +353,20 @@ export default function AIDashboardPage() {
                 Topics below 60% accuracy. We recommend targeting these immediately.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {weakTopicsList.map((topic, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', backgroundColor: 'rgba(239, 68, 68, 0.05)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                    <span style={{ fontWeight: '600', fontSize: '14px' }}>{topic}</span>
-                    <span style={{ fontSize: '12px', color: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: '2px 8px', borderRadius: '12px', fontWeight: '700' }}>
-                      Needs Practice
-                    </span>
+                {weakTopicsList.length > 0 ? (
+                  weakTopicsList.map((topic, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', backgroundColor: 'rgba(239, 68, 68, 0.05)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                      <span style={{ fontWeight: '600', fontSize: '14px' }}>{topic}</span>
+                      <span style={{ fontSize: '12px', color: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: '2px 8px', borderRadius: '12px', fontWeight: '700' }}>
+                        Needs Practice
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px', background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-md)' }}>
+                    No weak topics flagged yet. Start solving questions to analyze your accuracy by topic.
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -373,14 +379,20 @@ export default function AIDashboardPage() {
                 Highly optimized categories with 80%+ accuracy rates. Excellent job!
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {strongTopicsList.map((topic, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', backgroundColor: 'rgba(16, 185, 129, 0.05)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-                    <span style={{ fontWeight: '600', fontSize: '14px' }}>{topic}</span>
-                    <span style={{ fontSize: '12px', color: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '2px 8px', borderRadius: '12px', fontWeight: '700' }}>
-                      Proficient
-                    </span>
+                {strongTopicsList.length > 0 ? (
+                  strongTopicsList.map((topic, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', backgroundColor: 'rgba(16, 185, 129, 0.05)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                      <span style={{ fontWeight: '600', fontSize: '14px' }}>{topic}</span>
+                      <span style={{ fontSize: '12px', color: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '2px 8px', borderRadius: '12px', fontWeight: '700' }}>
+                        Proficient
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px', background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-md)' }}>
+                    Complete practice assessments to discover your strongest competencies.
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>

@@ -40,6 +40,7 @@ export class AIProcessingPipelineService {
     let department = rawItem.departmentHint || 'CSE';
     let questionType = 'mcq_single';
 
+    let aiConfidencePct = 70;
     try {
       const parsed = JSON.parse(categorizationResult.text);
       if (parsed.subject) subject = parsed.subject;
@@ -48,8 +49,9 @@ export class AIProcessingPipelineService {
       if (parsed.difficulty) difficulty = parsed.difficulty;
       if (parsed.company) company = parsed.company;
       if (parsed.department) department = parsed.department;
+      aiConfidencePct = 92;
     } catch (e) {
-      // Use heuristic fallbacks if JSON parse fails
+      aiConfidencePct = categorizationResult.providerId !== 'unavailable' ? 75 : 50;
     }
 
     // Step 11 - 12: Semantic Duplicate Detection & Embeddings
@@ -92,7 +94,13 @@ export class AIProcessingPipelineService {
     if (!explanation || explanation.length < 10) qualityScore -= 10;
     qualityScore = Math.max(10, Math.min(100, qualityScore));
 
-    // Step 17 - 19: Insert into Approval Queue
+    // Step 17 - 19: Insert into Approval Queue (never automatically reject/delete duplicates)
+    const isSuspectedDuplicate = duplicateScorePct > 75;
+    const queueStatus = isSuspectedDuplicate ? 'review_required' : 'pending';
+    const adminComments = isSuspectedDuplicate
+      ? `Flagged as suspected duplicate: ${duplicateScorePct}% match with question #${duplicateQuestionId || ''}. Admin review required.`
+      : 'AI Processed & Queued for Approval.';
+
     const supabase = getSupabase();
     const { data: queuedItem, error } = await supabase
       .from('approval_queue')
@@ -114,9 +122,9 @@ export class AIProcessingPipelineService {
         quality_score: qualityScore,
         duplicate_score_pct: duplicateScorePct,
         duplicate_question_id: duplicateQuestionId,
-        ai_confidence_pct: 94,
-        status: duplicateScorePct > 90 ? 'rejected' : 'pending',
-        admin_comments: duplicateScorePct > 90 ? 'Auto-rejected due to high duplicate similarity.' : 'AI Processed & Queued for Approval.',
+        ai_confidence_pct: aiConfidencePct,
+        status: queueStatus,
+        admin_comments: adminComments,
       })
       .select()
       .single();

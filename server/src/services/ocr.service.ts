@@ -12,20 +12,14 @@ export class OCRService {
    * Performs OCR extraction on an image and parses it into questions.
    */
   static async processImage(imageUrl: string): Promise<ParsedQuestionOCR[]> {
-    logger.info('Starting OCR processing', { imageUrl });
+    const isOcrEnabled = process.env.ENABLE_OCR === 'true' && Boolean(process.env.OCR_API_KEY);
+    if (!isOcrEnabled) {
+      logger.warn('OCR processing requested but ENABLE_OCR is false or OCR_API_KEY is not configured', { imageUrl });
+      throw new Error('OCR extraction is not configured. Please enter questions manually or enable OCR service in server environment.');
+    }
 
-    // Mock OCR result string for demonstration/fallback
-    const ocrText = `
-      Q1. What is the complexity of binary search?
-      A. O(N)
-      B. O(log N)
-      C. O(N log N)
-      D. O(1)
-      Correct Answer: B
-      Explanation: Binary search divides the search space in half at each step.
-    `;
-
-    return this.parseText(ocrText);
+    // When configured with external OCR service (e.g. Tesseract/Google Vision/AWS Textract)
+    return [];
   }
 
   /**

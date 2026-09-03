@@ -81,41 +81,36 @@ export default function UploadWizardPage() {
       
       // If OCR file was present, step to OCR Preview
       if (file) {
-        // Trigger mock ocr job trigger
-        const mockJobId = 'ocr_job_mock_' + Date.now();
-        setOcrJob({ id: mockJobId, status: 'processing' });
+        const jobId = res?.submission?.id || 'job_' + Date.now();
+        setOcrJob({ id: jobId, status: 'processing' });
         setStep(3);
         
-        // Simulates async ocr completion
-        setTimeout(async () => {
+        try {
+          const ocrRes = await communityService.runOCR(jobId);
+          setOcrJob({ id: jobId, status: 'completed' });
+          const extracted = ocrRes?.data?.questions || ocrRes?.questions || [];
+          setOcrQuestions(extracted);
+          if (extracted.length > 0) {
+            toast.success(`OCR Extraction Completed! ${extracted.length} question(s) found.`);
+          } else {
+            toast.info('File attached to submission. Image text queued for moderator review.');
+          }
+          
+          // Check duplicates
+          const dups = await communityService.getDuplicates(res.submission.id);
+          setDuplicates(dups.data || []);
+        } catch (err) {
+          console.error(err);
+          setOcrJob({ id: jobId, status: 'completed' });
+          setOcrQuestions([]);
+          toast.info('File attached. Automated OCR parser is offline; submission queued for review.');
           try {
-            await communityService.runOCR(mockJobId);
-            setOcrJob({ id: mockJobId, status: 'completed' });
-            // Fetch extracted questions
-            const mockExtracted = [
-              {
-                statement: `What is the output of the following Java program?\nclass Test {\n  public static void main(String args[]) {\n    System.out.println(10 + 20 + "ASET");\n  }\n}`,
-                options: [
-                  { label: 'A', content: '30ASET' },
-                  { label: 'B', content: '1020ASET' },
-                  { label: 'C', content: '30 ASET' },
-                  { label: 'D', content: 'Compiler Error' }
-                ],
-                correctAnswer: 'A',
-                explanation: 'Java evaluates arithmetic operations from left to right, adding 10 and 20 first, then concatenates.'
-              }
-            ];
-            setOcrQuestions(mockExtracted);
-            toast.success('OCR Text Extraction Completed!');
-            
-            // Check duplicates
             const dups = await communityService.getDuplicates(res.submission.id);
             setDuplicates(dups.data || []);
-          } catch (err) {
-            console.error(err);
-            setOcrJob({ id: mockJobId, status: 'failed' });
+          } catch {
+            setDuplicates([]);
           }
-        }, 3000);
+        }
       } else {
         // No file attached -> directly show check screen or route back
         // Check duplicates for text input

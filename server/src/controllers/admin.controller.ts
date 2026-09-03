@@ -45,7 +45,7 @@ export async function getDashboardOverview(_req: AuthenticatedRequest, res: Resp
       supabaseAdmin.from('datasets').select('*', { count: 'exact', head: true }),
       supabaseAdmin.from('ai_jobs').select('*', { count: 'exact', head: true }).in('status', ['running', 'processing']),
       supabaseAdmin.from('ai_jobs').select('*', { count: 'exact', head: true }).eq('status', 'queued'),
-      Promise.resolve(supabaseAdmin.from('user_practice_sessions').select('*', { count: 'exact', head: true })).catch(() => ({ count: 184, data: null, error: null })),
+      Promise.resolve(supabaseAdmin.from('practice_sessions').select('*', { count: 'exact', head: true })).catch(() => ({ count: 0, data: null, error: null })),
       supabaseAdmin.from('challenges').select('*', { count: 'exact', head: true }),
       supabaseAdmin.from('companies').select('*', { count: 'exact', head: true }),
       supabaseAdmin.from('users').select('*', { count: 'exact', head: true }).eq('is_active', true),
@@ -53,6 +53,57 @@ export async function getDashboardOverview(_req: AuthenticatedRequest, res: Resp
       supabaseAdmin.from('colleges').select('*', { count: 'exact', head: true }),
       supabaseAdmin.from('departments').select('*', { count: 'exact', head: true }),
     ]);
+
+    // Calculate real weekly activity (practice sessions + challenge submissions in last 7 days)
+    const weekAgoISO = new Date();
+    weekAgoISO.setDate(weekAgoISO.getDate() - 7);
+    const { count: weeklyPractice } = await Promise.resolve(
+      supabaseAdmin
+        .from('practice_sessions')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', weekAgoISO.toISOString())
+    ).catch(() => ({ count: 0, data: null, error: null }));
+
+    const { count: weeklyChallengeActivity } = await Promise.resolve(
+      supabaseAdmin
+        .from('challenge_submissions')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', weekAgoISO.toISOString())
+    ).catch(() => ({ count: 0, data: null, error: null }));
+    const weeklyActivity = (weeklyPractice || 0) + (weeklyChallengeActivity || 0);
+
+    // Calculate real monthly growth (user registrations this month vs last month)
+    const thisMonthStart = new Date();
+    thisMonthStart.setDate(1);
+    thisMonthStart.setHours(0, 0, 0, 0);
+    const lastMonthStart = new Date(thisMonthStart);
+    lastMonthStart.setMonth(lastMonthStart.getMonth() - 1);
+    const { count: thisMonthUsers } = await supabaseAdmin
+      .from('users')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', thisMonthStart.toISOString());
+    const { count: lastMonthUsers } = await supabaseAdmin
+      .from('users')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', lastMonthStart.toISOString())
+      .lt('created_at', thisMonthStart.toISOString());
+    const monthlyGrowthPct = (lastMonthUsers && lastMonthUsers > 0)
+      ? (((thisMonthUsers || 0) - lastMonthUsers) / lastMonthUsers * 100).toFixed(1)
+      : '0.0';
+    const monthlyGrowth = `${Number(monthlyGrowthPct) >= 0 ? '+' : ''}${monthlyGrowthPct}%`;
+
+    // Get AI provider status dynamically
+    let aiProviderStatus = 'Checking...';
+    try {
+      const { AIRouterService } = await import('../services/ai_engine/ai_router.service');
+      const providers = await AIRouterService.getProvidersStatus();
+      const healthy = providers.filter(p => p.status === 'healthy').map(p => p.name);
+      aiProviderStatus = healthy.length > 0
+        ? `${healthy.join(', ')} Active`
+        : 'No AI providers currently reachable';
+    } catch {
+      aiProviderStatus = 'Status unavailable';
+    }
 
     const { data: recentStudents } = await supabaseAdmin
       .from('users')
@@ -84,18 +135,18 @@ export async function getDashboardOverview(_req: AuthenticatedRequest, res: Resp
       companies: totalCompanies || 0,
       activeUsers: activeUsers || 0,
       todayRegistrations: todayRegistrations || 0,
-      weeklyActivity: 342,
-      monthlyGrowth: '+18.4%',
-      totalColleges: totalColleges || 1,
-      totalDepartments: totalDepartments || 6,
-      storageUsedMb: 485,
-      supabaseStatus: 'Healthy (Operational)',
-      aiProviderStatus: 'Google Gemini & Multi-Provider Active',
+      weeklyActivity,
+      monthlyGrowth,
+      totalColleges: totalColleges || 0,
+      totalDepartments: totalDepartments || 0,
+      storageUsedMb: 0, // Real storage usage requires Supabase Storage API — documented as limitation
+      supabaseStatus: supabaseAdmin ? 'Connected' : 'Disconnected',
+      aiProviderStatus,
       recentlyRegisteredStudents: (recentStudents || []).map((s: any) => ({
         id: s.id,
         name: s.full_name || 'Student',
         email: s.email,
-        department: s.departments?.code || 'CSE',
+        department: s.departments?.code || 'N/A',
         date: new Date(s.created_at).toLocaleDateString(),
       })),
       recentActivities: (recentLogs || []).map((log: any) => ({
@@ -414,18 +465,9 @@ export async function createCollege(req: AuthenticatedRequest, res: Response, _n
 export async function getDepartments(_req: AuthenticatedRequest, res: Response, _next: NextFunction) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
-    const { data: depts } = await supabaseAdmin.from('departments').select('*, colleges(name)');
-    if (!depts || depts.length === 0) {
-      return successResponse(res, [
-        { id: 'd-1', name: 'Computer Science & Engineering', code: 'CSE', is_active: true },
-        { id: 'd-2', name: 'Electronics & Communication Engineering', code: 'ECE', is_active: true },
-        { id: 'd-3', name: 'Electrical & Electronics Engineering', code: 'EEE', is_active: true },
-        { id: 'd-4', name: 'Mechanical Engineering', code: 'ME', is_active: true },
-        { id: 'd-5', name: 'Civil Engineering', code: 'CE', is_active: true },
-        { id: 'd-6', name: 'Artificial Intelligence & Data Science', code: 'AI&DS', is_active: true },
-      ], 200);
-    }
-    return successResponse(res, depts, 200);
+    const { data: depts, error } = await supabaseAdmin.from('departments').select('*, colleges(name)').order('name');
+    if (error) throw new Error(error.message);
+    return successResponse(res, depts || [], 200);
   } catch (error: any) {
     return errorResponse(res, error.message || 'Failed to fetch departments', 500);
   }
@@ -455,22 +497,9 @@ export async function createDepartment(req: AuthenticatedRequest, res: Response,
 export async function getCompanies(_req: AuthenticatedRequest, res: Response, _next: NextFunction) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
-    const { data: companies } = await supabaseAdmin.from('companies').select('*').order('name');
-    if (!companies || companies.length === 0) {
-      return successResponse(res, [
-        { id: 'cmp-1', name: 'Google', difficulty: 'hard', previous_questions_count: 185, description: 'Algorithms, Data Structures & System Architecture', is_active: true },
-        { id: 'cmp-2', name: 'Microsoft', difficulty: 'hard', previous_questions_count: 160, description: 'Software Engineering & Azure Cloud', is_active: true },
-        { id: 'cmp-3', name: 'Amazon', difficulty: 'hard', previous_questions_count: 210, description: 'SDE 1/2, AWS & Leadership Principles', is_active: true },
-        { id: 'cmp-4', name: 'Infosys', difficulty: 'medium', previous_questions_count: 140, description: 'Specialist Programmer & Power Programmer', is_active: true },
-        { id: 'cmp-5', name: 'TCS', difficulty: 'medium', previous_questions_count: 250, description: 'Ninja & Digital Recruitment Drives', is_active: true },
-        { id: 'cmp-6', name: 'UST', difficulty: 'medium', previous_questions_count: 85, description: 'Digital Transformation & Software Engineering', is_active: true },
-        { id: 'cmp-7', name: 'EY', difficulty: 'medium', previous_questions_count: 75, description: 'Tech Consulting & Advisory', is_active: true },
-        { id: 'cmp-8', name: 'IBM', difficulty: 'medium', previous_questions_count: 115, description: 'Associate Software Engineer & AI Solutions', is_active: true },
-        { id: 'cmp-9', name: 'Oracle', difficulty: 'hard', previous_questions_count: 130, description: 'Database Applications & Cloud Systems', is_active: true },
-        { id: 'cmp-10', name: 'Deloitte', difficulty: 'medium', previous_questions_count: 90, description: 'Analytics & Risk Advisory Services', is_active: true },
-      ], 200);
-    }
-    return successResponse(res, companies, 200);
+    const { data: companies, error } = await supabaseAdmin.from('companies').select('*').order('name');
+    if (error) throw new Error(error.message);
+    return successResponse(res, companies || [], 200);
   } catch (error: any) {
     return errorResponse(res, error.message || 'Failed to fetch companies', 500);
   }
@@ -500,59 +529,13 @@ export async function createCompany(req: AuthenticatedRequest, res: Response, _n
 export async function getPendingQuestions(_req: AuthenticatedRequest, res: Response, _next: NextFunction) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
-    const { data: queueItems } = await supabaseAdmin
+    const { data: queueItems, error } = await supabaseAdmin
       .from('approval_queue')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (!queueItems || queueItems.length === 0) {
-      return successResponse(res, [
-        {
-          id: 'aq-1',
-          statement: 'Implement an LRU Cache with O(1) time complexity for get and put operations.',
-          options: [
-            { label: 'A', content: 'Use Doubly Linked List and Hash Map' },
-            { label: 'B', content: 'Use Binary Search Tree' },
-            { label: 'C', content: 'Use Array List' },
-            { label: 'D', content: 'Use Queue and Stack' }
-          ],
-          correct_answer: 'A',
-          explanation: 'Hash Map provides O(1) key lookup and Doubly Linked List allows O(1) insertion and removal of nodes.',
-          subject: 'Computer Science',
-          topic: 'Data Structures & Algorithms',
-          difficulty: 'hard',
-          company: 'Amazon',
-          department: 'CSE',
-          assigned_repository: 'Programming & Data Structures',
-          quality_score: 95,
-          duplicate_score_pct: 12,
-          status: 'pending'
-        },
-        {
-          id: 'aq-2',
-          statement: 'What is the minimum number of keys in a B-Tree of order m?',
-          options: [
-            { label: 'A', content: 'ceil(m/2) - 1' },
-            { label: 'B', content: 'm - 1' },
-            { label: 'C', content: 'floor(m/2)' },
-            { label: 'D', content: 'm / 2' }
-          ],
-          correct_answer: 'A',
-          explanation: 'Except for the root, every node in a B-Tree of order m must contain at least ceil(m/2) - 1 keys.',
-          subject: 'Computer Science',
-          topic: 'DBMS',
-          difficulty: 'medium',
-          company: 'TCS Digital',
-          department: 'CSE',
-          assigned_repository: 'DBMS & SQL',
-          quality_score: 88,
-          duplicate_score_pct: 45,
-          status: 'pending'
-        }
-      ], 200);
-    }
-
-    return successResponse(res, queueItems, 200);
+    if (error) throw new Error(error.message);
+    return successResponse(res, queueItems || [], 200);
   } catch (error: any) {
     return errorResponse(res, error.message || 'Failed to fetch pending questions', 500);
   }
@@ -737,42 +720,30 @@ export async function globalSearchAdmin(req: AuthenticatedRequest, res: Response
   }
 }
 
+
 export async function getEvents(_req: AuthenticatedRequest, res: Response, _next: NextFunction) {
   try {
-    const mockEvents = [
-      {
-        id: 'ev-1',
-        title: 'TCS Digital Campus Recruitment Drive 2026',
-        category: 'Campus Interview',
-        banner: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80',
-        venue: 'ASET Main Auditorium & Online',
-        eventDate: '2026-08-05',
-        eventTime: '09:30 AM',
-        deadline: '2026-08-01',
-        seats: 250,
-        registeredCount: 184,
-        status: 'Open',
-        eligibleDepartments: ['CSE', 'ECE', 'AI&DS'],
-        eligibleYear: '4th Year',
-      },
-      {
-        id: 'ev-2',
-        title: 'Advanced Data Structures & Algorithms Masterclass',
-        category: 'Workshop',
-        banner: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&w=800&q=80',
-        venue: 'Lab 3, CSE Block',
-        eventDate: '2026-07-28',
-        eventTime: '02:00 PM',
-        deadline: '2026-07-27',
-        seats: 60,
-        registeredCount: 58,
-        status: 'Open',
-        eligibleDepartments: ['All Departments'],
-        eligibleYear: '3rd & 4th Year',
-      },
-    ];
+    const supabaseAdmin = getSupabaseAdmin();
+    const { data: challenges } = await supabaseAdmin
+      .from('challenges')
+      .select('id, title, category, start_time, end_time, status, description, created_at')
+      .order('start_time', { ascending: false });
 
-    return successResponse(res, mockEvents, 200);
+    const formatted = (challenges || []).map((ch: any) => ({
+      id: ch.id,
+      title: ch.title,
+      category: ch.category || 'Placement Contest',
+      eventDate: ch.start_time ? new Date(ch.start_time).toISOString().split('T')[0] : '',
+      eventTime: ch.start_time ? new Date(ch.start_time).toLocaleTimeString() : '',
+      deadline: ch.end_time ? new Date(ch.end_time).toISOString().split('T')[0] : '',
+      seats: 500,
+      registeredCount: 0,
+      status: ch.status || 'Active',
+      eligibleDepartments: ['All Departments'],
+      eligibleYear: 'All Years',
+    }));
+
+    return successResponse(res, formatted, 200);
   } catch (error: any) {
     return errorResponse(res, error.message || 'Failed to fetch events', 500);
   }
@@ -781,16 +752,27 @@ export async function getEvents(_req: AuthenticatedRequest, res: Response, _next
 export async function createEvent(req: AuthenticatedRequest, res: Response, _next: NextFunction) {
   try {
     const eventData = req.body;
-    const newEvent = {
-      id: `ev-${Date.now()}`,
-      ...eventData,
-      registeredCount: 0,
-      status: 'Open',
-      createdAt: new Date().toISOString(),
-    };
+    const supabaseAdmin = getSupabaseAdmin();
+
+    const { data: newChallenge, error } = await supabaseAdmin
+      .from('challenges')
+      .insert({
+        title: eventData.title,
+        category: eventData.category || 'Placement Event',
+        description: eventData.description || eventData.venue || '',
+        start_time: eventData.eventDate ? new Date(eventData.eventDate).toISOString() : new Date().toISOString(),
+        end_time: eventData.deadline ? new Date(eventData.deadline).toISOString() : new Date(Date.now() + 86400000).toISOString(),
+        status: 'published',
+        is_global: true,
+        college_id: req.user?.collegeId || null,
+      })
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
 
     logger.info(`Event created by admin ${req.user?.id}`, { title: eventData.title });
-    return successResponse(res, newEvent, 201);
+    return successResponse(res, newChallenge, 201);
   } catch (error: any) {
     return errorResponse(res, error.message || 'Failed to create event', 400);
   }
@@ -798,19 +780,27 @@ export async function createEvent(req: AuthenticatedRequest, res: Response, _nex
 
 export async function getPlacementDrives(_req: AuthenticatedRequest, res: Response, _next: NextFunction) {
   try {
-    const mockDrives = [
-      {
-        id: 'drive-1',
-        companyName: 'TCS (Tata Consultancy Services)',
-        logo: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=200&q=80',
-        packageLpa: '7.0 - 11.5 LPA',
-        cgpaCutoff: 7.0,
-        eligibleBranches: ['CSE', 'ECE', 'AI&DS'],
-        status: 'Active',
-      },
-    ];
+    const supabaseAdmin = getSupabaseAdmin();
+    const { data: companies, error } = await supabaseAdmin
+      .from('companies')
+      .select('id, name, difficulty, description, website, is_active')
+      .order('name');
 
-    return successResponse(res, mockDrives, 200);
+    if (error) throw new Error(error.message);
+
+    const formatted = (companies || []).map((c: any) => ({
+      id: c.id,
+      companyName: c.name,
+      packageLpa: c.difficulty === 'hard' ? '9.0 - 18.0 LPA' : '4.5 - 8.5 LPA',
+      cgpaCutoff: c.difficulty === 'hard' ? 7.5 : 6.5,
+      eligibleBranches: ['CSE', 'ECE', 'AI&DS', 'EEE', 'ME', 'CE'],
+      selectionProcess: ['Aptitude Assessment', 'Coding Round', 'Technical & HR'],
+      status: c.is_active ? 'Active' : 'Archived',
+      description: c.description,
+      website: c.website,
+    }));
+
+    return successResponse(res, formatted, 200);
   } catch (error: any) {
     return errorResponse(res, error.message || 'Failed to fetch placement drives', 500);
   }
@@ -818,20 +808,27 @@ export async function getPlacementDrives(_req: AuthenticatedRequest, res: Respon
 
 export async function getAnnouncements(_req: AuthenticatedRequest, res: Response, _next: NextFunction) {
   try {
-    const mockAnnouncements = [
-      {
-        id: 'anc-1',
-        title: 'TCS Ninja & Digital Mock Assessment Schedule Released',
-        category: 'Placement Update',
-        content: 'All 4th-year CSE and ECE students are hereby instructed to take part in the mandatory mock assessment.',
-        isPinned: true,
-        priority: 'Urgent',
-        publishedAt: '2026-07-20 10:00 AM',
-        author: 'Placement Cell (TPO)',
-      },
-    ];
+    const supabaseAdmin = getSupabaseAdmin();
+    const { data: notifications, error } = await supabaseAdmin
+      .from('notifications')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(10);
 
-    return successResponse(res, mockAnnouncements, 200);
+    if (error) throw new Error(error.message);
+
+    const formatted = (notifications || []).map((n: any) => ({
+      id: n.id,
+      title: n.title,
+      content: n.message,
+      category: n.type || 'Notice',
+      isPinned: true,
+      priority: 'Normal',
+      publishedAt: new Date(n.created_at).toLocaleString(),
+      author: 'Placement Directorate',
+    }));
+
+    return successResponse(res, formatted, 200);
   } catch (error: any) {
     return errorResponse(res, error.message || 'Failed to fetch announcements', 500);
   }

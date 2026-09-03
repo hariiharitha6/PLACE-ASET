@@ -107,6 +107,7 @@ export class PracticeService {
       .from('questions')
       .select('id, statement, type, difficulty, image_url, question_options(id, label, content)')
       .eq('approval_status', 'approved')
+      .eq('is_published', true)
       .eq('is_archived', false);
 
     if (data.category_id) {

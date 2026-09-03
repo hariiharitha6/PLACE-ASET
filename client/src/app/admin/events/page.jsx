@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../../../lib/api';
+import EmptyState from '../../../components/ui/EmptyState';
+import { Calendar, Plus, MapPin, Clock, Users, CheckCircle2 } from 'lucide-react';
 import styles from './events.module.css';
 
 export default function EventManagementPage() {
@@ -23,37 +25,34 @@ export default function EventManagementPage() {
     eligibleYear: '4th Year',
   });
 
-  useEffect(() => {
-    fetchEvents();
-  }, []);
-
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get('/admin/events');
-      setEvents(res.data || []);
+      setEvents(res.data?.data || res.data || []);
     } catch (err) {
-      console.error(err);
-      setEvents([
-        { id: 'ev-1', title: 'TCS Digital Campus Recruitment Drive 2026', category: 'Campus Interview', venue: 'ASET Main Auditorium', eventDate: '2026-08-05', eventTime: '09:30 AM', deadline: '2026-08-01', seats: 250, registeredCount: 184, status: 'Open', eligibleDepartments: ['CSE', 'ECE', 'AI&DS'], eligibleYear: '4th Year' },
-        { id: 'ev-2', title: 'Advanced Data Structures & Algorithms Masterclass', category: 'Workshop', venue: 'Lab 3, CSE Block', eventDate: '2026-07-28', eventTime: '02:00 PM', deadline: '2026-07-27', seats: 60, registeredCount: 58, status: 'Open', eligibleDepartments: ['All Departments'], eligibleYear: '3rd & 4th Year' },
-        { id: 'ev-3', title: 'PLACE@ASET Summer Hackathon 2026', category: 'Hackathon', venue: 'ASET Innovation Lab', eventDate: '2026-08-12', eventTime: '09:00 AM', deadline: '2026-08-10', seats: 120, registeredCount: 95, status: 'Upcoming', eligibleDepartments: ['All Departments'], eligibleYear: 'All Years' },
-      ]);
+      console.error('Failed to fetch events from database', err);
+      setEvents([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
       const res = await api.post('/admin/events', form);
-      setEvents([res.data, ...events]);
-      setMsg('Event created successfully and notifications dispatched to eligible candidates!');
+      const created = res.data?.data || res.data;
+      setEvents([created, ...events]);
+      setMsg('Event created successfully and registered in system!');
       setShowModal(false);
       setTimeout(() => setMsg(null), 4000);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to create event', err);
     }
   };
 
@@ -62,7 +61,7 @@ export default function EventManagementPage() {
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Event & Campus Activity Management</h1>
-          <p className={styles.subtitle}>Schedule placement drives, workshops, hackathons, and instant candidate alerts</p>
+          <p className={styles.subtitle}>Schedule placement drives, workshops, hackathons, and contest sessions</p>
         </div>
         <button className={styles.primaryBtn} onClick={() => setShowModal(true)}>
           + Schedule New Event
@@ -77,11 +76,21 @@ export default function EventManagementPage() {
       )}
 
       {/* Events Grid */}
-      <div className={styles.eventsGrid}>
-        {loading ? (
-          <div className={styles.textCenter}>Loading scheduled campus events...</div>
-        ) : (
-          events.map((ev) => (
+      {loading ? (
+        <div className={styles.textCenter} style={{ padding: '40px', color: 'var(--text-muted)' }}>
+          Loading scheduled campus events from database...
+        </div>
+      ) : events.length === 0 ? (
+        <EmptyState
+          icon={<Calendar size={36} style={{ color: 'var(--text-muted)' }} />}
+          title="No Campus Events Scheduled"
+          description="Schedule a recruitment drive, mock test, or departmental hackathon to alert eligible students."
+          actionText="+ Schedule New Event"
+          onAction={() => setShowModal(true)}
+        />
+      ) : (
+        <div className={styles.eventsGrid}>
+          {events.map((ev) => (
             <div key={ev.id} className={styles.eventCard}>
               <div
                 className={styles.cardBanner}
@@ -95,13 +104,13 @@ export default function EventManagementPage() {
                 <h3 className={styles.eventTitle}>{ev.title}</h3>
 
                 <div className={styles.infoRow}>
-                  <span>📍 {ev.venue}</span>
-                  <span>📅 {ev.eventDate} ({ev.eventTime})</span>
+                  <span>📍 {ev.venue || 'Campus Auditorium'}</span>
+                  <span>📅 {ev.eventDate} {ev.eventTime ? `(${ev.eventTime})` : ''}</span>
                 </div>
 
                 <div className={styles.infoRow}>
-                  <span>⏰ Deadline: {ev.deadline}</span>
-                  <span>🎟️ {ev.registeredCount || 0} / {ev.seats} Seats</span>
+                  <span>⏰ Deadline: {ev.deadline || 'Open'}</span>
+                  <span>🎟️ {ev.registeredCount || 0} / {ev.seats || 100} Seats</span>
                 </div>
 
                 <div className={styles.tagRow}>
@@ -119,9 +128,9 @@ export default function EventManagementPage() {
                 </div>
               </div>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Schedule Event Modal */}
       {showModal && (
@@ -138,39 +147,40 @@ export default function EventManagementPage() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. TCS Digital Campus Recruitment Drive"
+                  placeholder="e.g. TCS Digital Campus Assessment 2026"
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                 />
               </div>
 
-              <div className={styles.rowTwo}>
+              <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label>Category</label>
-                  <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+                  <select
+                    value={form.category}
+                    onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  >
                     <option value="Placement Drive">Placement Drive</option>
                     <option value="Campus Interview">Campus Interview</option>
                     <option value="Workshop">Workshop</option>
-                    <option value="Seminar">Seminar</option>
                     <option value="Hackathon">Hackathon</option>
-                    <option value="Coding Contest">Coding Contest</option>
-                    <option value="Training Session">Training Session</option>
+                    <option value="Guest Lecture">Guest Lecture</option>
                   </select>
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Venue</label>
+                  <label>Venue / Location</label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. ASET Main Auditorium"
+                    placeholder="e.g. Main Auditorium / Online"
                     value={form.venue}
                     onChange={(e) => setForm({ ...form, venue: e.target.value })}
                   />
                 </div>
               </div>
 
-              <div className={styles.rowThree}>
+              <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label>Event Date</label>
                   <input
@@ -182,16 +192,17 @@ export default function EventManagementPage() {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Time</label>
+                  <label>Event Time</label>
                   <input
                     type="text"
-                    required
                     placeholder="09:30 AM"
                     value={form.eventTime}
                     onChange={(e) => setForm({ ...form, eventTime: e.target.value })}
                   />
                 </div>
+              </div>
 
+              <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label>Registration Deadline</label>
                   <input
@@ -201,11 +212,50 @@ export default function EventManagementPage() {
                     onChange={(e) => setForm({ ...form, deadline: e.target.value })}
                   />
                 </div>
+
+                <div className={styles.formGroup}>
+                  <label>Seat Capacity</label>
+                  <input
+                    type="number"
+                    min="10"
+                    value={form.seats}
+                    onChange={(e) => setForm({ ...form, seats: Number(e.target.value) })}
+                  />
+                </div>
               </div>
 
-              <div className={styles.modalFooter}>
-                <button type="button" onClick={() => setShowModal(false)} className={styles.cancelBtn}>Cancel</button>
-                <button type="submit" className={styles.submitBtn}>Schedule Event & Notify Students</button>
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Eligible Departments</label>
+                  <input
+                    type="text"
+                    placeholder="CSE, ECE, AI&DS"
+                    value={form.eligibleDepartments}
+                    onChange={(e) => setForm({ ...form, eligibleDepartments: e.target.value })}
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Eligible Year</label>
+                  <select
+                    value={form.eligibleYear}
+                    onChange={(e) => setForm({ ...form, eligibleYear: e.target.value })}
+                  >
+                    <option value="All Years">All Years</option>
+                    <option value="4th Year">4th Year (Final)</option>
+                    <option value="3rd & 4th Year">3rd & 4th Year</option>
+                    <option value="1st & 2nd Year">1st & 2nd Year</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className={styles.modalActions}>
+                <button type="button" onClick={() => setShowModal(false)} className={styles.cancelBtn}>
+                  Cancel
+                </button>
+                <button type="submit" className={styles.submitBtn}>
+                  Confirm & Schedule Event
+                </button>
               </div>
             </form>
           </div>

@@ -270,19 +270,21 @@ export class CommunityRepoService {
           .single();
 
         if (officialQ) {
-          // If options exist in metadata, parse them
-          const mockOptions = [
-            { label: 'A', content: 'Option A', is_correct: sub.correct_answer === 'A' },
-            { label: 'B', content: 'Option B', is_correct: sub.correct_answer === 'B' },
-            { label: 'C', content: 'Option C', is_correct: sub.correct_answer === 'C' },
-            { label: 'D', content: 'Option D', is_correct: sub.correct_answer === 'D' }
-          ];
-          await supabase.from('question_options').insert(mockOptions.map(o => ({
-            question_id: officialQ.id,
-            label: o.label,
-            content: o.content,
-            is_correct: o.is_correct
-          })));
+          // If options exist in submission metadata or fields, parse them
+          const submissionOptions = Array.isArray(sub.metadata?.options)
+            ? sub.metadata.options
+            : Array.isArray(sub.options)
+            ? sub.options
+            : [];
+
+          if (submissionOptions.length > 0) {
+            await supabase.from('question_options').insert(submissionOptions.map((o: any) => ({
+              question_id: officialQ.id,
+              label: o.label || 'A',
+              content: o.content || o.text || '',
+              is_correct: o.is_correct ?? (sub.correct_answer === o.label)
+            })));
+          }
 
           // Link official question id
           await supabase.from('community_submissions').update({ approved_question_id: officialQ.id }).eq('id', submissionId);

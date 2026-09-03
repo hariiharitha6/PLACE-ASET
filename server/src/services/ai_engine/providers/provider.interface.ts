@@ -3,6 +3,9 @@ export interface AICompletionOptions {
   maxTokens?: number;
   topP?: number;
   systemPrompt?: string;
+  timeoutMs?: number;
+  learningMode?: 'personal' | 'institute';
+  taskType?: string;
 }
 
 export interface AICompletionResult {

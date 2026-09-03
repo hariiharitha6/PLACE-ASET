@@ -19,23 +19,7 @@ export default function StudentComparePage() {
       const res = await api.get('/users/compare', { params: { user1, user2 } });
       setCompareData(res.data?.data || res.data || {});
     } catch (err) {
-      console.error(err);
-      setCompareData({
-        student1: {
-          id: user1,
-          full_name: 'D Haritha',
-          departments: { code: 'CSE' },
-          year: '4th Year',
-          stats: { totalXP: 4850, rank: 4, level: 5, solvedCount: 142, streakDays: 14, readinessScore: 87, mockTestsCount: 12, resourcesUploadedCount: 5 }
-        },
-        student2: {
-          id: user2,
-          full_name: 'Rahul Varma',
-          departments: { code: 'ECE' },
-          year: '3rd Year',
-          stats: { totalXP: 3200, rank: 12, level: 4, solvedCount: 98, streakDays: 7, readinessScore: 74, mockTestsCount: 8, resourcesUploadedCount: 2 }
-        }
-      });
+      setCompareData(null);
     } finally {
       setLoading(false);
     }
@@ -50,6 +34,27 @@ export default function StudentComparePage() {
       <div className={styles.loadingBox}>
         <div className={styles.spinner} />
         <span>Generating Student Comparison Matrix...</span>
+      </div>
+    );
+  }
+
+  if (!compareData || !compareData.student1 || !compareData.student2) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <h1 className={styles.title}>Student Head-to-Head Comparison</h1>
+          <p className={styles.subtitle}>Side-by-side performance matrix comparing candidate achievements, XP, rank, and readiness</p>
+        </div>
+        <div style={{ padding: '60px 24px', textAlign: 'center', background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)', marginTop: '24px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>📊</div>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '8px', color: 'var(--text-primary)' }}>No Comparison Data Available</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '14px', maxWidth: '450px', margin: '0 auto 24px auto' }}>
+            Select two valid candidate profiles from the campus leaderboard to generate a live side-by-side telemetry comparison.
+          </p>
+          <button onClick={() => router.push('/leaderboard')} style={{ padding: '10px 20px', borderRadius: '8px', background: 'var(--gradient-primary)', color: '#fff', fontWeight: '600', cursor: 'pointer', border: 'none' }}>
+            Go to Leaderboard
+          </button>
+        </div>
       </div>
     );
   }

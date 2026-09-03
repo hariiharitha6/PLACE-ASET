@@ -38,16 +38,16 @@ export default function AdminDashboardPage() {
   }
 
   const statCards = [
-    { title: 'Total Students', value: overview?.totalStudents || 1250, icon: '🎓', trend: '+14% this month', color: 'indigo' },
-    { title: 'Total Questions', value: overview?.totalQuestions || 450, icon: '❓', trend: '+28 this week', color: 'emerald' },
-    { title: 'Total Companies', value: overview?.totalCompanies || 28, icon: '🏢', trend: '13 Drives Active', color: 'sky' },
-    { title: 'Upcoming Events', value: overview?.upcomingEvents || 6, icon: '📅', trend: 'Next: TCS Drive', color: 'amber' },
-    { title: "Today's Logins", value: overview?.todayLogins || 142, icon: '⚡', trend: 'Peak: 11:30 AM', color: 'purple' },
-    { title: 'Total Colleges', value: overview?.totalColleges || 1, icon: '🏫', trend: 'ASET Campus', color: 'blue' },
-    { title: 'Total Departments', value: overview?.totalDepartments || 6, icon: '🏛️', trend: 'CSE, ECE, EEE, ME, CE, AI&DS', color: 'violet' },
-    { title: 'Total Tests', value: overview?.totalTests || 18, icon: '📝', trend: '4 Active Challenges', color: 'cyan' },
-    { title: 'Placement Drives', value: overview?.activePlacementDrives || 8, icon: '💼', trend: 'Avg Package 6.8 LPA', color: 'green' },
-    { title: 'Pending Approvals', value: overview?.pendingApprovals || 12, icon: '⏳', trend: 'Requires Review', color: 'rose' },
+    { title: 'Total Students', value: overview?.totalStudents ?? 0, icon: '🎓', trend: 'Campus Enrolled', color: 'indigo' },
+    { title: 'Total Questions', value: overview?.totalQuestions ?? 0, icon: '❓', trend: 'Question Bank', color: 'emerald' },
+    { title: 'Total Companies', value: overview?.totalCompanies ?? 0, icon: '🏢', trend: 'Hiring Partners', color: 'sky' },
+    { title: 'Upcoming Events', value: overview?.upcomingEvents ?? 0, icon: '📅', trend: 'Scheduled Drives', color: 'amber' },
+    { title: "Active Users", value: overview?.todayLogins ?? 0, icon: '⚡', trend: 'Live Telemetry', color: 'purple' },
+    { title: 'Total Colleges', value: overview?.totalColleges ?? 1, icon: '🏫', trend: 'ASET Campus', color: 'blue' },
+    { title: 'Total Departments', value: overview?.totalDepartments ?? 0, icon: '🏛️', trend: 'Academic Departments', color: 'violet' },
+    { title: 'Total Assessments', value: overview?.totalTests ?? 0, icon: '📝', trend: 'Active Challenges', color: 'cyan' },
+    { title: 'Placement Drives', value: overview?.activePlacementDrives ?? 0, icon: '💼', trend: 'Recruitment Drives', color: 'green' },
+    { title: 'Pending Moderation', value: overview?.pendingApprovals ?? 0, icon: '⏳', trend: 'Requires Review', color: 'rose' },
   ];
 
   return (

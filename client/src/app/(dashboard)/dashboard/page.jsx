@@ -67,10 +67,10 @@ export default function StudentDashboardPage() {
     latestResources = [],
   } = data || {};
 
-  const streakDays = user?.daily_streak || profile?.streak_days || 1;
+  const streakDays = user?.daily_streak || profile?.streak_days || 0;
   const solvedCount = profile?.solved_count || 0;
-  const rank = profile?.rank || 1;
-  const readinessScore = profile?.readiness_score || 85;
+  const rank = profile?.rank || 0;
+  const readinessScore = profile?.readiness_score || 0;
 
   return (
     <div className={styles.dashboardContainer}>
@@ -85,7 +85,7 @@ export default function StudentDashboardPage() {
         ctaText="Resume Practice →"
         ctaHref="/practice"
         goalTarget={5}
-        completedCount={Math.min(5, solvedCount > 0 ? (solvedCount % 5) || 3 : 2)}
+        completedCount={Math.min(5, solvedCount > 0 ? (solvedCount % 5) : 0)}
       />
 
       {/* 2. EXECUTIVE STUDY TELEMETRY KPIS */}
@@ -104,16 +104,16 @@ export default function StudentDashboardPage() {
             <span className={styles.kpiIcon}>🏆</span>
             <span className={styles.kpiTagActive}>Weekly</span>
           </div>
-          <span className={styles.kpiVal}>Rank #{rank}</span>
+          <span className={styles.kpiVal}>{rank > 0 ? `Rank #${rank}` : 'Unranked'}</span>
           <span className={styles.kpiLabel}>Campus Leaderboard</span>
         </div>
 
         <div className={styles.kpiCard} onClick={() => router.push('/dashboard/readiness')}>
           <div className={styles.kpiHeader}>
             <span className={styles.kpiIcon}>🎯</span>
-            <span className={styles.kpiTagActive}>{readinessScore}%</span>
+            <span className={styles.kpiTagActive}>{readinessScore > 0 ? `${readinessScore}%` : '—'}</span>
           </div>
-          <span className={styles.kpiVal}>{readinessScore} / 100</span>
+          <span className={styles.kpiVal}>{readinessScore > 0 ? `${readinessScore} / 100` : 'Start practicing'}</span>
           <span className={styles.kpiLabel}>Placement Readiness Score</span>
         </div>
 

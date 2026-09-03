@@ -24,44 +24,8 @@ export default function PublicStudentProfilePage() {
       setProfile(profRes.data?.data || profRes.data || {});
       setAchievements(achRes.data?.data || achRes.data || []);
     } catch (err) {
-      console.error(err);
-      // Fallback profile data
-      setProfile({
-        id: studentId,
-        full_name: 'D Haritha',
-        avatar_url: null,
-        bio: 'Passionate Full-Stack Software Engineer & Competitive Coder preparing for Placement 2026. Skilled in React, Node.js, C++, and System Design.',
-        skills: ['JavaScript', 'React.js', 'Node.js', 'Express', 'C++', 'Data Structures', 'PostgreSQL', 'Tailwind CSS'],
-        linkedin_url: 'https://linkedin.com',
-        github_url: 'https://github.com',
-        portfolio_url: 'https://haritha.dev',
-        resume_url: 'https://place-aset.com/resumes/haritha_cv.pdf',
-        year: '4th Year',
-        section: 'Section A',
-        roll_number: 'ATP22CS006',
-        departments: { name: 'Computer Science and Engineering', code: 'CSE' },
-        colleges: { name: 'Ahalia School of Engineering and Technology', slug: 'aset' },
-        created_at: '2025-08-01',
-        stats: {
-          totalXP: 4850,
-          rank: 4,
-          level: 5,
-          solvedCount: 142,
-          streakDays: 14,
-          readinessScore: 87,
-          mockTestsCount: 12,
-          resourcesUploadedCount: 5,
-          profileViews: 128,
-        },
-      });
-
-      setAchievements([
-        { id: 'ach-1', title: '100 Questions Solved', category: 'practice', description: 'Solved over 100 coding and aptitude challenges', xp_reward: 500, earned: true, earnedAt: '2026-06-15' },
-        { id: 'ach-2', title: 'Top 10 Leaderboard', category: 'rank', description: 'Reached the Top 10 overall campus rankings', xp_reward: 1000, earned: true, earnedAt: '2026-07-01' },
-        { id: 'ach-3', title: '14-Day Streak Champion', category: 'streak', description: 'Maintained a daily coding & practice streak for 14 days', xp_reward: 300, earned: true, earnedAt: '2026-07-10' },
-        { id: 'ach-4', title: 'Placement Ready Candidate', category: 'placement', description: 'Achieved a Placement Readiness Score exceeding 85%', xp_reward: 750, earned: true, earnedAt: '2026-07-18' },
-        { id: 'ach-5', title: 'Community Contributor', category: 'resource', description: 'Shared 5 high-quality study materials & notes', xp_reward: 400, earned: true, earnedAt: '2026-07-20' },
-      ]);
+      setProfile(null);
+      setAchievements([]);
     } finally {
       setLoading(false);
     }
@@ -76,6 +40,23 @@ export default function PublicStudentProfilePage() {
       <div className={styles.loadingBox}>
         <div className={styles.spinner} />
         <span>Loading Student Profile...</span>
+      </div>
+    );
+  }
+
+  if (!profile || !profile.id) {
+    return (
+      <div className={styles.container}>
+        <div style={{ padding: '60px 24px', textAlign: 'center', background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)', marginTop: '40px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>👤</div>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '8px', color: 'var(--text-primary)' }}>Student Profile Not Found</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '14px', maxWidth: '400px', margin: '0 auto 24px auto' }}>
+            The requested student profile does not exist or has been made private.
+          </p>
+          <button onClick={() => router.push('/leaderboard')} style={{ padding: '10px 20px', borderRadius: '8px', background: 'var(--gradient-primary)', color: '#fff', fontWeight: '600', cursor: 'pointer', border: 'none' }}>
+            View Leaderboard
+          </button>
+        </div>
       </div>
     );
   }
@@ -176,27 +157,27 @@ export default function PublicStudentProfilePage() {
         </div>
         <div className={styles.statCard}>
           <span className={styles.statIcon}>✅</span>
-          <span className={styles.statVal}>{profile?.stats?.solvedCount || 142}</span>
+          <span className={styles.statVal}>{profile?.stats?.solvedCount || 0}</span>
           <span className={styles.statLabel}>Questions Solved</span>
         </div>
         <div className={styles.statCard}>
           <span className={styles.statIcon}>🔥</span>
-          <span className={styles.statVal}>{profile?.stats?.streakDays || 14} Days</span>
+          <span className={styles.statVal}>{profile?.stats?.streakDays || 0} Days</span>
           <span className={styles.statLabel}>Coding Streak</span>
         </div>
         <div className={styles.statCard}>
           <span className={styles.statIcon}>🎯</span>
-          <span className={styles.statVal}>{profile?.stats?.readinessScore || 87}%</span>
+          <span className={styles.statVal}>{profile?.stats?.readinessScore || 0}%</span>
           <span className={styles.statLabel}>Placement Readiness</span>
         </div>
         <div className={styles.statCard}>
           <span className={styles.statIcon}>📝</span>
-          <span className={styles.statVal}>{profile?.stats?.mockTestsCount || 12}</span>
+          <span className={styles.statVal}>{profile?.stats?.mockTestsCount || 0}</span>
           <span className={styles.statLabel}>Mock Tests Done</span>
         </div>
         <div className={styles.statCard}>
           <span className={styles.statIcon}>📚</span>
-          <span className={styles.statVal}>{profile?.stats?.resourcesUploadedCount || 5}</span>
+          <span className={styles.statVal}>{profile?.stats?.resourcesUploadedCount || 0}</span>
           <span className={styles.statLabel}>Resources Shared</span>
         </div>
       </div>

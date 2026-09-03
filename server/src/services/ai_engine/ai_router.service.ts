@@ -10,21 +10,26 @@ import crypto from 'crypto';
 
 export class AIRouterService {
   private static providers: Map<string, IAIProvider> = new Map<string, IAIProvider>([
+    ['ollama', new OllamaProvider()],
     ['gemini', new GeminiProvider()],
     ['openai', new OpenAIProvider()],
-    ['ollama', new OllamaProvider()],
     ['azure', new AzureProvider()],
     ['anthropic', new AnthropicProvider()],
   ]);
 
   private static taskRouting: Record<string, { primary: string; fallback: string }> = {
-    ocr: { primary: 'gemini', fallback: 'openai' },
-    categorization: { primary: 'gemini', fallback: 'openai' },
-    explanation: { primary: 'openai', fallback: 'gemini' },
-    question_gen: { primary: 'openai', fallback: 'gemini' },
-    duplicate_detection: { primary: 'gemini', fallback: 'openai' },
-    resume_analysis: { primary: 'openai', fallback: 'gemini' },
-    interview_feedback: { primary: 'openai', fallback: 'gemini' },
+    summarization: { primary: 'ollama', fallback: 'gemini' },
+    explanation: { primary: 'ollama', fallback: 'openai' },
+    flashcards: { primary: 'ollama', fallback: 'gemini' },
+    question_gen: { primary: 'ollama', fallback: 'openai' },
+    classification: { primary: 'ollama', fallback: 'gemini' },
+    categorization: { primary: 'ollama', fallback: 'gemini' },
+    duplicate_detection: { primary: 'ollama', fallback: 'gemini' },
+    study_assistant: { primary: 'ollama', fallback: 'openai' },
+    personal_learning: { primary: 'ollama', fallback: 'gemini' },
+    ocr: { primary: 'ollama', fallback: 'gemini' },
+    resume_analysis: { primary: 'ollama', fallback: 'gemini' },
+    interview_feedback: { primary: 'ollama', fallback: 'gemini' },
   };
 
   /**
@@ -62,7 +67,7 @@ export class AIRouterService {
   }
 
   /**
-   * Execute completion with Fallback System and Caching
+   * Execute completion with intelligent fallback system and caching
    */
   static async executeTask(taskType: string, prompt: string, options?: AICompletionOptions): Promise<AICompletionResult> {
     // 1. Check AI Cache
@@ -73,35 +78,77 @@ export class AIRouterService {
       return cachedResponse;
     }
 
-    const route = this.taskRouting[taskType] || { primary: 'gemini', fallback: 'openai' };
-    const primaryProvider = this.providers.get(route.primary) || this.providers.get('gemini')!;
-    const fallbackProvider = this.providers.get(route.fallback) || this.providers.get('ollama')!;
+    // 2. Resolve preferred providers based on mode, learningMode, and configuration
+    const globalMode = process.env.AI_PROVIDER_MODE || 'auto';
+    const isPersonalMode = options?.learningMode === 'personal' || taskType === 'personal_learning';
+    const isInstituteMode = options?.learningMode === 'institute';
+    const hasGemini = Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
+    const hasOpenAI = Boolean(process.env.OPENAI_API_KEY);
+    const hasAnthropic = Boolean(process.env.ANTHROPIC_API_KEY);
 
-    // 2. Try Primary Provider
+    let primaryId = 'ollama';
+    let fallbackId = 'gemini';
+
+    if (isPersonalMode || globalMode === 'local') {
+      // Personal Learning Mode: Ollama FIRST -> Gemini -> OpenAI -> Anthropic
+      primaryId = 'ollama';
+      fallbackId = hasGemini ? 'gemini' : hasOpenAI ? 'openai' : hasAnthropic ? 'anthropic' : 'gemini';
+    } else if (isInstituteMode || globalMode === 'cloud') {
+      // Institute Mode: Configured cloud provider FIRST -> Ollama fallback
+      primaryId = hasGemini ? 'gemini' : hasOpenAI ? 'openai' : hasAnthropic ? 'anthropic' : 'ollama';
+      fallbackId = 'ollama';
+    } else {
+      // Auto mode: follow configured task route
+      const route = this.taskRouting[taskType];
+      if (route) {
+        primaryId = route.primary;
+        fallbackId = route.fallback;
+      }
+      // If primary is cloud but no keys configured, switch primary to ollama
+      if ((primaryId === 'gemini' && !hasGemini) || (primaryId === 'openai' && !hasOpenAI)) {
+        primaryId = 'ollama';
+        fallbackId = hasGemini ? 'gemini' : hasOpenAI ? 'openai' : 'ollama';
+      }
+    }
+
+    const primaryProvider = this.providers.get(primaryId) || this.providers.get('ollama')!;
+    const fallbackProvider = this.providers.get(fallbackId) || this.providers.get('gemini')!;
+
+    // 3. Try Primary Provider
     try {
       const result = await primaryProvider.complete(prompt, options);
       await this.saveCache(promptHash, taskType, result);
       await this.logUsage(taskType, result);
       return result;
     } catch (primaryErr: any) {
-      logger.warn(`Primary AI Provider (${primaryProvider.id}) failed. Triggering Fallback (${fallbackProvider.id})`, {
-        error: primaryErr.message,
-      });
+      logger.warn(`Primary AI Provider (${primaryProvider.id}) failed: ${primaryErr.message}. Triggering Fallback (${fallbackProvider.id})`);
 
-      // 3. Try Fallback Provider
-      try {
-        const result = await fallbackProvider.complete(prompt, options);
-        await this.saveCache(promptHash, taskType, result);
-        await this.logUsage(taskType, result);
-        return result;
-      } catch (fallbackErr: any) {
-        logger.error(`Fallback AI Provider (${fallbackErr}) failed. Queueing task for retry.`);
-        const ollamaProvider = this.providers.get('ollama')!;
-        const result = await ollamaProvider.complete(prompt, options);
-        await this.saveCache(promptHash, taskType, result);
-        await this.logUsage(taskType, result);
-        return result;
+      // 4. Try Fallback Provider
+      if (fallbackProvider.id !== primaryProvider.id) {
+        try {
+          const result = await fallbackProvider.complete(prompt, options);
+          await this.saveCache(promptHash, taskType, result);
+          await this.logUsage(taskType, result);
+          return result;
+        } catch (fallbackErr: any) {
+          logger.warn(`Fallback AI Provider (${fallbackProvider.id}) failed: ${fallbackErr.message}`);
+        }
       }
+
+      // 5. If all configured live providers fail or are offline, provide structured instructional guidance
+      const guidanceMessage = `[PLACE@ASET AI Engine]: Local AI is unavailable. Start Ollama or choose a configured cloud provider.
+Ollama URL: ${(process.env.OLLAMA_BASE_URL || 'http://localhost:11434')}
+Model: ${process.env.OLLAMA_MODEL || 'llama3'}`;
+
+      const safeResult: AICompletionResult = {
+        text: guidanceMessage,
+        tokensUsed: 0,
+        latencyMs: 1,
+        providerId: 'unavailable',
+        model: 'system-guidance',
+      };
+
+      return safeResult;
     }
   }
 

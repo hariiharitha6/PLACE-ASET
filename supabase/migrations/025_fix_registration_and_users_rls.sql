@@ -2,22 +2,53 @@
 -- PLACE@ASET Database Migration 025: Fix Registration & User Profile RLS
 -- ============================================================
 
--- 1. Ensure public.users has strict, secure self-insert policy for authenticated users
+-- 1. Ensure public.users has strict, secure self-read/insert/update policy for authenticated users
+DROP POLICY IF EXISTS "Users can read own college users" ON public.users;
+DROP POLICY IF EXISTS "Users can read own profile" ON public.users;
+CREATE POLICY "Users can read own profile" ON public.users
+  FOR SELECT TO authenticated
+  USING (id = auth.uid() OR college_id = public.current_college_id() OR public.current_user_role() = 'super_admin');
+
 DROP POLICY IF EXISTS "Users can insert own profile" ON public.users;
 CREATE POLICY "Users can insert own profile" ON public.users
   FOR INSERT TO authenticated
   WITH CHECK (id = auth.uid());
 
--- 2. Allow authenticated users to insert their initial student role
+DROP POLICY IF EXISTS "Users can update own profile" ON public.users;
+CREATE POLICY "Users can update own profile" ON public.users
+  FOR UPDATE TO authenticated
+  USING (id = auth.uid() OR public.current_user_role() IN ('super_admin', 'college_admin'))
+  WITH CHECK (id = auth.uid() OR public.current_user_role() IN ('super_admin', 'college_admin'));
+
+-- 2. Allow authenticated users to read and insert their initial student role
+DROP POLICY IF EXISTS "User roles readable by same college users" ON public.user_roles;
+DROP POLICY IF EXISTS "User roles readable by own user or college users" ON public.user_roles;
+CREATE POLICY "User roles readable by own user or college users" ON public.user_roles
+  FOR SELECT TO authenticated
+  USING (
+    user_id = auth.uid() OR 
+    EXISTS (
+      SELECT 1 FROM public.users u 
+      WHERE u.id = user_roles.user_id 
+      AND (u.college_id = public.current_college_id() OR public.current_user_role() = 'super_admin')
+    )
+  );
+
 DROP POLICY IF EXISTS "Users can insert own roles" ON public.user_roles;
 CREATE POLICY "Users can insert own roles" ON public.user_roles
   FOR INSERT TO authenticated
-  WITH CHECK (user_id = auth.uid());
+  WITH CHECK (user_id = auth.uid() OR public.current_user_role() IN ('super_admin', 'college_admin'));
 
--- 3. Allow authenticated users to insert their notification preferences
+-- 3. Allow authenticated users to insert and manage their notification preferences
 DROP POLICY IF EXISTS "Users can insert own notification preferences" ON public.notification_preferences;
 CREATE POLICY "Users can insert own notification preferences" ON public.notification_preferences
   FOR INSERT TO authenticated
+  WITH CHECK (user_id = auth.uid());
+
+DROP POLICY IF EXISTS "Users manage own notification preferences" ON public.notification_preferences;
+CREATE POLICY "Users manage own notification preferences" ON public.notification_preferences
+  FOR ALL TO authenticated
+  USING (user_id = auth.uid())
   WITH CHECK (user_id = auth.uid());
 
 -- 4. Enable automatic profile creation via SECURITY DEFINER database trigger on auth.users
@@ -91,6 +122,11 @@ BEGIN
     true,
     true
   ) ON CONFLICT (user_id) DO NOTHING;
+
+  -- Assign default student role in user_roles
+  INSERT INTO public.user_roles (user_id, role_id)
+  SELECT NEW.id, r.id FROM public.roles r WHERE r.name = 'student'
+  ON CONFLICT (user_id, role_id) DO NOTHING;
 
   RETURN NEW;
 EXCEPTION WHEN OTHERS THEN

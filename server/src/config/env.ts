@@ -41,6 +41,14 @@ export const envSchema = z.object({
   ENABLE_AI_DEDUP: z.string().default('false'),
   ENABLE_ANTI_CHEAT: z.string().default('true'),
   
+  // AI Provider Configuration
+  OLLAMA_BASE_URL: z.string().default('http://localhost:11434'),
+  OLLAMA_MODEL: z.string().default('llama3'),
+  AI_PROVIDER_MODE: z.enum(['auto', 'local', 'cloud']).default('auto'),
+  GEMINI_API_KEY: optionalNonEmptyString,
+  GOOGLE_API_KEY: optionalNonEmptyString,
+  OPENAI_API_KEY: optionalNonEmptyString,
+
   // Logging
   LOG_LEVEL: z.string().default('info'),
   LOG_FORMAT: z.string().default('json'),
