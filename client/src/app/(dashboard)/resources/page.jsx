@@ -11,6 +11,7 @@ import {
   Sparkles, Filter, RotateCcw, ExternalLink, Video, Award, 
   CheckCircle, Layers, BookOpen, User, Star
 } from 'lucide-react';
+import EmptyState from '../../../components/ui/EmptyState';
 import styles from './resources.module.css';
 
 const SECTIONS = [
@@ -211,7 +212,7 @@ export default function ResourceHubHome() {
       <div className={styles.header}>
         <div className={styles.titleSection}>
           <h1>🎓 Resource Hub</h1>
-          <p>Discover academic study guides, placement papers, video lectures, and AI-summarized notes.</p>
+          <p>Find study materials, placement preparation guides, and video tutorials. Browse categories or save items to your bookmarks.</p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           <Link href="/resources/bookmarks" style={{ textDecoration: 'none' }}>
@@ -301,14 +302,15 @@ export default function ResourceHubHome() {
           <p>Loading curated resources...</p>
         </div>
       ) : resources.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--bg-glass)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)' }}>
-          <BookOpen size={40} style={{ color: 'var(--text-muted)', marginBottom: '12px' }} />
-          <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>No resources found</h3>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>Try adjusting your search criteria or resetting filters.</p>
-          <button onClick={resetFilters} style={{ marginTop: '16px', padding: '8px 16px', borderRadius: 'var(--radius-md)', background: 'var(--accent-primary)', color: '#fff', border: 'none', cursor: 'pointer' }}>
-            Reset Filters
-          </button>
-        </div>
+        <EmptyState
+          icon={<BookOpen size={44} style={{ opacity: 0.5 }} />}
+          title="No resources found"
+          description="Try adjusting your search criteria or resetting filters to find study materials."
+          actionText="Reset Filters"
+          onAction={resetFilters}
+          secondaryText="View Bookmarks"
+          secondaryHref="/resources/bookmarks"
+        />
       ) : (
         <div className={styles.grid}>
           {resources.map(res => (

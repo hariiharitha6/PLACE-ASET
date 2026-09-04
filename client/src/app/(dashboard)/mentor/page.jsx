@@ -145,7 +145,7 @@ export default function AIMentorPage() {
           <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Bot size={26} style={{ color: 'var(--accent-primary)' }} /> AI Personal Learning & Career Mentor
           </h1>
-          <p>Conversational AI mentor for daily study plans, concept explanations, placement guidance, and personal document queries.</p>
+          <p>Ask questions about any technical topic, request custom study plans, or query your uploaded materials with AI guidance.</p>
         </div>
       </div>
 

@@ -12,6 +12,7 @@ import {
   Flame, Clock, ChevronRight, Bookmark, AlertTriangle, Sparkles, 
   Settings, History, Award, CheckCircle, RefreshCw 
 } from 'lucide-react';
+import EmptyState from '../../../components/ui/EmptyState';
 import styles from './practice.module.css';
 
 const PRACTICE_MODES = [
@@ -164,7 +165,7 @@ export default function PracticeArenaPage() {
       <div className={styles.header}>
         <div className={styles.titleSection}>
           <h1>Placement Practice Arena</h1>
-          <p>Train across Quantitative, Reasoning, Verbal, Technical, and Recruiters specific formats.</p>
+          <p>Choose a category and difficulty below to begin answering questions with instant evaluation, or target weak areas with adaptive practice.</p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           <button 
@@ -444,9 +445,13 @@ export default function PracticeArenaPage() {
               <History size={18} /> Recent Practice Sessions
             </h2>
             {history.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: '13px', textAlign: 'center', padding: '24px 0' }}>
-                No practice history recorded yet. Choose a mode to start!
-              </p>
+              <EmptyState
+                icon={<History size={36} style={{ opacity: 0.5 }} />}
+                title="No practice history yet"
+                description="Start your first practice session to track your progress and unlock performance telemetry."
+                actionText="Select a Practice Mode"
+                onAction={() => window.scrollTo({ top: 300, behavior: 'smooth' })}
+              />
             ) : (
               <div style={{ overflowX: 'auto' }}>
                 <table className={styles.historyTable}>

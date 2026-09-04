@@ -111,7 +111,7 @@ export default function InterviewPrepPage() {
       <div className={styles.header}>
         <div className={styles.titleBox}>
           <h1>Interview Preparation Hub & AI Simulator</h1>
-          <p>Real-time conversational mock interviews, structured behavioral scoring, and core placement subject diagnostics.</p>
+          <p>Practice technical and HR interviews with AI evaluation. Choose a prep module below or launch a simulated mock interview.</p>
         </div>
         <button 
           className={styles.launchMockBtn}

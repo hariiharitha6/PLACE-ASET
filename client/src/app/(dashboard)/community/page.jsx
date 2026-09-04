@@ -10,6 +10,7 @@ import {
   Users, MessageSquare, ThumbsUp, Plus, Search, CheckCircle2, 
   Pin, Sparkles, Filter, Bookmark, User, Tag, ArrowRight, ShieldCheck 
 } from 'lucide-react';
+import EmptyState from '../../../components/ui/EmptyState';
 import styles from './community.module.css';
 
 const FILTER_TABS = [
@@ -133,7 +134,7 @@ export default function CommunityHubPage() {
           <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Users size={26} style={{ color: 'var(--accent-primary)' }} /> Community & Collaboration Forum
           </h1>
-          <p>Ask coding doubts, discuss interview preparation, share DSA & SQL solutions, and collaborate.</p>
+          <p>Ask coding doubts, discuss interview preparation, share solutions, and collaborate with peers and faculty across campus.</p>
         </div>
 
         <button onClick={() => setShowAddModal(true)}
@@ -195,14 +196,13 @@ export default function CommunityHubPage() {
           <p>Loading community discussions...</p>
         </div>
       ) : discussions.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--bg-glass)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)' }}>
-          <MessageSquare size={40} style={{ color: 'var(--text-muted)', marginBottom: '12px' }} />
-          <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>No discussions found</h3>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>Be the first student or faculty member to start a discussion in this topic.</p>
-          <button onClick={() => setShowAddModal(true)} style={{ marginTop: '16px', padding: '8px 16px', borderRadius: 'var(--radius-md)', background: 'var(--accent-primary)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>
-            Start a Discussion
-          </button>
-        </div>
+        <EmptyState
+          icon={<MessageSquare size={44} style={{ opacity: 0.5 }} />}
+          title="No discussions yet"
+          description="Be the first student or faculty member to start a discussion or ask a question."
+          actionText="Start Discussion"
+          onAction={() => setShowAddModal(true)}
+        />
       ) : (
         <div className={styles.grid}>
           {discussions.map(disc => (

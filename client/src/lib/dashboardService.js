@@ -47,5 +47,13 @@ export const dashboardService = {
   markAllAsRead: async () => {
     const response = await api.put('/dashboard/notifications/read-all');
     return response.data;
+  },
+
+  /**
+   * Fetches prioritized "Your Next Step" recommendations based on real user data.
+   */
+  getNextSteps: async () => {
+    const response = await api.get('/dashboard/next-steps');
+    return response.data;
   }
 };

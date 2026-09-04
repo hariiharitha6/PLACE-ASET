@@ -118,3 +118,20 @@ export async function markAllNotificationsRead(req: AuthenticatedRequest, res: R
     return errorResponse(res, error.message || 'Failed to mark all notifications as read', 400);
   }
 }
+
+/**
+ * Returns prioritized "Your Next Step" recommendations based on real user data.
+ */
+export async function getNextSteps(req: AuthenticatedRequest, res: Response, _next: NextFunction) {
+  try {
+    if (!req.user) {
+      return errorResponse(res, 'User not authenticated', 401);
+    }
+    const collegeId = req.user.collegeId || '';
+
+    const steps = await DashboardService.getNextSteps(req.user.id, collegeId);
+    return successResponse(res, steps, 200);
+  } catch (error: any) {
+    return errorResponse(res, error.message || 'Failed to fetch recommendations', 400);
+  }
+}

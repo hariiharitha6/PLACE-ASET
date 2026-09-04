@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../context/AuthContext';
+import { useToast } from '../../../context/ToastContext';
 import { dashboardService } from '../../../lib/dashboardService';
 import FocusCard from '../../../components/ui/FocusCard';
+import NextStepCard from '../../../components/widgets/NextStepCard';
 import PlacementReadinessWidget from '../../../components/widgets/PlacementReadinessWidget';
 import PlacementDrivesWidget from '../../../components/widgets/PlacementDrivesWidget';
 import ChallengeWidget from '../../../components/widgets/ChallengeWidget';
@@ -33,6 +35,7 @@ import styles from './studentDashboard.module.css';
 export default function StudentDashboardPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const toast = useToast();
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -50,6 +53,16 @@ export default function StudentDashboardPage() {
     loadDashboard();
   }, []);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const welcomed = localStorage.getItem('place_aset_welcomed');
+      if (!welcomed) {
+        toast.info("Welcome to PLACE@ASET! Start with the highlighted 'Your Next Step' above.", 6000);
+        localStorage.setItem('place_aset_welcomed', 'true');
+      }
+    }
+  }, [toast]);
+
   if (isLoading) {
     return (
       <div className={styles.loadingContainer}>
@@ -61,42 +74,50 @@ export default function StudentDashboardPage() {
 
   const {
     profile = {},
+    practiceProgress = {},
     weeklyChallenge = null,
     leaderboardPreview = [],
     upcomingEvents = [],
     latestResources = [],
   } = data || {};
 
-  const streakDays = user?.daily_streak || profile?.streak_days || 0;
-  const solvedCount = profile?.solved_count || 0;
-  const rank = profile?.rank || 0;
+  const streakDays = profile?.streak || 0;
+  const totalSessions = practiceProgress?.totalSessions || 0;
+  const completedSessions = practiceProgress?.completedSessions || 0;
+  const rank = profile?.collegeRank || 0;
   const readinessScore = profile?.readiness_score || 0;
 
   return (
     <div className={styles.dashboardContainer}>
 
-      {/* 1. DOMINANT FOCUS COMMAND CARD */}
+      {/* 1. GREETING + FOCUS CARD */}
       <FocusCard
         greeting="Good day"
         userName={user?.full_name || 'Candidate'}
         streak={streakDays}
-        focusTitle="Continue Active Learning"
-        focusDescription="Pick up right where you left off. Recommended focus today is Technical Core (DSA & DBMS)."
-        ctaText="Resume Practice →"
+        focusTitle={totalSessions > 0 ? 'Continue Active Learning' : 'Welcome to PLACE@ASET'}
+        focusDescription={totalSessions > 0
+          ? `You have completed ${completedSessions} practice sessions. Keep going to strengthen your preparation.`
+          : 'Start by practising a few questions. Your dashboard will fill up as you learn.'
+        }
+        ctaText={totalSessions > 0 ? 'Resume Practice →' : 'Start Your First Practice →'}
         ctaHref="/practice"
         goalTarget={5}
-        completedCount={Math.min(5, solvedCount > 0 ? (solvedCount % 5) : 0)}
+        completedCount={Math.min(5, completedSessions)}
       />
 
-      {/* 2. EXECUTIVE STUDY TELEMETRY KPIS */}
+      {/* 2. YOUR NEXT STEP — data-driven recommendations */}
+      <NextStepCard />
+
+      {/* 3. EXECUTIVE STUDY TELEMETRY KPIS */}
       <div className={styles.kpiGrid}>
         <div className={styles.kpiCard} onClick={() => router.push('/practice')}>
           <div className={styles.kpiHeader}>
             <span className={styles.kpiIcon}>⚡</span>
             <span className={styles.kpiTagSuccess}>Active</span>
           </div>
-          <span className={styles.kpiVal}>{solvedCount} Solved</span>
-          <span className={styles.kpiLabel}>Total Practice Questions</span>
+          <span className={styles.kpiVal}>{totalSessions > 0 ? `${completedSessions} Sessions` : 'Not started'}</span>
+          <span className={styles.kpiLabel}>Practice Sessions Completed</span>
         </div>
 
         <div className={styles.kpiCard} onClick={() => router.push('/challenges')}>
@@ -127,66 +148,46 @@ export default function StudentDashboardPage() {
         </div>
       </div>
 
-      {/* 3. AI WEAK AREA RECOMMENDATION & TOPIC LAUNCHPAD */}
-      <div className={styles.sectionRowTwo}>
-        <div className={styles.aiRecCard}>
-          <div className={styles.aiRecHeader}>
-            <span className={styles.aiRecBadge}>
-              <Bot size={14} /> AI Diagnostic Recommendation
-            </span>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Adaptive Engine</span>
-          </div>
-          <div>
-            <h3 className={styles.aiRecTitle}>Recommended Focus: SQL Joins & Query Tuning</h3>
-            <p className={styles.aiRecText}>
-              Based on your recent assessment history, spending 15 minutes reviewing Relational DBMS indexing and Multi-table Joins will optimize your core technical score.
-            </p>
-          </div>
-          <Link href="/practice" className={styles.aiRecActionBtn}>
-            Start 15-Minute Topic Practice <ArrowRight size={14} />
+      {/* 4. TOPIC LAUNCHPAD */}
+      <div className={styles.topicCard}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#fff', margin: 0 }}>Core Learning Tracks</h3>
+          <Link href="/practice" style={{ fontSize: '12px', color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: '600' }}>
+            View All →
           </Link>
         </div>
+        <div className={styles.topicGrid}>
+          <Link href="/practice" className={styles.topicItem}>
+            <span className={styles.topicIcon}>💻</span>
+            <div>
+              <h4 className={styles.topicName}>Data Structures</h4>
+              <span className={styles.topicCount}>Trees, Graphs, DP</span>
+            </div>
+          </Link>
 
-        <div className={styles.topicCard}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#fff', margin: 0 }}>Core Learning Tracks</h3>
-            <Link href="/practice" style={{ fontSize: '12px', color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: '600' }}>
-              View All →
-            </Link>
-          </div>
-          <div className={styles.topicGrid}>
-            <Link href="/practice" className={styles.topicItem}>
-              <span className={styles.topicIcon}>💻</span>
-              <div>
-                <h4 className={styles.topicName}>Data Structures</h4>
-                <span className={styles.topicCount}>Trees, Graphs, DP</span>
-              </div>
-            </Link>
+          <Link href="/practice" className={styles.topicItem}>
+            <span className={styles.topicIcon}>🗄️</span>
+            <div>
+              <h4 className={styles.topicName}>DBMS & SQL</h4>
+              <span className={styles.topicCount}>Queries, Indexing</span>
+            </div>
+          </Link>
 
-            <Link href="/practice" className={styles.topicItem}>
-              <span className={styles.topicIcon}>🗄️</span>
-              <div>
-                <h4 className={styles.topicName}>DBMS & SQL</h4>
-                <span className={styles.topicCount}>Queries, Indexing</span>
-              </div>
-            </Link>
+          <Link href="/practice" className={styles.topicItem}>
+            <span className={styles.topicIcon}>⚙️</span>
+            <div>
+              <h4 className={styles.topicName}>Operating Systems</h4>
+              <span className={styles.topicCount}>Threads, Memory</span>
+            </div>
+          </Link>
 
-            <Link href="/practice" className={styles.topicItem}>
-              <span className={styles.topicIcon}>⚙️</span>
-              <div>
-                <h4 className={styles.topicName}>Operating Systems</h4>
-                <span className={styles.topicCount}>Threads, Memory</span>
-              </div>
-            </Link>
-
-            <Link href="/practice" className={styles.topicItem}>
-              <span className={styles.topicIcon}>🧠</span>
-              <div>
-                <h4 className={styles.topicName}>General Aptitude</h4>
-                <span className={styles.topicCount}>Quants & Reasoning</span>
-              </div>
-            </Link>
-          </div>
+          <Link href="/practice" className={styles.topicItem}>
+            <span className={styles.topicIcon}>🧠</span>
+            <div>
+              <h4 className={styles.topicName}>General Aptitude</h4>
+              <span className={styles.topicCount}>Quants & Reasoning</span>
+            </div>
+          </Link>
         </div>
       </div>
 

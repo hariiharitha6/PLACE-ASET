@@ -38,7 +38,7 @@ export default function ProtectedRoute({ children, allowedRoles }) {
           animation: 'spin 1s linear infinite'
         }} />
         <span style={{ color: '#94a3b8', fontSize: '14px', letterSpacing: '0.05em' }}>
-          Verifying Identity...
+          Loading your learning portal...
         </span>
         <style>{`
           @keyframes spin {

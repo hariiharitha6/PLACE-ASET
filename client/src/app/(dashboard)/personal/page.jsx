@@ -9,6 +9,7 @@ import {
   HelpCircle, Trash2, Plus, ArrowRight, ShieldCheck, CheckCircle2, Bot 
 } from 'lucide-react';
 import Link from 'next/link';
+import EmptyState from '../../../components/ui/EmptyState';
 import styles from './personal.module.css';
 
 export default function PersonalLearningModePage() {
@@ -120,7 +121,7 @@ export default function PersonalLearningModePage() {
             <UserCheck size={28} style={{ color: 'var(--accent-primary)' }} /> Personal Learning Mode & Private Studio
           </h1>
           <p>
-            Independent learning space for personal notes, custom study materials, automated AI flashcards, quizzes, and private knowledge exploration.
+            Upload your notes or study material. AI will automatically create chapter summaries, interactive flashcards, and quizzes for self-paced study.
           </p>
         </div>
 
@@ -211,14 +212,13 @@ export default function PersonalLearningModePage() {
               <p style={{ fontSize: '13px', marginTop: '8px' }}>Loading private studio items...</p>
             </div>
           ) : documents.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--text-muted)' }}>
-              <FileText size={36} style={{ opacity: 0.4, marginBottom: '10px' }} />
-              <h4 style={{ fontSize: '15px', color: 'var(--text-primary)', margin: 0 }}>Your personal library is empty</h4>
-              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>Upload your first notes or PDF text to generate automated flashcards, summaries, and quizzes.</p>
-              <button onClick={() => setShowUpload(true)} style={{ marginTop: '12px', padding: '8px 16px', borderRadius: 'var(--radius-md)', background: 'var(--gradient-primary)', color: '#fff', border: 'none', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
-                Upload First Material
-              </button>
-            </div>
+            <EmptyState
+              icon={<FileText size={44} style={{ opacity: 0.5 }} />}
+              title="No study materials yet"
+              description="Upload your notes or study material — AI will create summaries, flashcards, and quizzes."
+              actionText="Upload Material"
+              onAction={() => setShowUpload(true)}
+            />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {documents.map(doc => (

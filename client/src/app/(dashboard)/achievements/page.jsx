@@ -9,6 +9,7 @@ import {
   Trophy, Award, Sparkles, CheckCircle2, Lock, Flame, 
   Target, MessageSquare, Zap, Star, Shield 
 } from 'lucide-react';
+import EmptyState from '../../../components/ui/EmptyState';
 import styles from '../certificates/certificates.module.css';
 
 export default function AchievementsGalleryPage() {
@@ -71,7 +72,7 @@ export default function AchievementsGalleryPage() {
           <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Trophy size={26} style={{ color: '#f59e0b' }} /> Digital Achievements & Badge Gallery
           </h1>
-          <p>Earn XP rewards, unlock coding streak milestones, challenge mastery badges, and community honors.</p>
+          <p>Earn badges and XP rewards by solving questions, participating in discussions, and hitting practice streaks.</p>
         </div>
 
         <button onClick={handleCheckAchievements} disabled={checking}
@@ -86,6 +87,16 @@ export default function AchievementsGalleryPage() {
           <Sparkles size={24} style={{ animation: 'spin 1s linear infinite', marginBottom: '12px' }} />
           <p>Loading digital achievement badges...</p>
         </div>
+      ) : achievements.length === 0 ? (
+        <EmptyState
+          icon={<Trophy size={44} style={{ opacity: 0.5 }} />}
+          title="No achievements unlocked yet"
+          description="Keep practicing, joining challenges, and participating in the community to earn badges and XP rewards."
+          actionText="Sync Achievements"
+          onAction={handleCheckAchievements}
+          secondaryText="Go to Practice"
+          secondaryHref="/practice"
+        />
       ) : (
         <div className={styles.grid}>
           {achievements.map(ach => (

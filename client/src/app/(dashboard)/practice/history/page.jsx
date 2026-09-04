@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { practiceService } from '../../../../lib/practiceService';
-import { Clock, Target, Zap, ChevronRight } from 'lucide-react';
+import { Clock, Target, Zap, ChevronRight, Brain } from 'lucide-react';
+import EmptyState from '../../../../components/ui/EmptyState';
 import styles from '../practice.module.css';
 
 export default function PracticeHistoryPage() {
@@ -53,9 +54,13 @@ export default function PracticeHistoryPage() {
       {isLoading ? (
         <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>Loading history...</div>
       ) : sessions.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)', background: 'var(--bg-glass)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)' }}>
-          No practice sessions completed yet.
-        </div>
+        <EmptyState
+          icon={<Brain size={44} style={{ opacity: 0.5 }} />}
+          title="No practice history yet"
+          description="Start your first practice session to track your progress and skill accuracy."
+          actionText="Start Practice"
+          actionHref="/practice"
+        />
       ) : (
         <div style={{ background: 'var(--bg-glass)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', overflow: 'auto' }}>
           <table className={styles.historyTable}>

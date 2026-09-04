@@ -5,7 +5,8 @@ import {
   getActivityLogs, 
   getNotifications, 
   markNotificationRead, 
-  markAllNotificationsRead 
+  markAllNotificationsRead,
+  getNextSteps 
 } from '../../controllers/dashboard.controller';
 import { verifyJWT } from '../../middleware/auth';
 import { cacheMiddleware } from '../../utils/cache';
@@ -21,5 +22,6 @@ router.get('/activity', getActivityLogs as any);
 router.get('/notifications', getNotifications as any);
 router.put('/notifications/read-all', markAllNotificationsRead as any);
 router.put('/notifications/:id/read', markNotificationRead as any);
+router.get('/next-steps', getNextSteps as any);
 
 export default router;

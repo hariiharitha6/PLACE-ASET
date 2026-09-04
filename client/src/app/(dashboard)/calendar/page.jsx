@@ -8,6 +8,7 @@ import {
   Calendar as CalendarIcon, Plus, Sparkles, Clock, MapPin, 
   Trash2, CheckCircle2, BookOpen, Trophy, Briefcase, Bell, ChevronLeft, ChevronRight 
 } from 'lucide-react';
+import EmptyState from '../../../components/ui/EmptyState';
 import styles from './calendar.module.css';
 
 export default function CalendarPage() {
@@ -111,7 +112,7 @@ export default function CalendarPage() {
           <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <CalendarIcon size={26} style={{ color: 'var(--accent-primary)' }} /> Calendar & Smart Schedule
           </h1>
-          <p>Unified view of your assignments, coding contests, placement drives, workshops, and AI study plans.</p>
+          <p>Track placement deadlines, company drives, exam dates, and generate personalized AI study plans.</p>
         </div>
 
         <button onClick={() => setShowAddModal(true)}
@@ -134,9 +135,13 @@ export default function CalendarPage() {
               <p>Syncing calendar events...</p>
             </div>
           ) : events.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
-              No upcoming events scheduled. Add a reminder or generate an AI study plan!
-            </div>
+            <EmptyState
+              icon={<CalendarIcon size={44} style={{ opacity: 0.5 }} />}
+              title="No upcoming events"
+              description="Add deadlines, events, or generate an AI study plan to stay organized."
+              actionText="Add Event"
+              onAction={() => setShowAddModal(true)}
+            />
           ) : (
             <div className={styles.agendaList}>
               {events.map(item => {

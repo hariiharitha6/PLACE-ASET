@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import styles from './PageHeader.module.css';
 
 export default function PageHeader({
@@ -7,7 +8,8 @@ export default function PageHeader({
   title,
   subtitle,
   children,
-  breadcrumbs = []
+  breadcrumbs = [],
+  nextAction,
 }) {
   return (
     <header className={styles.header}>
@@ -18,7 +20,7 @@ export default function PageHeader({
               <span key={idx} className={styles.crumbItem}>
                 {idx > 0 && <span className={styles.separator}>/</span>}
                 {crumb.href ? (
-                  <a href={crumb.href} className={styles.crumbLink}>{crumb.label}</a>
+                  <Link href={crumb.href} className={styles.crumbLink}>{crumb.label}</Link>
                 ) : (
                   <span className={styles.crumbActive}>{crumb.label}</span>
                 )}
@@ -36,6 +38,20 @@ export default function PageHeader({
 
         <h1 className={styles.title}>{title}</h1>
         {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
+
+        {nextAction && (
+          <div className={styles.nextAction}>
+            <span className={styles.nextActionLabel}>Recommended Next Step</span>
+            {nextAction.description && (
+              <span className={styles.nextActionDesc}>{nextAction.description}</span>
+            )}
+            {nextAction.href && nextAction.text && (
+              <Link href={nextAction.href} className={styles.nextActionLink}>
+                {nextAction.text} &rarr;
+              </Link>
+            )}
+          </div>
+        )}
       </div>
 
       {children && <div className={styles.actions}>{children}</div>}

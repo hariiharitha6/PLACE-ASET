@@ -9,6 +9,7 @@ import {
   Award, ShieldCheck, Download, ExternalLink, Sparkles, 
   CheckCircle2, QrCode, Share2, FileText, Calendar 
 } from 'lucide-react';
+import EmptyState from '../../../components/ui/EmptyState';
 import styles from './certificates.module.css';
 
 export default function CertificatesPage() {
@@ -112,7 +113,7 @@ export default function CertificatesPage() {
           <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Award size={26} style={{ color: 'var(--accent-primary)' }} /> Digital Credentials & Certificates
           </h1>
-          <p>Verified academic credentials, coding mastery certificates, and competitive placement achievements.</p>
+          <p>View and download your earned credentials. Certificates are issued automatically upon completing challenges, assessments, and high-scoring mocks.</p>
         </div>
 
         <Link href="/achievements" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: 'var(--radius-md)', background: 'var(--bg-glass)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', textDecoration: 'none', fontWeight: '600', fontSize: '13px' }}>
@@ -127,16 +128,13 @@ export default function CertificatesPage() {
           <p>Loading digital certificates...</p>
         </div>
       ) : certificates.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--bg-glass)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)' }}>
-          <Award size={44} style={{ color: 'var(--text-muted)', marginBottom: '12px' }} />
-          <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>No certificates earned yet</h3>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px', maxWidth: '500px', margin: '8px auto' }}>
-            Certificates are issued automatically when you win weekly coding challenges, complete faculty assessments, or score above 80% in company placement mocks.
-          </p>
-          <Link href="/challenges" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '16px', padding: '10px 20px', borderRadius: 'var(--radius-md)', background: 'var(--gradient-primary)', color: '#fff', textDecoration: 'none', fontSize: '13px', fontWeight: '600' }}>
-            Join Active Challenges
-          </Link>
-        </div>
+        <EmptyState
+          icon={<Award size={44} style={{ opacity: 0.5 }} />}
+          title="No certificates earned yet"
+          description="Complete weekly coding challenges, faculty assessments, or high-scoring mocks to earn verified digital credentials."
+          actionText="View Challenges"
+          actionHref="/challenges"
+        />
       ) : (
         <div className={styles.grid}>
           {certificates.map(cert => (

@@ -244,4 +244,248 @@ export class DashboardService {
 
     return { success: true };
   }
+
+  /**
+   * Generates prioritized "Your Next Step" recommendations based on REAL user data.
+   * 
+   * Each recommendation contains:
+   *   - title: WHAT to do (plain language)
+   *   - reason: WHY it matters (based on real metrics)
+   *   - ctaText: button label
+   *   - ctaHref: link destination
+   *   - type: icon hint (profile | practice | weak_topic | challenge | personal | calendar | streak | community)
+   *   - priority: numeric (lower = higher priority)
+   * 
+   * Rules:
+   *   - NEVER expose database column names or technical IDs
+   *   - NEVER invent or default statistics
+   *   - NEVER return more than 3 recommendations
+   *   - The first recommendation is the ONE dominant primary action
+   */
+  static async getNextSteps(userId: string, collegeId: string) {
+    const supabase = getSupabase();
+    const steps: Array<{
+      title: string;
+      reason: string;
+      ctaText: string;
+      ctaHref: string;
+      type: string;
+      priority: number;
+    }> = [];
+
+    try {
+      // 1. Check if profile is incomplete
+      const { data: userProfile } = await supabase
+        .from('users')
+        .select('full_name, college_id, roll_number, department_id')
+        .eq('id', userId)
+        .single();
+
+      if (userProfile && (!userProfile.college_id || !userProfile.roll_number || !userProfile.department_id)) {
+        steps.push({
+          title: 'Complete Your Profile',
+          reason: 'Your profile is missing important details like your department or roll number. Completing it helps us personalise your learning experience.',
+          ctaText: 'Complete Profile',
+          ctaHref: '/profile-setup',
+          type: 'profile',
+          priority: 1
+        });
+      }
+
+      // 2. Check for incomplete practice sessions
+      const { data: incompleteSessions } = await supabase
+        .from('practice_sessions')
+        .select('id, mode, created_at')
+        .eq('user_id', userId)
+        .is('ended_at', null)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (incompleteSessions && incompleteSessions.length > 0) {
+        steps.push({
+          title: 'Continue Your Practice Session',
+          reason: 'You have an unfinished practice session. Pick up where you left off to keep your progress going.',
+          ctaText: 'Continue Practice',
+          ctaHref: `/practice/arena/${incompleteSessions[0].id}`,
+          type: 'practice',
+          priority: 2
+        });
+      }
+
+      // 3. Check total practice history
+      const { count: totalSessions } = await supabase
+        .from('practice_sessions')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId);
+
+      if ((totalSessions || 0) === 0 && !incompleteSessions?.length) {
+        steps.push({
+          title: 'Start Your First Practice',
+          reason: 'You haven\'t practiced any questions yet. Starting a practice session is the best way to begin your preparation.',
+          ctaText: 'Start Practice',
+          ctaHref: '/practice',
+          type: 'practice',
+          priority: 2
+        });
+      }
+
+      // 4. Check for weak topics (real data from practice_statistics)
+      const { data: practiceStats } = await supabase
+        .from('practice_statistics')
+        .select('weak_topics, topic_accuracy')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (practiceStats?.weak_topics && Object.keys(practiceStats.weak_topics).length > 0) {
+        // Resolve category names for the weakest topic
+        const weakEntries = Object.entries(practiceStats.weak_topics as Record<string, number>);
+        const sortedWeak = weakEntries.sort(([, a], [, b]) => (a as number) - (b as number));
+        const [weakestCatId, weakestAccuracy] = sortedWeak[0];
+
+        // Get category name
+        const { data: category } = await supabase
+          .from('categories')
+          .select('name')
+          .eq('id', weakestCatId)
+          .maybeSingle();
+
+        const topicName = category?.name || null;
+        const accuracyPct = Math.round(weakestAccuracy as number);
+
+        // Only show if we resolved a real topic name
+        if (topicName) {
+          steps.push({
+            title: `Review: ${topicName}`,
+            reason: `Your recent accuracy in ${topicName} is ${accuracyPct}%. Practising this topic now will strengthen your weakest area.`,
+            ctaText: `Practice ${topicName}`,
+            ctaHref: '/practice',
+            type: 'weak_topic',
+            priority: 3
+          });
+        }
+      }
+
+      // 5. Check for upcoming challenges the user hasn't registered for
+      if (collegeId) {
+        const now = new Date().toISOString();
+        const { data: upcomingChallenges } = await supabase
+          .from('challenges')
+          .select('id, title, start_time')
+          .eq('college_id', collegeId)
+          .in('status', ['published', 'active'])
+          .gt('start_time', now)
+          .order('start_time', { ascending: true })
+          .limit(3);
+
+        if (upcomingChallenges && upcomingChallenges.length > 0) {
+          // Check user registrations
+          const challengeIds = upcomingChallenges.map(c => c.id);
+          const { data: regs } = await supabase
+            .from('challenge_registrations')
+            .select('challenge_id')
+            .eq('user_id', userId)
+            .in('challenge_id', challengeIds);
+
+          const registeredIds = new Set(regs?.map(r => r.challenge_id) || []);
+          const unregistered = upcomingChallenges.find(c => !registeredIds.has(c.id));
+
+          if (unregistered) {
+            const startDate = new Date(unregistered.start_time).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+            steps.push({
+              title: `Join: ${unregistered.title}`,
+              reason: `This challenge starts on ${startDate}. Register now so you don't miss it.`,
+              ctaText: 'View Challenge',
+              ctaHref: `/challenges`,
+              type: 'challenge',
+              priority: 4
+            });
+          }
+        }
+      }
+
+      // 6. Check if user has any personal study documents
+      const { count: personalDocCount } = await supabase
+        .from('personal_documents')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId);
+
+      if ((personalDocCount || 0) === 0) {
+        steps.push({
+          title: 'Upload Study Material',
+          reason: 'Upload your notes or textbook content. Our AI will create summaries, flashcards, and quizzes from your material.',
+          ctaText: 'Go to Personal Studio',
+          ctaHref: '/personal',
+          type: 'personal',
+          priority: 6
+        });
+      }
+
+      // 7. Check for unread notifications
+      const { count: unreadCount } = await supabase
+        .from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('is_read', false);
+
+      if ((unreadCount || 0) >= 5) {
+        steps.push({
+          title: 'Check Your Notifications',
+          reason: `You have ${unreadCount} unread notifications. There may be important updates about assignments, events, or results.`,
+          ctaText: 'View Notifications',
+          ctaHref: '/notifications',
+          type: 'notifications',
+          priority: 5
+        });
+      }
+
+      // 8. Streak encouragement (only if user has practiced before)
+      if (practiceStats?.topic_accuracy && Object.keys(practiceStats.topic_accuracy as object).length > 0) {
+        const { data: userXP } = await supabase
+          .from('users')
+          .select('current_streak')
+          .eq('id', userId)
+          .single();
+
+        const streak = userXP?.current_streak || 0;
+        if (streak >= 2) {
+          steps.push({
+            title: `Keep Your ${streak}-Day Streak`,
+            reason: `You've been practising for ${streak} days in a row. A short session today will keep your streak alive.`,
+            ctaText: 'Quick Practice',
+            ctaHref: '/practice',
+            type: 'streak',
+            priority: 7
+          });
+        }
+      }
+
+      // 9. If user is doing well and nothing urgent, suggest community
+      if (steps.length === 0) {
+        steps.push({
+          title: 'You\'re All Caught Up!',
+          reason: 'Great job keeping up with your learning. Try helping others in the community or exploring new topics.',
+          ctaText: 'Visit Community',
+          ctaHref: '/community',
+          type: 'community',
+          priority: 10
+        });
+      }
+
+      // Sort by priority and return max 3
+      steps.sort((a, b) => a.priority - b.priority);
+      return steps.slice(0, 3);
+
+    } catch (error: any) {
+      logger.error('Failed to generate next steps', { userId, error: error.message });
+      // Graceful fallback — never crash the dashboard for this
+      return [{
+        title: 'Start Practising',
+        reason: 'Head to the Practice Arena to begin answering questions and tracking your progress.',
+        ctaText: 'Go to Practice',
+        ctaHref: '/practice',
+        type: 'practice',
+        priority: 1
+      }];
+    }
+  }
 }

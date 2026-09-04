@@ -11,6 +11,7 @@ export default function EmptyState({
   onAction,
   secondaryText,
   secondaryHref,
+  onSecondary,
 }) {
   return (
     <div className={styles.emptyContainer} role="status">
@@ -32,10 +33,16 @@ export default function EmptyState({
             )
           )}
 
-          {secondaryText && secondaryHref && (
-            <Link href={secondaryHref} className={styles.secondaryBtn}>
-              {secondaryText}
-            </Link>
+          {secondaryText && (
+            secondaryHref ? (
+              <Link href={secondaryHref} className={styles.secondaryBtn}>
+                {secondaryText}
+              </Link>
+            ) : onSecondary ? (
+              <button onClick={onSecondary} className={styles.secondaryBtn}>
+                {secondaryText}
+              </button>
+            ) : null
           )}
         </div>
       )}

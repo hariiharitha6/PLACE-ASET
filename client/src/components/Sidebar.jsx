@@ -26,22 +26,30 @@ export default function Sidebar({ isOpen, onClose }) {
   const pathname = usePathname();
   const { logout, user } = useAuth();
 
-  const navItems = [
-    { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { label: 'Question Bank', href: '/questions', icon: BookOpen },
-    { label: 'Practice Arena', href: '/practice', icon: BookOpen },
-    { label: 'Challenges', href: '/challenges', icon: Trophy },
-    { label: 'AI Personal Mentor', href: '/mentor', icon: Bot },
-    { label: 'Personal Studio', href: '/personal', icon: UserCheck },
-    { label: 'Resource Library', href: '/resources', icon: Library },
-    { label: 'Community', href: '/community', icon: Users },
-    { label: 'Calendar & Deadlines', href: '/calendar', icon: Calendar },
-    { label: '🎯 Placement Readiness', href: '/dashboard/readiness', icon: Target },
-    { label: 'AI Analytics', href: '/ai', icon: Brain },
-    { label: 'Digital Credentials', href: '/certificates', icon: Award },
-    { label: 'Achievements & Badges', href: '/achievements', icon: Award },
-    { label: 'Interview Simulator', href: '/interview-prep', icon: Mic },
-    { label: 'AI Resume Builder', href: '/resume', icon: FileText },
+  const navSections = [
+    { label: 'LEARN', items: [
+      { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+      { label: 'Practice Arena', href: '/practice', icon: BookOpen },
+      { label: 'Resource Library', href: '/resources', icon: Library },
+      { label: 'AI Personal Mentor', href: '/mentor', icon: Bot },
+      { label: 'Personal Studio', href: '/personal', icon: UserCheck },
+    ]},
+    { label: 'PROGRESS', items: [
+      { label: 'Placement Readiness', href: '/dashboard/readiness', icon: Target },
+      { label: 'AI Analytics', href: '/ai', icon: Brain },
+      { label: 'Leaderboard', href: '/leaderboard', icon: BookOpen },
+    ]},
+    { label: 'CONNECT', items: [
+      { label: 'Community', href: '/community', icon: Users },
+      { label: 'Calendar & Deadlines', href: '/calendar', icon: Calendar },
+      { label: 'Challenges', href: '/challenges', icon: Trophy },
+    ]},
+    { label: 'CAREER', items: [
+      { label: 'Interview Simulator', href: '/interview-prep', icon: Mic },
+      { label: 'AI Resume Builder', href: '/resume', icon: FileText },
+      { label: 'Digital Credentials', href: '/certificates', icon: Award },
+      { label: 'Achievements & Badges', href: '/achievements', icon: Award },
+    ]},
   ];
 
   return (
@@ -120,58 +128,82 @@ export default function Sidebar({ isOpen, onClose }) {
           </button>
         </div>
 
-        {/* Navigation Items */}
         <nav style={{
           flex: 1,
           padding: '16px 12px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '4px',
+          gap: '2px',
           overflowY: 'auto'
         }}>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href || (pathname.startsWith(item.href + '/') && item.href !== '/dashboard');
+          {navSections.map((section, sectionIdx) => (
+            <div key={section.label}>
+              {/* Section label */}
+              {sectionIdx > 0 && (
+                <div style={{
+                  height: '1px',
+                  backgroundColor: 'var(--border-color)',
+                  margin: '10px 14px 8px',
+                  opacity: 0.5
+                }} />
+              )}
+              <div style={{
+                fontSize: '10px',
+                fontWeight: '700',
+                letterSpacing: '0.08em',
+                color: 'var(--text-muted)',
+                padding: '6px 14px 4px',
+                userSelect: 'none'
+              }}>
+                {section.label}
+              </div>
 
-            return (
-              <Link 
-                key={item.href} 
-                href={item.href}
-                onClick={() => {
-                  if (window.innerWidth < 1024) onClose();
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '10px 14px',
-                  borderRadius: 'var(--radius-md)',
-                  color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  backgroundColor: isActive ? 'var(--bg-glass-hover)' : 'transparent',
-                  border: isActive ? '1px solid var(--border-accent)' : '1px solid transparent',
-                  fontWeight: isActive ? '600' : '500',
-                  fontSize: '13px',
-                  textDecoration: 'none',
-                  transition: 'all var(--transition-fast)'
-                }}
-                onMouseOver={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.backgroundColor = 'var(--bg-glass)';
-                    e.currentTarget.style.color = 'var(--text-primary)';
-                  }
-                }}
-                onMouseOut={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.color = 'var(--text-secondary)';
-                  }
-                }}
-              >
-                <Icon size={16} style={{ color: isActive ? 'var(--accent-primary)' : 'inherit', flexShrink: 0 }} />
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
-              </Link>
-            );
-          })}
+              {/* Section items */}
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href || (pathname.startsWith(item.href + '/') && item.href !== '/dashboard');
+
+                return (
+                  <Link 
+                    key={item.href} 
+                    href={item.href}
+                    onClick={() => {
+                      if (window.innerWidth < 1024) onClose();
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '9px 14px',
+                      borderRadius: 'var(--radius-md)',
+                      color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      backgroundColor: isActive ? 'var(--bg-glass-hover)' : 'transparent',
+                      border: isActive ? '1px solid var(--border-accent)' : '1px solid transparent',
+                      fontWeight: isActive ? '600' : '500',
+                      fontSize: '13px',
+                      textDecoration: 'none',
+                      transition: 'all var(--transition-fast)'
+                    }}
+                    onMouseOver={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.backgroundColor = 'var(--bg-glass)';
+                        e.currentTarget.style.color = 'var(--text-primary)';
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = 'var(--text-secondary)';
+                      }
+                    }}
+                  >
+                    <Icon size={16} style={{ color: isActive ? 'var(--accent-primary)' : 'inherit', flexShrink: 0 }} />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         {/* Footer Candidate Info */}

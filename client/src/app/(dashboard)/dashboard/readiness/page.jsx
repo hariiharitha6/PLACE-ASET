@@ -62,7 +62,7 @@ export default function PlacementReadinessDashboard() {
         <div>
           <span className={styles.headerBadge}>🎯 AI PLACEMENT TELEMETRY</span>
           <h1 className={styles.title}>Placement Readiness Diagnostic</h1>
-          <p className={styles.subtitle}>Comprehensive candidate readiness diagnostic, company eligibility matrix, and skill progress meters</p>
+          <p className={styles.subtitle}>Evaluate your preparedness for campus placements, view company eligibility criteria, and target skill gaps with diagnostic practice.</p>
         </div>
         <button className={styles.primaryBtn} onClick={() => router.push('/practice')}>
           ⚡ Start Diagnostic Practice

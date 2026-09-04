@@ -147,7 +147,7 @@ ${resumeData.skills}
       <div className={styles.headerRow}>
         <div className={styles.titleBox}>
           <h1>ATS-Optimized AI Placement Resume Builder</h1>
-          <p>Real-time AI ATS keyword alignment, layout templates, and automated technical evaluation for campus placements.</p>
+          <p>Fill in your details, select a layout, and run AI ATS evaluation to optimize your resume for campus placement drives.</p>
         </div>
         <div className={styles.actions}>
           <button onClick={handleAIScore} disabled={analyzing} style={{ backgroundColor: '#6366f1', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '10px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }}>

@@ -52,7 +52,7 @@ export default function AnalyticsPage() {
           <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <TrendingUp size={26} style={{ color: 'var(--accent-primary)' }} /> Analytics & Performance Insights
           </h1>
-          <p>Comprehensive activity heatmap, accuracy trends, skill radar, and Placement Readiness Index.</p>
+          <p>Review your practice telemetry, topic accuracy rates, and placement readiness score. Target your weakest areas to boost your index.</p>
         </div>
       </div>
 
