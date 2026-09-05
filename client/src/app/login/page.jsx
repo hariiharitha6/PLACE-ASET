@@ -41,7 +41,12 @@ function LoginForm() {
       router.push(targetPath);
     } catch (err) {
       console.error(err);
-      setLocalError(err.error || err.message || 'Invalid email or password. Please check your credentials.');
+      const rawMsg = err.error || err.message || '';
+      if (rawMsg.toLowerCase().includes('fetch failed') || rawMsg.toLowerCase().includes('enotfound') || rawMsg.toLowerCase().includes('network')) {
+        setLocalError('Unable to connect to authentication server. Please check your network connection or verify database status.');
+      } else {
+        setLocalError(rawMsg || 'Invalid email or password. Please check your credentials.');
+      }
     } finally {
       setIsSubmitting(false);
     }

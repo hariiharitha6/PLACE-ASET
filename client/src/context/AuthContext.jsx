@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { authService } from '../lib/authService';
 import { useRouter, usePathname } from 'next/navigation';
@@ -35,11 +35,15 @@ export function AuthProvider({ children }) {
   const [error, setError] = useState(null);
   const router = useRouter();
   const pathname = usePathname();
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
 
   // Load profile from backend API or localStorage fallback
   const fetchProfile = useCallback(async (_userId) => {
     try {
-      const profile = await authService.getProfile();
+      const profilePromise = authService.getProfile();
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Profile timeout')), 3000));
+      const profile = await Promise.race([profilePromise, timeoutPromise]);
       if (profile) {
         setUser(profile);
         if (typeof window !== 'undefined') {
@@ -50,7 +54,7 @@ export function AuthProvider({ children }) {
         // Onboarding check for students
         if (profile.role === 'student') {
           const incomplete = !profile.college_id || !profile.roll_number || !profile.department_id;
-          if (incomplete && pathname !== '/profile-setup') {
+          if (incomplete && pathnameRef.current !== '/profile-setup') {
             router.push('/profile-setup');
           }
         }
@@ -70,14 +74,26 @@ export function AuthProvider({ children }) {
     } finally {
       setIsLoading(false);
     }
-  }, [pathname, router]);
+  }, [router]);
 
   useEffect(() => {
     let authListener = null;
 
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const getSessionWithTimeout = async () => {
+          try {
+            const res = await Promise.race([
+              supabase.auth.getSession(),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('Session timeout')), 2000))
+            ]);
+            return res;
+          } catch {
+            return { data: { session: null } };
+          }
+        };
+
+        const { data: { session } } = await getSessionWithTimeout();
         if (session?.user) {
           await fetchProfile(session.user.id);
         } else {
@@ -107,7 +123,8 @@ export function AuthProvider({ children }) {
           } else if (event === 'SIGNED_OUT') {
             setUser(null);
             setIsLoading(false);
-            if (pathname !== '/login' && pathname !== '/admin/login' && pathname !== '/register' && pathname !== '/forgot-password' && pathname !== '/reset-password' && pathname !== '/') {
+            const currentPath = pathnameRef.current;
+            if (currentPath !== '/login' && currentPath !== '/admin/login' && currentPath !== '/register' && currentPath !== '/forgot-password' && currentPath !== '/reset-password' && currentPath !== '/') {
               router.push('/login');
             }
           }
@@ -123,7 +140,7 @@ export function AuthProvider({ children }) {
         authListener.unsubscribe();
       }
     };
-  }, [pathname, router, fetchProfile]);
+  }, [fetchProfile, router]);
 
   const login = async (email, password) => {
     setIsLoading(true);

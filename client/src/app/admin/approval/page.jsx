@@ -133,7 +133,7 @@ export default function QuestionApprovalDashboard() {
 
               <div style={{ display: 'flex', gap: '10px' }}>
                 <span style={{ backgroundColor: 'rgba(16,185,129,0.15)', color: '#34d399', fontSize: '11px', fontWeight: '700', padding: '4px 10px', borderRadius: '12px' }}>
-                  Quality Score: {item.quality_score || 90}/100
+                  Quality Score: {item.quality_score != null ? `${item.quality_score}/100` : 'Pending'}
                 </span>
                 <span style={{ backgroundColor: item.duplicate_score_pct > 30 ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.05)', color: item.duplicate_score_pct > 30 ? '#fbbf24' : '#94a3b8', fontSize: '11px', fontWeight: '700', padding: '4px 10px', borderRadius: '12px' }}>
                   Duplicate Similarity: {item.duplicate_score_pct || 0}%

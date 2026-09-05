@@ -189,7 +189,7 @@ ${resumeData.skills}
 
         {aiAnalysis && (
           <div style={{ backgroundColor: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', color: '#34d399', padding: '8px 16px', borderRadius: '12px', fontSize: '13px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <CheckCircle size={16} /> Overall Score: {aiAnalysis.overallScore}/100 | ATS Match: {aiAnalysis.atsMatch || '90%'} | Impact: {aiAnalysis.impactScore || 85}/100
+            <CheckCircle size={16} /> Overall Score: {aiAnalysis.overallScore != null ? `${aiAnalysis.overallScore}/100` : 'Evaluated'} | ATS Match: {aiAnalysis.atsMatch != null ? `${aiAnalysis.atsMatch}%` : 'N/A'} | Impact: {aiAnalysis.impactScore != null ? `${aiAnalysis.impactScore}/100` : 'N/A'}
           </div>
         )}
       </div>

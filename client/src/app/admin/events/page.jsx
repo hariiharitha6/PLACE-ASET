@@ -110,7 +110,7 @@ export default function EventManagementPage() {
 
                 <div className={styles.infoRow}>
                   <span>⏰ Deadline: {ev.deadline || 'Open'}</span>
-                  <span>🎟️ {ev.registeredCount || 0} / {ev.seats || 100} Seats</span>
+                  <span>🎟️ {ev.registeredCount || 0} / {ev.seats ? `${ev.seats} Seats` : 'Open Seats'}</span>
                 </div>
 
                 <div className={styles.tagRow}>

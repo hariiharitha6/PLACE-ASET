@@ -160,7 +160,7 @@ export default function QuestionApprovalPage() {
                 </div>
                 <div className={styles.metaBox}>
                   <span className={styles.metaLabel}>AI Quality Score</span>
-                  <span className={styles.metaVal}>{selectedQuestion.quality_score || 90} / 100</span>
+                  <span className={styles.metaVal}>{selectedQuestion.quality_score != null ? `${selectedQuestion.quality_score} / 100` : 'Pending'}</span>
                 </div>
               </div>
 

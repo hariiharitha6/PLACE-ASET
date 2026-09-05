@@ -13,21 +13,47 @@ const api = axios.create({
 
 // Attach JWT to every request
 api.interceptors.request.use(async (config) => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session?.access_token) {
-    config.headers.Authorization = `Bearer ${session.access_token}`;
+  let token = null;
+  if (typeof window !== 'undefined') {
+    token = localStorage.getItem('accessToken');
+  }
+  if (!token) {
+    try {
+      const res = await Promise.race([
+        supabase.auth.getSession(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 1000))
+      ]);
+      token = res?.data?.session?.access_token;
+    } catch {
+      token = null;
+    }
+  }
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
 
-// Handle auth errors
+// Handle auth errors safely without infinite redirect loop
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    if (error.response?.status === 401) {
-      // Redirect to login
+    const requestUrl = error.config?.url || '';
+    const isAuthEndpoint = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register');
+    
+    if (error.response?.status === 401 && !isAuthEndpoint) {
       if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('user');
+        const currentPath = window.location.pathname;
+        if (
+          currentPath !== '/login' && 
+          currentPath !== '/admin/login' && 
+          currentPath !== '/register' && 
+          currentPath !== '/'
+        ) {
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error.response?.data || error);
