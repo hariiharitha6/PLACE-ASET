@@ -51,8 +51,8 @@ export default function NextStepCard() {
   if (loading) {
     return (
       <div className={styles.loadingBox}>
-        <Sparkles size={16} style={{ animation: 'pulse 1.5s ease infinite' }} />
-        <span>Finding your next step...</span>
+        <Target size={16} style={{ animation: 'pulse 1.5s ease infinite', color: 'var(--accent-primary)' }} />
+        <span>Loading recommended next step...</span>
       </div>
     );
   }

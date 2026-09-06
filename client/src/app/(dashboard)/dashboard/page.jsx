@@ -27,8 +27,7 @@ import {
   Trophy, 
   Flame, 
   CheckCircle2, 
-  BookOpen,
-  Bot
+  BookOpen
 } from 'lucide-react';
 import styles from './studentDashboard.module.css';
 
@@ -67,7 +66,7 @@ export default function StudentDashboardPage() {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.spinner} />
-        <span>Loading Learning Command Center...</span>
+        <span>Loading dashboard...</span>
       </div>
     );
   }
@@ -151,7 +150,7 @@ export default function StudentDashboardPage() {
       {/* 4. TOPIC LAUNCHPAD */}
       <div className={styles.topicCard}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#fff', margin: 0 }}>Core Learning Tracks</h3>
+          <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>Core Learning Tracks</h3>
           <Link href="/practice" style={{ fontSize: '12px', color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: '600' }}>
             View All →
           </Link>

@@ -18,7 +18,8 @@ import {
   Mic,
   Bot,
   Calendar,
-  UserCheck
+  UserCheck,
+  GraduationCap
 } from 'lucide-react';
 import { APP_NAME } from '../lib/constants';
 
@@ -31,12 +32,12 @@ export default function Sidebar({ isOpen, onClose }) {
       { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       { label: 'Practice Arena', href: '/practice', icon: BookOpen },
       { label: 'Resource Library', href: '/resources', icon: Library },
-      { label: 'AI Personal Mentor', href: '/mentor', icon: Bot },
+      { label: 'Mentor', href: '/mentor', icon: Bot },
       { label: 'Personal Studio', href: '/personal', icon: UserCheck },
     ]},
     { label: 'PROGRESS', items: [
       { label: 'Placement Readiness', href: '/dashboard/readiness', icon: Target },
-      { label: 'AI Analytics', href: '/ai', icon: Brain },
+      { label: 'Analytics', href: '/analytics', icon: Brain },
       { label: 'Leaderboard', href: '/leaderboard', icon: BookOpen },
     ]},
     { label: 'CONNECT', items: [
@@ -46,7 +47,7 @@ export default function Sidebar({ isOpen, onClose }) {
     ]},
     { label: 'CAREER', items: [
       { label: 'Interview Simulator', href: '/interview-prep', icon: Mic },
-      { label: 'AI Resume Builder', href: '/resume', icon: FileText },
+      { label: 'Resume Builder', href: '/resume', icon: FileText },
       { label: 'Digital Credentials', href: '/certificates', icon: Award },
       { label: 'Achievements & Badges', href: '/achievements', icon: Award },
     ]},
@@ -97,18 +98,17 @@ export default function Sidebar({ isOpen, onClose }) {
           borderBottom: '1px solid var(--border-color)'
         }}>
           <Link href="/" style={{
-            fontSize: '18px',
-            fontWeight: '800',
+            fontSize: '17px',
+            fontWeight: '700',
             letterSpacing: '-0.02em',
-            background: 'var(--gradient-primary)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
+            color: 'var(--text-primary)',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
             textDecoration: 'none'
           }}>
-            🎓 {APP_NAME}
+            <GraduationCap size={20} style={{ color: 'var(--accent-primary)' }} />
+            <span>{APP_NAME}</span>
           </Link>
           <button 
             onClick={onClose}
@@ -220,11 +220,11 @@ export default function Sidebar({ isOpen, onClose }) {
               width: '36px',
               height: '36px',
               borderRadius: 'var(--radius-full)',
-              background: 'var(--gradient-primary)',
+              background: 'var(--accent-primary)',
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              fontWeight: '700',
+              fontWeight: '600',
               color: '#fff',
               fontSize: '13px'
             }}>

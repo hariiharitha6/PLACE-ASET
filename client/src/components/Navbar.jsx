@@ -94,8 +94,7 @@ export default function Navbar({ onMenuClick }) {
       position: 'sticky',
       top: 0,
       zIndex: 380,
-      backdropFilter: 'blur(8px)',
-      background: 'rgba(var(--bg-secondary), 0.8)'
+      backdropFilter: 'blur(8px)'
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <button 
@@ -126,7 +125,7 @@ export default function Navbar({ onMenuClick }) {
         <div className="hidden-mobile" style={{
           display: 'flex',
           alignItems: 'center',
-          background: 'rgba(255, 255, 255, 0.03)',
+          background: 'var(--bg-subtle)',
           border: '1px solid var(--border-color)',
           borderRadius: '20px',
           padding: '3px 4px',
@@ -142,9 +141,9 @@ export default function Navbar({ onMenuClick }) {
               borderRadius: '16px',
               border: 'none',
               fontSize: '11px',
-              fontWeight: '700',
+              fontWeight: '600',
               cursor: 'pointer',
-              background: !isPersonalMode ? 'var(--gradient-primary)' : 'transparent',
+              background: !isPersonalMode ? 'var(--accent-primary)' : 'transparent',
               color: !isPersonalMode ? '#fff' : 'var(--text-secondary)',
               transition: 'all var(--transition-fast)'
             }}
@@ -161,9 +160,9 @@ export default function Navbar({ onMenuClick }) {
               borderRadius: '16px',
               border: 'none',
               fontSize: '11px',
-              fontWeight: '700',
+              fontWeight: '600',
               cursor: 'pointer',
-              background: isPersonalMode ? 'var(--gradient-primary)' : 'transparent',
+              background: isPersonalMode ? 'var(--accent-primary)' : 'transparent',
               color: isPersonalMode ? '#fff' : 'var(--text-secondary)',
               transition: 'all var(--transition-fast)'
             }}
@@ -190,8 +189,8 @@ export default function Navbar({ onMenuClick }) {
             style={{
               padding: '7px 12px 7px 34px',
               borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-color)',
-              backgroundColor: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid var(--border-input)',
+              backgroundColor: 'var(--bg-input)',
               color: 'var(--text-primary)',
               fontSize: '13px',
               width: '180px',

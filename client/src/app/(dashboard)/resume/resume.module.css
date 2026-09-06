@@ -18,7 +18,7 @@
 }
 
 .titleBox h1 {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 4px;
@@ -26,7 +26,7 @@
 
 .titleBox p {
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 13.5px;
 }
 
 .actions {
@@ -35,10 +35,10 @@
 }
 
 .previewBtn, .exportBtn {
-  padding: 10px 20px;
-  border-radius: 8px;
+  padding: 9px 18px;
+  border-radius: var(--radius-md);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -47,25 +47,26 @@
 }
 
 .previewBtn {
-  background: var(--bg-secondary);
+  background: var(--bg-card);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
 }
 
 .previewBtn:hover {
-  background: var(--bg-tertiary);
+  background: var(--bg-card-hover);
 }
 
 .exportBtn {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  background: var(--accent-primary);
   color: #fff;
-  border: none;
-  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-sm);
 }
 
 .exportBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(var(--primary-rgb), 0.4);
+  opacity: 0.92;
+  transform: translateY(-1px);
 }
 
 .mainGrid {
@@ -81,13 +82,14 @@
 }
 
 .formSection {
-  background: var(--bg-secondary);
-  border-radius: 16px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 24px;
+  box-shadow: var(--shadow-sm);
 }
 
 .formGroup {
@@ -97,26 +99,26 @@
 }
 
 .formGroup label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
 }
 
 .formGroup input, .formGroup textarea {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  padding: 12px 16px;
-  border-radius: 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: inherit;
-  font-size: 14px;
+  font-size: 13.5px;
   transition: all 0.2s ease;
 }
 
 .formGroup input:focus, .formGroup textarea:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+  border-color: var(--border-input-focus);
+  box-shadow: 0 0 0 3px var(--bg-focus);
 }
 
 .formGroup textarea {
@@ -134,8 +136,8 @@
 }
 
 .sectionHeader h3 {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
   color: var(--text-primary);
   display: flex;
   align-items: center;
@@ -145,8 +147,8 @@
 .addBtn {
   background: none;
   border: none;
-  color: var(--primary-color);
-  font-size: 14px;
+  color: var(--accent-primary);
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   display: flex;

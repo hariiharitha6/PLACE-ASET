@@ -2,28 +2,28 @@
   padding: 32px;
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 24px;
   max-width: 1400px;
   margin: 0 auto;
 }
 
 .header {
   display: flex;
-  justifyContent: space-between;
+  justify-content: space-between;
   align-items: flex-start;
   flex-wrap: wrap;
   gap: 20px;
 }
 
 .titleSection h1 {
-  font-size: 26px;
-  font-weight: 800;
+  font-size: 22px;
+  font-weight: 700;
   color: var(--text-primary);
   margin: 0 0 8px 0;
 }
 
 .titleSection p {
-  font-size: 14px;
+  font-size: 13.5px;
   color: var(--text-secondary);
   margin: 0;
 }
@@ -41,22 +41,23 @@
 }
 
 .card {
-  background: var(--bg-glass);
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  box-shadow: var(--shadow-sm);
 }
 
 .docItem {
   padding: 16px;
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-subtle);
   border: 1px solid var(--border-color);
   display: flex;
-  justifyContent: space-between;
+  justify-content: space-between;
   align-items: center;
   gap: 12px;
   transition: all 0.2s ease;
@@ -64,12 +65,12 @@
 }
 
 .docItem:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-card-hover);
   border-color: var(--accent-primary);
 }
 
 .docItemActive {
-  background: rgba(99, 102, 241, 0.08);
+  background: var(--bg-focus);
   border-color: var(--accent-primary);
 }
 
@@ -88,19 +89,20 @@
 }
 
 .flashcard {
-  background: rgba(15, 23, 42, 0.6);
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  box-shadow: var(--shadow-sm);
 }
 
 .flashcardQ {
   font-size: 13px;
   font-weight: 700;
-  color: #38bdf8;
+  color: var(--accent-primary);
 }
 
 .flashcardA {

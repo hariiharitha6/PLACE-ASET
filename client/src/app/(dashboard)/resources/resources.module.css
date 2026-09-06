@@ -1,7 +1,7 @@
 .container { display: flex; flex-direction: column; gap: 24px; }
 .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
-.titleSection h1 { font-size: 24px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px; }
-.titleSection p { font-size: 14px; color: var(--text-secondary); }
+.titleSection h1 { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+.titleSection p { font-size: 13.5px; color: var(--text-secondary); }
 
 .tabContainer { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; border-bottom: 1px solid var(--border-color); scrollbar-width: none; }
 .tabContainer::-webkit-scrollbar { display: none; }
@@ -12,22 +12,22 @@
   white-space: nowrap; transition: all var(--transition-fast); display: flex; align-items: center; gap: 6px;
 }
 .tabButton:hover { color: var(--text-primary); background: var(--bg-tertiary); }
-.tabActive { color: var(--accent-primary) !important; background: rgba(99,102,241,0.1) !important; font-weight: 700; }
+.tabActive { color: var(--accent-primary) !important; background: var(--bg-focus) !important; font-weight: 600; }
 
-.filterBar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; background: var(--bg-glass); border: 1px solid var(--border-color); padding: 12px 16px; border-radius: var(--radius-lg); }
-.searchField { flex: 1; min-width: 200px; padding: 10px 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 13px; }
-.selectField { padding: 10px 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 13px; }
-.resetBtn { padding: 10px 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); font-size: 13px; cursor: pointer; transition: all var(--transition-fast); }
+.filterBar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; background: var(--bg-card); border: 1px solid var(--border-color); padding: 12px 16px; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+.searchField { flex: 1; min-width: 200px; padding: 9px 14px; border-radius: var(--radius-md); border: 1px solid var(--border-input); background: var(--bg-input); color: var(--text-primary); font-size: 13px; }
+.selectField { padding: 9px 14px; border-radius: var(--radius-md); border: 1px solid var(--border-input); background: var(--bg-input); color: var(--text-primary); font-size: 13px; }
+.resetBtn { padding: 9px 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); font-size: 13px; cursor: pointer; transition: all var(--transition-fast); }
 .resetBtn:hover { background: var(--bg-tertiary); color: var(--accent-danger); }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
 
 .card {
-  background: var(--bg-glass); border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+  background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);
   padding: 20px; display: flex; flex-direction: column; gap: 14px; transition: all var(--transition-fast);
-  position: relative; overflow: hidden;
+  position: relative; overflow: hidden; box-shadow: var(--shadow-sm);
 }
-.card:hover { background: var(--bg-glass-hover); border-color: var(--border-color-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.card:hover { background: var(--bg-card-hover); border-color: var(--border-color-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); }
 
 .cardHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .resourceIcon { width: 40px; height: 40px; border-radius: var(--radius-md); background: rgba(99,102,241,0.08); display: flex; align-items: center; justify-content: center; color: var(--accent-primary); flex-shrink: 0; }

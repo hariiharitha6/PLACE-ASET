@@ -32,14 +32,15 @@ export default function RecentQuestionsWidget() {
     <div style={{
       padding: '24px',
       borderRadius: 'var(--radius-lg)',
-      background: 'var(--bg-glass)',
+      background: 'var(--bg-card)',
       border: '1px solid var(--border-color)',
+      boxShadow: 'var(--shadow-sm)',
       display: 'flex',
       flexDirection: 'column',
       gap: '16px'
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ fontSize: '16px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <HelpCircle size={18} style={{ color: 'var(--accent-info)' }} />
           <span>Recent Practice Questions</span>
         </h3>
@@ -50,7 +51,7 @@ export default function RecentQuestionsWidget() {
 
       {loading ? (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', color: 'var(--text-muted)', fontSize: '12px', gap: '8px' }}>
-          <Sparkles size={14} style={{ animation: 'spin 1s linear infinite' }} /> Loading active questions...
+          <HelpCircle size={14} style={{ animation: 'pulse 1.5s ease infinite', color: 'var(--accent-primary)' }} /> Loading active questions...
         </div>
       ) : questions.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '20px 10px', color: 'var(--text-muted)', fontSize: '13px' }}>
@@ -75,7 +76,7 @@ export default function RecentQuestionsWidget() {
                   justifyContent: 'space-between',
                   padding: '12px',
                   borderRadius: 'var(--radius-md)',
-                  backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                  backgroundColor: 'var(--bg-subtle)',
                   border: '1px solid var(--border-color)'
                 }}
               >

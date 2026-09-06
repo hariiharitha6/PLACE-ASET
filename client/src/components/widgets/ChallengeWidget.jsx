@@ -45,13 +45,13 @@ export default function ChallengeWidget({ challenge }) {
     <div style={{
       padding: '24px',
       borderRadius: 'var(--radius-lg)',
-      background: 'var(--gradient-card)',
-      border: '1px solid var(--border-accent)',
+      background: 'var(--bg-card)',
+      border: '1px solid var(--border-color)',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
       gap: '24px',
-      boxShadow: 'var(--shadow-glow)',
+      boxShadow: 'var(--shadow-sm)',
       minHeight: '200px'
     }}>
       <div>
@@ -61,8 +61,8 @@ export default function ChallengeWidget({ challenge }) {
             fontWeight: '700',
             textTransform: 'uppercase',
             color: 'var(--accent-primary)',
-            backgroundColor: 'rgba(129, 140, 248, 0.1)',
-            padding: '4px 8px',
+            backgroundColor: 'var(--bg-focus)',
+            padding: '4px 10px',
             borderRadius: 'var(--radius-full)'
           }}>
             Weekly Challenge
@@ -71,7 +71,7 @@ export default function ChallengeWidget({ challenge }) {
             ⏱️ {duration_minutes} mins
           </span>
         </div>
-        <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' }}>
+        <h3 style={{ fontSize: '17px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' }}>
           {title}
         </h3>
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
@@ -92,10 +92,10 @@ export default function ChallengeWidget({ challenge }) {
             gap: '8px',
             background: 'var(--accent-success)',
             color: '#fff',
-            padding: '10px 18px',
+            padding: '9px 18px',
             borderRadius: 'var(--radius-md)',
             fontWeight: '600',
-            fontSize: '14px'
+            fontSize: '13.5px'
           }}>
             <span>Start Challenge</span>
             <ArrowRight size={14} />
@@ -105,13 +105,13 @@ export default function ChallengeWidget({ challenge }) {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            background: 'var(--gradient-primary)',
+            background: 'var(--accent-primary)',
             color: '#fff',
-            padding: '10px 18px',
+            padding: '9px 18px',
             borderRadius: 'var(--radius-md)',
             fontWeight: '600',
-            fontSize: '14px',
-            boxShadow: 'var(--shadow-glow)'
+            fontSize: '13.5px',
+            boxShadow: 'var(--shadow-sm)'
           }}>
             <span>Register Now</span>
             <ArrowRight size={14} />

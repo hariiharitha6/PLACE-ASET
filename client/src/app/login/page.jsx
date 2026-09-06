@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './login.module.css';
 import Link from 'next/link';
-import { Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
+import { GraduationCap, CheckCircle2, AlertCircle } from 'lucide-react';
 
 function LoginForm() {
   const { login, isAuthenticated, user, getDashboardPath } = useAuth();
@@ -55,15 +55,15 @@ function LoginForm() {
   return (
     <div className={styles.card}>
       <div className={styles.header}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '4px 12px', background: 'rgba(6, 182, 212, 0.1)', border: '1px solid rgba(6, 182, 212, 0.25)', borderRadius: '20px', color: '#06b6d4', fontSize: '12px', fontWeight: '700', marginBottom: '12px' }}>
-          <Sparkles size={14} /> PLACE@ASET Workspace
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '5px 14px', background: 'var(--bg-focus)', border: '1px solid var(--border-accent)', borderRadius: '20px', color: 'var(--accent-primary)', fontSize: '12px', fontWeight: '600', marginBottom: '12px' }}>
+          <GraduationCap size={15} /> PLACE@ASET
         </div>
         <h1 className={styles.title}>Welcome Back</h1>
         <p className={styles.subtitle}>Single Authentication Portal for Candidates, Faculty, HODs, Placement Cell & Admins</p>
       </div>
 
       {registered && !localError && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '10px', color: '#34d399', fontSize: '13px', marginBottom: '18px', fontWeight: '600' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '10px', color: 'var(--accent-success)', fontSize: '13px', marginBottom: '18px', fontWeight: '600' }}>
           <CheckCircle2 size={18} style={{ flexShrink: 0 }} />
           <span>Account registered successfully! Please sign in with your credentials.</span>
         </div>
@@ -134,7 +134,7 @@ function LoginForm() {
         </div>
         <div>
           <span>Faculty or Educator? </span>
-          <Link href="/register/faculty" className={styles.signupLink} style={{ color: '#06b6d4' }}>
+          <Link href="/register/faculty" className={styles.signupLink} style={{ color: 'var(--accent-teal)' }}>
             Faculty Portal Registration
           </Link>
         </div>
@@ -146,8 +146,6 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <main className={styles.container}>
-      <div className={styles.glowOrb} />
-      <div className={styles.glowOrb2} />
       <Suspense fallback={<div className={styles.card}>Loading workspace...</div>}>
         <LoginForm />
       </Suspense>

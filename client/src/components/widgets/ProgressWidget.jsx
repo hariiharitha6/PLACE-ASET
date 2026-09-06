@@ -14,15 +14,16 @@ export default function ProgressWidget({ progress, level }) {
     <div style={{
       padding: '24px',
       borderRadius: 'var(--radius-lg)',
-      background: 'var(--bg-glass)',
+      background: 'var(--bg-card)',
       border: '1px solid var(--border-color)',
+      boxShadow: 'var(--shadow-sm)',
       display: 'flex',
       flexDirection: 'column',
       gap: '20px'
     }}>
       {/* Header info */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ fontSize: '16px', fontWeight: '700' }}>Your Progress</h3>
+        <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>Your Progress</h3>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-warning)', fontSize: '13px', fontWeight: '600' }}>
           <Flame size={16} />
           <span>{streak} Day Streak</span>
@@ -32,17 +33,16 @@ export default function ProgressWidget({ progress, level }) {
       {/* Level stats */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <div style={{
-          width: '48px',
-          height: '48px',
+          width: '44px',
+          height: '44px',
           borderRadius: 'var(--radius-full)',
-          background: 'var(--gradient-primary)',
+          background: 'var(--accent-primary)',
           color: '#fff',
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          fontWeight: '800',
-          fontSize: '18px',
-          boxShadow: 'var(--shadow-glow)'
+          fontWeight: '700',
+          fontSize: '16px'
         }}>
           {level}
         </div>
@@ -52,15 +52,15 @@ export default function ProgressWidget({ progress, level }) {
             <span>{xpInCurrentLevel} / 1000 XP</span>
           </div>
           <div style={{
-            height: '8px',
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            height: '6px',
+            backgroundColor: 'var(--bg-tertiary)',
             borderRadius: 'var(--radius-full)',
             overflow: 'hidden'
           }}>
             <div style={{
               height: '100%',
               width: `${levelProgressPercent}%`,
-              background: 'var(--gradient-primary)',
+              background: 'var(--accent-primary)',
               borderRadius: 'var(--radius-full)',
               transition: 'width 0.4s ease'
             }} />
@@ -76,7 +76,7 @@ export default function ProgressWidget({ progress, level }) {
         borderTop: '1px solid var(--border-color)',
         paddingTop: '16px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px', borderRadius: 'var(--radius-md)', backgroundColor: 'rgba(255, 255, 255, 0.02)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--bg-subtle)', border: '1px solid var(--border-color)' }}>
           <div style={{ color: 'var(--accent-info)' }}><Target size={18} /></div>
           <div>
             <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>College Rank</p>
@@ -84,7 +84,7 @@ export default function ProgressWidget({ progress, level }) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px', borderRadius: 'var(--radius-md)', backgroundColor: 'rgba(255, 255, 255, 0.02)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--bg-subtle)', border: '1px solid var(--border-color)' }}>
           <div style={{ color: 'var(--accent-secondary)' }}><Award size={18} /></div>
           <div>
             <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Longest Streak</p>

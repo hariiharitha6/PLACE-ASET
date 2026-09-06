@@ -2,80 +2,85 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
-  animation: fadeIn 0.6s ease-out;
+  animation: fadeIn 0.4s ease-out;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .header {
-  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
-  padding: 32px;
-  border-radius: 16px;
+  padding: 28px;
+  border-radius: var(--radius-lg);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: var(--shadow-sm);
 }
 
 .titleBox h1 {
-  font-size: 28px;
-  margin-bottom: 8px;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 6px;
   color: var(--text-primary);
 }
 
 .titleBox p {
   color: var(--text-secondary);
-  font-size: 15px;
+  font-size: 13.5px;
 }
 
 .launchMockBtn {
-  background: var(--primary-color);
+  background: var(--accent-primary);
   color: white;
-  padding: 12px 24px;
-  border-radius: 8px;
-  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
   font-weight: 600;
+  font-size: 13.5px;
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
 }
 
 .launchMockBtn:hover {
-  background: var(--primary-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+  opacity: 0.92;
+  transform: translateY(-1px);
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
 }
 
 .card {
-  background: var(--bg-secondary);
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
   padding: 24px;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
 }
 
 .card:hover {
-  border-color: var(--primary-color);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  border-color: var(--border-color-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .iconWrapper {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: rgba(var(--primary-rgb), 0.1);
-  color: var(--primary-color);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--bg-focus);
+  color: var(--accent-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -83,17 +88,18 @@
 }
 
 .card h3 {
-  font-size: 18px;
-  margin-bottom: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 6px;
   color: var(--text-primary);
 }
 
 .card p {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.5;
   margin-bottom: 16px;
-  min-height: 42px;
+  min-height: 40px;
 }
 
 .progressTrack {
@@ -106,7 +112,7 @@
 
 .progressFill {
   height: 100%;
-  background: var(--primary-color);
+  background: var(--accent-primary);
   border-radius: 3px;
 }
 
@@ -121,18 +127,19 @@
 .startBtn {
   margin-top: 16px;
   width: 100%;
-  padding: 10px;
+  padding: 9px;
   background: none;
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   color: var(--text-primary);
   font-weight: 600;
+  font-size: 13px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .card:hover .startBtn {
-  background: var(--primary-color);
+  background: var(--accent-primary);
   color: white;
-  border-color: var(--primary-color);
+  border-color: var(--accent-primary);
 }

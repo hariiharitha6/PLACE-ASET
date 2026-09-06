@@ -47,10 +47,31 @@ button {
   outline-offset: 2px;
 }
 
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+
 input, textarea, select {
   font-family: inherit;
   font-size: inherit;
   outline: none;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-input);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--border-input-focus);
+  box-shadow: 0 0 0 3px var(--bg-focus);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted);
 }
 
 img {

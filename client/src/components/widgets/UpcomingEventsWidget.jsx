@@ -12,13 +12,14 @@ export default function UpcomingEventsWidget({ events }) {
     <div style={{
       padding: '24px',
       borderRadius: 'var(--radius-lg)',
-      background: 'var(--bg-glass)',
+      background: 'var(--bg-card)',
       border: '1px solid var(--border-color)',
+      boxShadow: 'var(--shadow-sm)',
       display: 'flex',
       flexDirection: 'column',
       gap: '16px'
     }}>
-      <h3 style={{ fontSize: '16px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
         <Calendar size={18} style={{ color: 'var(--accent-warning)' }} />
         <span>Upcoming Events</span>
       </h3>
@@ -38,7 +39,7 @@ export default function UpcomingEventsWidget({ events }) {
                 gap: '12px',
                 padding: '12px',
                 borderRadius: 'var(--radius-md)',
-                backgroundColor: 'rgba(255, 255, 255, 0.01)',
+                backgroundColor: 'var(--bg-subtle)',
                 border: '1px solid var(--border-color)'
               }}
             >

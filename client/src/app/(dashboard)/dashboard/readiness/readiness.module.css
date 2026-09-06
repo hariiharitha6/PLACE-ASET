@@ -9,15 +9,15 @@
   align-items: center;
   justify-content: center;
   min-height: 60vh;
-  color: #94a3b8;
+  color: var(--text-muted);
   gap: 12px;
 }
 
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid rgba(255, 255, 255, 0.08);
-  border-top-color: #6366f1;
+  border: 3px solid rgba(14, 165, 233, 0.15);
+  border-top-color: var(--accent-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -34,10 +34,10 @@
 }
 
 .headerBadge {
-  background-color: rgba(99, 102, 241, 0.15);
-  color: #818cf8;
+  background-color: var(--bg-focus);
+  color: var(--accent-primary);
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   padding: 4px 10px;
   border-radius: 12px;
   display: inline-block;
@@ -45,28 +45,34 @@
 }
 
 .title {
-  color: #f8fafc;
-  font-size: 24px;
-  font-weight: 800;
+  color: var(--text-primary);
+  font-size: 22px;
+  font-weight: 700;
   margin: 0 0 4px 0;
 }
 
 .subtitle {
-  color: #94a3b8;
-  font-size: 13px;
+  color: var(--text-secondary);
+  font-size: 13.5px;
   margin: 0;
 }
 
 .primaryBtn {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  background: var(--accent-primary);
   color: #ffffff;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 10px;
-  font-weight: 700;
+  border: 1px solid transparent;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
   font-size: 13px;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.primaryBtn:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
 }
 
 .gridTwo {
@@ -82,39 +88,39 @@
 }
 
 .profileSummaryCard {
-  background-color: #0b1120;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
   padding: 24px;
   display: flex;
   align-items: center;
   gap: 20px;
+  box-shadow: var(--shadow-sm);
 }
 
 .avatarBox {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  width: 60px;
+  height: 60px;
+  border-radius: var(--radius-md);
+  background: var(--accent-primary);
   color: #ffffff;
-  font-weight: 800;
-  font-size: 22px;
+  font-weight: 700;
+  font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
   flex-shrink: 0;
 }
 
 .candidateName {
-  color: #f8fafc;
-  font-size: 20px;
-  font-weight: 800;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 700;
   margin: 0 0 4px 0;
 }
 
 .profileSub {
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 13px;
   margin: 0 0 10px 0;
 }
@@ -125,28 +131,29 @@
 }
 
 .cgpaPill {
-  background-color: rgba(16, 185, 129, 0.15);
-  color: #34d399;
+  background-color: rgba(16, 185, 129, 0.12);
+  color: var(--accent-success);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   padding: 4px 10px;
   border-radius: 6px;
 }
 
 .readinessStatusBadge {
-  background-color: rgba(99, 102, 241, 0.15);
-  color: #818cf8;
+  background-color: var(--bg-focus);
+  color: var(--accent-primary);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   padding: 4px 10px;
   border-radius: 6px;
 }
 
 .scoreGaugeCard {
-  background-color: #0b1120;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
   padding: 24px;
+  box-shadow: var(--shadow-sm);
 }
 
 .gaugeContent {
@@ -156,10 +163,10 @@
 }
 
 .circularGauge {
-  width: 100px;
-  height: 100px;
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
-  background: conic-gradient(#6366f1 87%, rgba(255, 255, 255, 0.06) 0);
+  background: conic-gradient(var(--accent-primary) 87%, var(--border-color) 0);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -167,10 +174,10 @@
 }
 
 .gaugeInner {
-  width: 80px;
-  height: 80px;
+  width: 78px;
+  height: 78px;
   border-radius: 50%;
-  background-color: #0b1120;
+  background-color: var(--bg-card);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -178,14 +185,14 @@
 }
 
 .scoreNumber {
-  color: #f8fafc;
+  color: var(--text-primary);
   font-size: 24px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
 }
 
 .scoreMax {
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 10px;
 }
 
@@ -196,33 +203,34 @@
 }
 
 .scoreLabel {
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
 }
 
 .statusText {
-  color: #34d399;
-  font-size: 18px;
-  font-weight: 800;
+  color: var(--accent-success);
+  font-size: 17px;
+  font-weight: 700;
   margin: 2px 0;
 }
 
 .statusSub {
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 12px;
   margin: 0;
 }
 
 .goalCard, .ranksCard, .cardBox {
-  background-color: #0b1120;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  box-shadow: var(--shadow-sm);
 }
 
 .cardHeader {
@@ -232,23 +240,23 @@
 }
 
 .cardHeader h3 {
-  color: #f8fafc;
+  color: var(--text-primary);
   font-size: 15px;
   font-weight: 700;
   margin: 0;
 }
 
 .streakTag {
-  background-color: rgba(249, 115, 22, 0.15);
-  color: #fb923c;
+  background-color: rgba(245, 158, 11, 0.12);
+  color: var(--accent-warning);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   padding: 3px 10px;
   border-radius: 12px;
 }
 
-.tagDanger { background-color: rgba(239, 68, 68, 0.15); color: #f87171; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
-.tagPurple { background-color: rgba(139, 92, 246, 0.15); color: #a78bfa; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+.tagDanger { background-color: rgba(239, 68, 68, 0.12); color: var(--accent-danger); font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; }
+.tagPurple { background-color: rgba(99, 102, 241, 0.12); color: var(--accent-indigo); font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; }
 
 .goalMetricsRow {
   display: grid;
@@ -257,9 +265,9 @@
 }
 
 .metricItem {
-  background-color: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 10px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -268,13 +276,13 @@
 }
 
 .mVal {
-  color: #f8fafc;
-  font-size: 18px;
-  font-weight: 800;
+  color: var(--text-primary);
+  font-size: 17px;
+  font-weight: 700;
 }
 
 .mLabel {
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 11px;
 }
 
@@ -285,9 +293,9 @@
 }
 
 .rankBox {
-  background-color: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 10px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -296,43 +304,44 @@
 }
 
 .rVal {
-  color: #fbbf24;
-  font-size: 20px;
-  font-weight: 800;
+  color: var(--accent-warning);
+  font-size: 18px;
+  font-weight: 700;
 }
 
 .rLabel {
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 11px;
 }
 
 .sectionCard {
-  background-color: #0b1120;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  box-shadow: var(--shadow-sm);
 }
 
 .sectionHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-color);
   padding-bottom: 12px;
 }
 
 .sectionHeader h3 {
-  color: #f8fafc;
+  color: var(--text-primary);
   font-size: 16px;
   font-weight: 700;
   margin: 0;
 }
 
 .infoBadge {
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 12px;
 }
 
@@ -351,20 +360,20 @@
 .skillHeader {
   display: flex;
   justify-content: space-between;
-  color: #cbd5e1;
+  color: var(--text-secondary);
   font-size: 12px;
 }
 
 .barTrack {
-  height: 8px;
-  background-color: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
+  height: 6px;
+  background-color: var(--bg-tertiary);
+  border-radius: 3px;
   overflow: hidden;
 }
 
 .barFill {
   height: 100%;
-  border-radius: 4px;
+  border-radius: 3px;
   transition: width 0.5s ease;
 }
 
@@ -377,7 +386,7 @@
 .weakItem {
   background-color: rgba(239, 68, 68, 0.04);
   border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 14px;
   display: flex;
   flex-direction: column;
@@ -385,14 +394,14 @@
 }
 
 .weakTitle {
-  color: #f87171;
-  font-size: 14px;
-  font-weight: 700;
+  color: var(--accent-danger);
+  font-size: 13.5px;
+  font-weight: 600;
   margin: 0;
 }
 
 .weakReason {
-  color: #cbd5e1;
+  color: var(--text-secondary);
   font-size: 12px;
   line-height: 1.4;
   margin: 0;
@@ -402,7 +411,7 @@
   align-self: flex-start;
   background: transparent;
   border: none;
-  color: #818cf8;
+  color: var(--accent-primary);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -411,32 +420,32 @@
 }
 
 .recItem {
-  background-color: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 10px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   padding: 12px;
   display: flex;
   align-items: center;
   gap: 12px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.15s ease;
 }
 
 .recItem:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--bg-tertiary);
 }
 
 .recItem span {
-  font-size: 22px;
+  font-size: 20px;
 }
 
 .recItem strong {
-  color: #f8fafc;
+  color: var(--text-primary);
   font-size: 13px;
 }
 
 .recItem p {
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 11px;
   margin: 2px 0 0 0;
 }
@@ -448,9 +457,9 @@
 }
 
 .companyRow {
-  background-color: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   padding: 16px;
   display: flex;
   align-items: center;
@@ -465,11 +474,11 @@
 }
 
 .companyLogo {
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
   object-fit: cover;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
   flex-shrink: 0;
 }
 
@@ -487,25 +496,25 @@
 }
 
 .cTitleRow h4 {
-  color: #f8fafc;
-  font-size: 15px;
-  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
   margin: 0;
 }
 
 .pkgText {
-  color: #10b981;
+  color: var(--accent-success);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .cCriteria {
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 12px;
 }
 
 .cReason {
-  color: #cbd5e1;
+  color: var(--text-secondary);
   font-size: 12px;
   margin: 2px 0 0 0;
   line-height: 1.4;
@@ -517,14 +526,14 @@
 
 .statusTag {
   font-size: 11px;
-  font-weight: 700;
-  padding: 6px 14px;
+  font-weight: 600;
+  padding: 5px 12px;
   border-radius: 20px;
 }
 
-.statusTag.eligible { background-color: rgba(16, 185, 129, 0.15); color: #34d399; }
-.statusTag.nearlyeligible { background-color: rgba(245, 158, 11, 0.15); color: #fbbf24; }
-.statusTag.noteligible { background-color: rgba(239, 68, 68, 0.15); color: #f87171; }
+.statusTag.eligible { background-color: rgba(16, 185, 129, 0.12); color: var(--accent-success); }
+.statusTag.nearlyeligible { background-color: rgba(245, 158, 11, 0.12); color: var(--accent-warning); }
+.statusTag.noteligible { background-color: rgba(239, 68, 68, 0.12); color: var(--accent-danger); }
 
 .activityList {
   display: flex;
@@ -537,8 +546,8 @@
   align-items: center;
   gap: 12px;
   font-size: 13px;
-  color: #cbd5e1;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-subtle);
   padding-bottom: 8px;
 }
 
@@ -553,6 +562,6 @@
 }
 
 .actTime {
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 11px;
 }

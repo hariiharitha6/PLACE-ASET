@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { ArrowRight, Sparkles, Flame, CheckCircle } from 'lucide-react';
+import { ArrowRight, Flame } from 'lucide-react';
 import styles from './FocusCard.module.css';
 
 export default function FocusCard({
@@ -19,13 +19,11 @@ export default function FocusCard({
 
   return (
     <section className={styles.focusCard} aria-label="Daily Focus Command Center">
-      <div className={styles.ambientGlow} />
-
       <div className={styles.content}>
         <div className={styles.topRow}>
           <div className={styles.welcomeBox}>
             <span className={styles.greetingBadge}>
-              <Sparkles size={13} /> {greeting.toUpperCase()}, {userName.split(' ')[0].toUpperCase()}
+              {greeting}, {userName.split(' ')[0]}
             </span>
             <h2 className={styles.focusTitle}>{focusTitle}</h2>
             <p className={styles.focusDescription}>{focusDescription}</p>

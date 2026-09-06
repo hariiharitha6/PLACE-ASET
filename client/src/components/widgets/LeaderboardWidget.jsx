@@ -7,14 +7,15 @@ export default function LeaderboardWidget({ leaderboard }) {
     <div style={{
       padding: '24px',
       borderRadius: 'var(--radius-lg)',
-      background: 'var(--bg-glass)',
+      background: 'var(--bg-card)',
       border: '1px solid var(--border-color)',
+      boxShadow: 'var(--shadow-sm)',
       display: 'flex',
       flexDirection: 'column',
       gap: '16px'
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ fontSize: '16px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Trophy size={18} style={{ color: 'var(--accent-warning)' }} />
           <span>Leaderboard</span>
         </h3>
@@ -39,7 +40,7 @@ export default function LeaderboardWidget({ leaderboard }) {
                   justifyContent: 'space-between',
                   padding: '10px 12px',
                   borderRadius: 'var(--radius-md)',
-                  backgroundColor: 'rgba(255, 255, 255, 0.01)',
+                  backgroundColor: 'var(--bg-subtle)',
                   border: '1px solid var(--border-color)'
                 }}
               >
@@ -57,7 +58,7 @@ export default function LeaderboardWidget({ leaderboard }) {
                     width: '32px',
                     height: '32px',
                     borderRadius: 'var(--radius-full)',
-                    background: 'var(--gradient-primary)',
+                    background: 'var(--accent-primary)',
                     color: '#fff',
                     display: 'flex',
                     justifyContent: 'center',
