@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './interview.module.css';
 import { useToast } from '../../../context/ToastContext';
 import { Mic, Code, Users, BookOpen, Clock, CheckCircle, Sparkles, ArrowRight, RefreshCw } from 'lucide-react';
@@ -33,25 +33,47 @@ export default function InterviewPrepPage() {
   const [answersHistory, setAnswersHistory] = useState([]);
   const [evaluating, setEvaluating] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [moduleProgress, setModuleProgress] = useState({
+    'Technical Core': 0,
+    'HR & Behavioral': 0,
+    'Aptitude & Reasoning': 0,
+  });
+
+  useEffect(() => {
+    async function loadTelemetry() {
+      try {
+        const res = await api.get('/ai/profile');
+        const p = res.data?.data || res.data || {};
+        setModuleProgress({
+          'Technical Core': p.technical_score || 0,
+          'HR & Behavioral': p.interview_score || p.verbal_score || 0,
+          'Aptitude & Reasoning': p.aptitude_score || 0,
+        });
+      } catch (e) {
+        // Safe offline default: zero progress
+      }
+    }
+    loadTelemetry();
+  }, []);
 
   const prepModules = [
     {
       title: 'Technical Core',
       description: 'Master OS, DBMS, Computer Networks, and System Design concepts.',
       icon: <Code size={24} />,
-      progress: 75,
+      progress: moduleProgress['Technical Core'],
     },
     {
       title: 'HR & Behavioral',
       description: 'Prepare for culture fit, situation-based questions, and the STAR method.',
       icon: <Users size={24} />,
-      progress: 60,
+      progress: moduleProgress['HR & Behavioral'],
     },
     {
       title: 'Aptitude & Reasoning',
       description: 'Brush up on quantitative aptitude, logical reasoning, and time management.',
       icon: <BookOpen size={24} />,
-      progress: 85,
+      progress: moduleProgress['Aptitude & Reasoning'],
     }
   ];
 
@@ -136,7 +158,7 @@ export default function InterviewPrepPage() {
             </div>
             <div className={styles.progressLabel}>
               <span>Readiness Progress</span>
-              <span>{mod.progress}%</span>
+              <span>{mod.progress > 0 ? `${mod.progress}%` : 'Not Started (0%)'}</span>
             </div>
 
             <button 

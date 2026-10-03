@@ -7,6 +7,7 @@
     "build": "rimraf dist && tsc",
     "start": "node dist/server.js",
     "dev": "nodemon src/server.ts",
+    "seed:personal": "node ./node_modules/ts-node/dist/bin.js src/seed_personal_content.ts",
     "test": "mocha -r ts-node/register src/**/*.spec.ts --exit"
   },
   "dependencies": {

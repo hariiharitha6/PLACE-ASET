@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import styles from './resume.module.css';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
-import { Printer, Eye, Sparkles, CheckCircle, Download, FileText, Plus, Trash2 } from 'lucide-react';
+import { Printer, Eye, Sparkles, CheckCircle, Download, FileText, Plus, Trash2, Save } from 'lucide-react';
 import api from '../../../lib/api';
 
 export default function ResumeBuilderPage() {
@@ -15,6 +15,8 @@ export default function ResumeBuilderPage() {
   const [selectedTemplate, setSelectedTemplate] = useState('modern');
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
+
+  const storageKey = user?.id ? `placeaset_resume_draft_${user.id}` : 'placeaset_resume_draft';
 
   const [resumeData, setResumeData] = useState({
     personal: {
@@ -51,6 +53,19 @@ export default function ResumeBuilderPage() {
   });
 
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          setResumeData(parsed);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load cached resume draft', e);
+    }
+
     if (user) {
       setResumeData(prev => ({
         ...prev,
@@ -61,7 +76,22 @@ export default function ResumeBuilderPage() {
         }
       }));
     }
-  }, [user]);
+  }, [user, storageKey]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(resumeData));
+    } catch (e) {}
+  }, [resumeData, storageKey]);
+
+  const handleSaveDraft = () => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(resumeData));
+      toast.success('Resume draft saved successfully');
+    } catch (e) {
+      toast.error('Could not save draft to local storage');
+    }
+  };
 
   const handlePrint = () => {
     window.print();
@@ -150,6 +180,9 @@ ${resumeData.skills}
           <p>Fill in your details, select a layout, and run AI ATS evaluation to optimize your resume for campus placement drives.</p>
         </div>
         <div className={styles.actions}>
+          <button onClick={handleSaveDraft} style={{ backgroundColor: 'rgba(255,255,255,0.06)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', padding: '10px 16px', borderRadius: '10px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }} title="Save Resume Draft">
+            <Save size={16} /> Save Draft
+          </button>
           <button onClick={handleAIScore} disabled={analyzing} style={{ backgroundColor: '#6366f1', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '10px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }}>
             <Sparkles size={16} /> {analyzing ? 'Analyzing with AI...' : 'Run AI ATS Score'}
           </button>

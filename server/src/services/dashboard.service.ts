@@ -336,12 +336,32 @@ export class DashboardService {
         .eq('user_id', userId)
         .maybeSingle();
 
+      let weakestCatId: string | null = null;
+      let weakestAccuracy = 100;
+
       if (practiceStats?.weak_topics && Object.keys(practiceStats.weak_topics).length > 0) {
-        // Resolve category names for the weakest topic
         const weakEntries = Object.entries(practiceStats.weak_topics as Record<string, number>);
         const sortedWeak = weakEntries.sort(([, a], [, b]) => (a as number) - (b as number));
-        const [weakestCatId, weakestAccuracy] = sortedWeak[0];
+        weakestCatId = sortedWeak[0][0];
+        weakestAccuracy = sortedWeak[0][1];
+      } else if (practiceStats?.topic_accuracy && Object.keys(practiceStats.topic_accuracy as object).length > 0) {
+        const entries = Object.entries(practiceStats.topic_accuracy as Record<string, { correct: number; total: number }>);
+        const lowAccEntries = entries
+          .map(([catId, val]) => ({
+            catId,
+            acc: val.total > 0 ? (val.correct / val.total) * 100 : 0,
+            total: val.total
+          }))
+          .filter(e => e.total > 0 && e.acc < 70)
+          .sort((a, b) => a.acc - b.acc);
 
+        if (lowAccEntries.length > 0) {
+          weakestCatId = lowAccEntries[0].catId;
+          weakestAccuracy = lowAccEntries[0].acc;
+        }
+      }
+
+      if (weakestCatId) {
         // Get category name
         const { data: category } = await supabase
           .from('categories')
@@ -350,7 +370,7 @@ export class DashboardService {
           .maybeSingle();
 
         const topicName = category?.name || null;
-        const accuracyPct = Math.round(weakestAccuracy as number);
+        const accuracyPct = Math.round(weakestAccuracy);
 
         // Only show if we resolved a real topic name
         if (topicName) {
