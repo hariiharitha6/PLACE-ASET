@@ -19,6 +19,7 @@ import calendarRoutes from './calendar.routes';
 import certificatesRoutes from './certificates.routes';
 import analyticsRoutes from './analytics.routes';
 import mentorRoutes from './ai_mentor.routes';
+import assistantRoutes from './assistant.routes';
 
 const v1Router = Router();
 
@@ -73,6 +74,9 @@ v1Router.use('/analytics', analyticsRoutes);
 
 // AI Personal Mentor routes
 v1Router.use('/mentor', mentorRoutes);
+
+// PLACE Assistant routes
+v1Router.use('/assistant', assistantRoutes);
 
 // Logs routes
 v1Router.use('/logs', logsRoutes);

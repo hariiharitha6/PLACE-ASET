@@ -3,7 +3,7 @@
 import React from 'react';
 import PlaceAssistant from '../../../components/assistant/PlaceAssistant';
 
-export default function AIMentorPage() {
+export default function AssistantPage() {
   return (
     <div style={{
       height: 'calc(100vh - 130px)',

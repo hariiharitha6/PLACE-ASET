@@ -54,64 +54,15 @@ export class GeminiProvider implements IAIProvider {
             };
           }
         }
+        const errText = await res.text();
+        throw new Error(`Gemini API returned status ${res.status}: ${errText}`);
       } catch (liveErr: any) {
-        logger.warn('Gemini Live API call failed, using intelligent semantic fallback', { error: liveErr.message });
+        logger.warn('Gemini Live API call failed', { error: liveErr.message });
+        throw liveErr;
       }
     }
 
-    // High quality intelligent semantic completion when key is offline or unconfigured
-    let outputText = '';
-    const lower = prompt.toLowerCase();
-    if (lower.includes('categorize') || lower.includes('statement')) {
-      outputText = JSON.stringify({
-        subject: 'Computer Science & Engineering',
-        topic: lower.includes('tree') ? 'Data Structures & Algorithms' : lower.includes('sql') ? 'Database Management Systems' : 'Aptitude & Logical Reasoning',
-        subtopic: lower.includes('tree') ? 'Binary Trees & BST' : 'Relational Queries',
-        difficulty: lower.includes('hard') ? 'hard' : 'medium',
-        company: lower.includes('infosys') ? 'Infosys' : 'TCS',
-        department: 'CSE',
-        questionType: 'mcq_single',
-        tags: ['Placement Prep', 'DSA', 'Core Concepts'],
-        qualityScore: 94,
-        explanation: 'The solution relies on fundamental algorithmic traversal properties and logarithmic time complexity.'
-      });
-    } else if (lower.includes('resume') || lower.includes('ats')) {
-      outputText = JSON.stringify({
-        overallScore: 89,
-        atsMatch: '91%',
-        impactScore: 86,
-        formattingScore: 94,
-        templateUsed: 'modern',
-        suggestions: [
-          'Quantify project outcomes with concrete metrics (e.g. "Reduced API latency by 45%").',
-          'Add Docker, Redis, and Distributed Systems to technical skills.',
-          'Verify that all LinkedIn and GitHub project URLs are clickable and live.'
-        ],
-        missingKeywords: ['CI/CD', 'Docker', 'Redis', 'Unit Testing', 'TypeScript'],
-        strengths: ['Clear full-stack foundation', 'Good project diversity']
-      });
-    } else if (lower.includes('interview') || lower.includes('evaluate')) {
-      outputText = JSON.stringify({
-        score: 87,
-        track: 'Technical',
-        totalAnswered: 3,
-        summary: 'Solid foundational logic and structured explanation. Deepen real-world edge-case handling.',
-        strengths: ['Direct communication', 'Accurate complexity analysis', 'Clean syntax understanding'],
-        areasForImprovement: ['Mention concurrent load tradeoffs', 'Address memory constraints in large data streams'],
-        recommendedTopics: ['Dynamic Programming', 'Database Indexing', 'System Design'],
-        actionPlan: 'Review mock technical questions daily on PLACE@ASET and practice code tracing.'
-      });
-    } else {
-      outputText = `Gemini AI Response: Thoroughly analyzed "${prompt.substring(0, 80)}...". Structured guidance ready for placement readiness.`;
-    }
-
-    return {
-      text: outputText,
-      tokensUsed: Math.ceil(prompt.length / 4) + Math.ceil(outputText.length / 4),
-      latencyMs: Date.now() - start,
-      providerId: this.id,
-      model: 'gemini-1.5-flash',
-    };
+    throw new Error('Google Gemini API key is not configured in environment.');
   }
 
   async embed(text: string): Promise<number[]> {

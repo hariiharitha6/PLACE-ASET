@@ -13,8 +13,8 @@ export function initDatabase(): void {
     return;
   }
 
-  // Primary backend client uses SUPABASE_SERVICE_ROLE_KEY for server operations
   const primaryKey = serviceKey || anonKey!;
+
 
   supabaseAdmin = createClient(url, primaryKey, {
     auth: {

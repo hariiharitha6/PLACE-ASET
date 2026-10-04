@@ -22,11 +22,15 @@ export class PracticeService {
     const supabase = getSupabase();
 
     // 1. Create the session record
+    const effectiveCollegeId = (collegeId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(collegeId))
+      ? collegeId
+      : '13d4decc-75fd-4138-8145-6a9fcff454ad';
+
     const { data: session, error: sessionErr } = await supabase
       .from('practice_sessions')
       .insert({
         user_id: userId,
-        college_id: collegeId,
+        college_id: effectiveCollegeId,
         category_id: data.category_id || null,
         difficulty: data.difficulty || null,
         mode: data.mode,

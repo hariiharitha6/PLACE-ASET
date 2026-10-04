@@ -242,22 +242,46 @@ Provide an objective, constructive JSON evaluation strictly in this format:
 export async function uploadPersonalDocument(req: AuthenticatedRequest, res: Response, _next: NextFunction) {
   try {
     if (!req.user) return errorResponse(res, 'User not authenticated', 401);
-    const { title, fileName, fileType, fileSize, rawText, tags } = req.body || {};
+    const uploadedFile = (req as any).file;
+    const body = req.body || {};
+
+    const rawTags = body.tags;
+    let parsedTags: string[] = ['Personal', 'Study Material'];
+    if (typeof rawTags === 'string') {
+      parsedTags = rawTags.split(',').map((t: string) => t.trim()).filter(Boolean);
+    } else if (Array.isArray(rawTags)) {
+      parsedTags = rawTags;
+    }
+
+    const title = (body.title && body.title.trim()) || uploadedFile?.originalname?.replace(/\.[^/.]+$/, '');
     if (!title) return errorResponse(res, 'Document title is required', 400);
 
     const doc = await PersonalDocumentService.createAndProcessDocument({
       userId: req.user.id,
       title,
-      fileName,
-      fileType,
-      fileSize,
-      rawText,
-      tags
+      fileName: uploadedFile?.originalname || body.fileName,
+      fileType: uploadedFile?.mimetype || body.fileType || 'application/pdf',
+      fileSize: uploadedFile?.size || body.fileSize,
+      rawText: body.rawText,
+      fileBuffer: uploadedFile?.buffer,
+      tags: parsedTags
     });
 
     return successResponse(res, doc, 201);
   } catch (error: any) {
     return errorResponse(res, error.message || 'Failed to upload personal document', 400);
+  }
+}
+
+export async function getPersonalDocumentSignedUrl(req: AuthenticatedRequest, res: Response, _next: NextFunction) {
+  try {
+    if (!req.user) return errorResponse(res, 'User not authenticated', 401);
+    const { id } = req.params;
+    const signedUrl = await PersonalDocumentService.getDocumentSignedUrl(req.user.id, id);
+    if (!signedUrl) return errorResponse(res, 'File not found or storage url unavailable', 404);
+    return successResponse(res, { signedUrl }, 200);
+  } catch (error: any) {
+    return errorResponse(res, error.message || 'Failed to get signed url', 400);
   }
 }
 

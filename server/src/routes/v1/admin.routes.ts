@@ -28,7 +28,10 @@ import {
   getAnnouncements,
   getAuditLogs,
   getReportSummary,
+  importQuestionsFromPdf,
+  publishImportedQuestions,
 } from '../../controllers/admin.controller';
+import { fileUpload } from '../../middleware/upload';
 import {
   listUsers as listManagedUsers,
   updateUser,
@@ -86,6 +89,10 @@ router.patch('/questions/:questionId/review', reviewQuestion as any);
 router.patch('/questions/:questionId/archive', archiveQuestion as any);
 router.patch('/questions/:questionId/restore', restoreQuestion as any);
 router.post('/questions/bulk-review', bulkReviewQuestions as any);
+
+// Content Ingestion & Question Bank Import (Phase 8 & 10)
+router.post('/content/import-questions', fileUpload.single('file') as any, importQuestionsFromPdf as any);
+router.post('/content/publish-imported', publishImportedQuestions as any);
 
 // Advanced Enterprise User Management
 router.get('/users/managed', listManagedUsers as any);

@@ -5,11 +5,12 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '../../../../context/AuthContext';
 import { useToast } from '../../../../context/ToastContext';
+import { useAssistant } from '../../../../context/AssistantContext';
 import { resourceService } from '../../../../lib/resourceService';
 import { 
   FileText, Download, Bookmark, Eye, ArrowLeft, ExternalLink, 
   Sparkles, Video, HelpCircle, CheckCircle2, BookOpen, Layers, 
-  Send, User, Clock, Award
+  Send, User, Clock, Award, Bot 
 } from 'lucide-react';
 import styles from '../resources.module.css';
 
@@ -19,6 +20,7 @@ export default function ResourceDetailPage() {
   const { id } = params;
   const { user } = useAuth();
   const toast = useToast();
+  const { openAssistant } = useAssistant();
 
   const [resource, setResource] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -145,6 +147,17 @@ export default function ResourceDetailPage() {
               style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: resource.is_bookmarked ? '#f59e0b' : 'var(--text-primary)', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }}>
               <Bookmark size={16} fill={resource.is_bookmarked ? '#f59e0b' : 'none'} />
               {resource.is_bookmarked ? 'Bookmarked' : 'Bookmark'}
+            </button>
+            <button
+              onClick={() => openAssistant({
+                type: 'resource',
+                resourceTitle: resource.title,
+                resourceCategory: resource.subject || resource.department,
+                resourceSnippet: resource.description || resource.ai_summary,
+              }, `Summarize the essential placement takeaways and core concepts from "${resource.title}".`)}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-glass)', border: '1px solid var(--border-accent)', color: 'var(--text-accent)', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }}
+            >
+              <Bot size={15} style={{ color: 'var(--accent-primary)' }} /> Ask Assistant
             </button>
             <button onClick={handleDownload}
               style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 20px', borderRadius: 'var(--radius-md)', background: 'var(--gradient-primary)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }}>

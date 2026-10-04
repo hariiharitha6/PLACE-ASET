@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useNotifications } from '../context/NotificationContext';
 import { usePathname, useRouter } from 'next/navigation';
+import { useAssistant } from '../context/AssistantContext';
 import UserMenu from './UserMenu';
 import { 
   Menu, 
@@ -14,13 +15,15 @@ import {
   Bell, 
   ChevronRight,
   GraduationCap,
-  UserCheck
+  UserCheck,
+  Bot
 } from 'lucide-react';
 
 export default function Navbar({ onMenuClick }) {
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const { openAssistant } = useAssistant();
   
   const [showNotifications, setShowNotifications] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -207,6 +210,39 @@ export default function Navbar({ onMenuClick }) {
             }}
           />
         </div>
+
+        {/* Ask PLACE Assistant Button */}
+        <button
+          onClick={() => openAssistant()}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '6px 12px',
+            borderRadius: 'var(--radius-md)',
+            backgroundColor: 'var(--bg-glass)',
+            border: '1px solid var(--border-accent)',
+            color: 'var(--text-accent)',
+            fontSize: '12.5px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all var(--transition-fast)',
+            height: '36px',
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--bg-glass-hover)';
+            e.currentTarget.style.borderColor = 'var(--accent-primary)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--bg-glass)';
+            e.currentTarget.style.borderColor = 'var(--border-accent)';
+          }}
+          title="Open PLACE AI Assistant"
+          aria-label="Open PLACE AI Assistant"
+        >
+          <Bot size={15} style={{ color: 'var(--accent-primary)' }} />
+          <span className="hidden-mobile">Ask PLACE</span>
+        </button>
 
         {/* Theme Toggle */}
         <button 

@@ -5,6 +5,7 @@ import ProtectedRoute from '../../components/ProtectedRoute';
 import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
 import MobileNavigation from '../../components/ui/MobileNavigation';
+import AssistantDrawer from '../../components/assistant/AssistantDrawer';
 
 export default function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -51,6 +52,9 @@ export default function DashboardLayout({ children }) {
 
           {/* Mobile Bottom Navigation */}
           <MobileNavigation />
+
+          {/* Slide-over PLACE Assistant Drawer */}
+          <AssistantDrawer />
         </div>
 
         {/* Global style inject for sidebar offset */}

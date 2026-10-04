@@ -35,11 +35,31 @@ export async function verifyJWT(req: AuthenticatedRequest, res: Response, next: 
       return res.status(401).json({ success: false, error: 'Invalid or expired token' });
     }
 
+    let role = user.app_metadata?.user_role || user.app_metadata?.role || user.user_metadata?.role || user.user_metadata?.user_role;
+    let collegeId = user.app_metadata?.college_id || user.user_metadata?.college_id || null;
+
+    if (!role || role === 'student') {
+      try {
+        const { data: dbUser } = await supabase
+          .from('users')
+          .select('role, college_id')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (dbUser) {
+          if (dbUser.role) role = dbUser.role;
+          if (dbUser.college_id) collegeId = dbUser.college_id;
+        }
+      } catch (dbErr) {
+        // Fallback to existing role
+      }
+    }
+
     req.user = {
       id: user.id,
       email: user.email || '',
-      role: user.app_metadata?.user_role || 'student',
-      collegeId: user.app_metadata?.college_id || null,
+      role: role || 'student',
+      collegeId: collegeId || null,
     };
 
     next();

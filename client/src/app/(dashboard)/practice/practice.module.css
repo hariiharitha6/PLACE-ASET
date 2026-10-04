@@ -39,8 +39,17 @@
 
 .arenaMain {
   background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);
-  padding: 32px; display: flex; flex-direction: column; gap: 24px; position: relative;
+  padding: 28px; display: flex; flex-direction: column; gap: 20px; position: relative;
   box-shadow: var(--shadow-sm);
+}
+@media (max-width: 640px) {
+  .arenaMain {
+    padding: 16px 14px;
+    gap: 16px;
+  }
+  .configPanel {
+    padding: 18px 14px;
+  }
 }
 .arenaSidebar {
   background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);

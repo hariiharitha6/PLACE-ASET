@@ -2,14 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
+import { useAssistant } from '../../../../context/AssistantContext';
 import { useRouter } from 'next/navigation';
 import api from '../../../../lib/api';
-import { Target, Trophy, Sparkles, BookOpen, Layers, BarChart3, Clock, AlertCircle } from 'lucide-react';
+import { Target, Trophy, Sparkles, BookOpen, Layers, BarChart3, Clock, AlertCircle, Bot } from 'lucide-react';
 import styles from './readiness.module.css';
 
 export default function PlacementReadinessDashboard() {
   const { user } = useAuth();
   const router = useRouter();
+  const { openAssistant } = useAssistant();
 
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
@@ -140,10 +142,28 @@ export default function PlacementReadinessDashboard() {
 
         {/* Quick AI Navigation */}
         <div className={styles.ranksCard}>
-          <h3>🤖 AI Copilot Actions</h3>
+          <h3>🤖 AI Placement Copilot</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
-            <button onClick={() => router.push('/mentor')} style={{ padding: '10px 14px', borderRadius: '8px', background: 'var(--gradient-primary)', color: '#fff', border: 'none', fontWeight: '700', fontSize: '13px', cursor: 'pointer', textAlign: 'left' }}>
-              💬 Chat with AI Personal Mentor
+            <button
+              onClick={() => openAssistant({
+                type: 'readiness',
+                readinessScore,
+                weakTopics: ['DSA & Core Algorithms', 'DBMS & SQL Queries'],
+                streak: streakDays,
+              }, `Based on my current readiness score of ${readinessScore || 0}/100 and active streak of ${streakDays} days, analyze my preparation gaps and give me high-impact recommendations.`)}
+              style={{ padding: '10px 14px', borderRadius: '8px', background: 'var(--gradient-primary)', color: '#fff', border: 'none', fontWeight: '700', fontSize: '13px', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <Bot size={16} /> How can I improve my readiness?
+            </button>
+            <button
+              onClick={() => openAssistant({
+                type: 'readiness',
+                readinessScore,
+                streak: streakDays,
+              }, 'Create a realistic, targeted study plan for today focusing on high-frequency placement topics.')}
+              style={{ padding: '10px 14px', borderRadius: '8px', background: 'var(--bg-glass)', border: '1px solid var(--border-accent)', color: 'var(--text-accent)', fontWeight: '600', fontSize: '13px', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <Target size={15} /> Create today&apos;s study plan
             </button>
             <button onClick={() => router.push('/resume')} style={{ padding: '10px 14px', borderRadius: '8px', background: 'var(--bg-glass)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontWeight: '600', fontSize: '13px', cursor: 'pointer', textAlign: 'left' }}>
               📄 Run AI ATS Resume Scoring

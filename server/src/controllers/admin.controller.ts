@@ -4,6 +4,8 @@ import { getSupabaseAdmin } from '../config/database';
 import { successResponse, errorResponse } from '../utils/helpers';
 import logger from '../utils/logger';
 import { LoggingService } from '../services/logging.service';
+import { StorageService } from '../services/storage.service';
+import crypto from 'crypto';
 
 /**
  * 1. Admin Dashboard Overview - Live database metrics for all 18 stat cards
@@ -893,5 +895,158 @@ export async function getReportSummary(req: AuthenticatedRequest, res: Response,
     return successResponse(res, reportData, 200);
   } catch (error: any) {
     return errorResponse(res, error.message || 'Failed to generate report summary', 500);
+  }
+}
+
+/**
+ * 18. Content Ingestion & Question Bank Import (Phase 8 & 10)
+ */
+export async function importQuestionsFromPdf(req: AuthenticatedRequest, res: Response, _next: NextFunction) {
+  try {
+    const admin = getSupabaseAdmin();
+    const uploadedFile = (req as any).file;
+    const body = req.body || {};
+
+    let textContent = body.rawText || '';
+    const filename = uploadedFile?.originalname || body.fileName || 'Uploaded_Question_Material.pdf';
+    let storagePath: string | null = null;
+
+    if (uploadedFile) {
+      if (!textContent) {
+        try {
+          textContent = await StorageService.extractTextFromFile(uploadedFile.buffer, uploadedFile.mimetype || 'application/pdf', filename);
+        } catch (textErr: any) {
+          logger.warn('Failed to extract text from uploaded admin PDF', { error: textErr.message });
+        }
+      }
+
+      try {
+        const sanitized = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const targetPath = `imports/${req.user?.id || 'admin'}_${Date.now()}_${sanitized}`;
+        const uploadRes = await StorageService.uploadFile('question-imports', targetPath, uploadedFile.buffer, uploadedFile.mimetype || 'application/pdf');
+        storagePath = uploadRes.fullPath;
+      } catch (storageErr: any) {
+        logger.warn('Admin question import file storage upload warning', { error: storageErr.message });
+      }
+    }
+
+    if (!textContent.trim()) {
+      return errorResponse(res, 'No readable content or file uploaded.', 400);
+    }
+
+    // Extract questions
+    const rawQuestions = StorageService.extractQuestionsFromText(textContent, filename);
+
+    // Map topics to categories in database
+    const { data: dbCategories } = await admin.from('categories').select('id, name, slug');
+    const catMap: Record<string, { id: string; name: string }> = {};
+    if (dbCategories) {
+      dbCategories.forEach(c => {
+        catMap[c.slug] = { id: c.id, name: c.name };
+        catMap[c.name.toLowerCase()] = { id: c.id, name: c.name };
+      });
+    }
+
+    const defaultCat = catMap['quantitative-aptitude'] || catMap['general-aptitude'] || { id: dbCategories?.[0]?.id || '', name: 'General Aptitude' };
+
+    const detectedQuestions = rawQuestions.map((q, idx) => {
+      const matched =
+        (q.categorySlug && catMap[q.categorySlug]) ||
+        catMap[q.topic.toLowerCase()] ||
+        defaultCat;
+
+      return {
+        tempId: `temp-${idx + 1}-${Date.now()}`,
+        questionNumber: q.questionNumber || idx + 1,
+        statement: q.statement,
+        topic: q.topic,
+        categoryId: matched.id,
+        categoryName: matched.name,
+        options: q.options,
+        correctLetter: q.correctLetter,
+        explanation: q.explanation,
+        difficulty: q.difficulty,
+        sourceName: filename,
+        approvalStatus: q.correctLetter ? 'approved' : 'pending_review'
+      };
+    });
+
+    return successResponse(res, {
+      documentTitle: filename,
+      storagePath,
+      totalDetected: detectedQuestions.length,
+      questions: detectedQuestions,
+      availableCategories: dbCategories || []
+    }, 200);
+  } catch (error: any) {
+    logger.error('Admin question import error', { error: error.message });
+    return errorResponse(res, error.message || 'Failed to import and extract questions from document', 400);
+  }
+}
+
+export async function publishImportedQuestions(req: AuthenticatedRequest, res: Response, _next: NextFunction) {
+  try {
+    const admin = getSupabaseAdmin();
+    const { questions, sourceName } = req.body;
+
+    if (!Array.isArray(questions) || questions.length === 0) {
+      return errorResponse(res, 'No questions provided for publishing', 400);
+    }
+
+    const { data: col } = await admin.from('colleges').select('id').limit(1).maybeSingle();
+    const collegeId = col?.id || '13d4decc-75fd-4138-8145-6a9fcff454ad';
+    const userId = req.user?.id || '87dc0ed9-82ce-4ae8-bcaa-c09c58de6e86';
+
+    let publishedCount = 0;
+
+    for (const q of questions) {
+      if (q.approvalStatus === 'rejected') continue;
+
+      const questionId = crypto.randomUUID();
+
+      const { error: qErr } = await admin.from('questions').insert({
+        id: questionId,
+        college_id: collegeId,
+        category_id: q.categoryId,
+        created_by: userId,
+        type: 'mcq_single',
+        difficulty: q.difficulty || 'medium',
+        statement: q.statement,
+        explanation: q.explanation || (q.correctLetter ? `Correct option: ${q.correctLetter}` : ''),
+        is_global: true,
+        visibility: 'public',
+        approval_status: 'approved',
+        times_answered: 0,
+        times_correct: 0,
+        success_rate: 0
+      });
+
+      if (qErr) {
+        logger.warn('Failed to insert question during admin publish', { error: qErr.message });
+        continue;
+      }
+
+      if (Array.isArray(q.options)) {
+        const optionRows = q.options.map((opt: any, idx: number) => ({
+          question_id: questionId,
+          label: opt.label || String.fromCharCode(65 + idx),
+          content: opt.content,
+          is_correct: opt.label?.toUpperCase() === (q.correctLetter || '').toUpperCase()
+        }));
+
+        await admin.from('question_options').insert(optionRows);
+      }
+
+      publishedCount++;
+    }
+
+    return successResponse(res, {
+      message: `Successfully published ${publishedCount} questions into the institutional Question Bank.`,
+      publishedCount,
+      sourceName: sourceName || 'Document Import'
+    }, 201);
+  } catch (error: any) {
+    logger.error('Admin question publish error', { error: error.message });
+    return errorResponse(res, error.message || 'Failed to publish questions', 400);
   }
 }

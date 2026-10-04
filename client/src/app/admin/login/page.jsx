@@ -8,8 +8,8 @@ import styles from './adminLogin.module.css';
 export default function AdminLoginPage() {
   const { login } = useAuth();
   const [role, setRole] = useState('super_admin');
-  const [email, setEmail] = useState('admin@aset.ac.in');
-  const [password, setPassword] = useState('Admin@12345');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -17,16 +17,6 @@ export default function AdminLoginPage() {
 
   const handleRoleChange = (newRole) => {
     setRole(newRole);
-    if (newRole === 'super_admin') {
-      setEmail('admin@aset.ac.in');
-      setPassword('Admin@12345');
-    } else if (newRole === 'college_admin') {
-      setEmail('collegeadmin@aset.ac.in');
-      setPassword('Admin@12345');
-    } else if (newRole === 'host') {
-      setEmail('host@aset.ac.in');
-      setPassword('Host@12345');
-    }
   };
 
   const handleSubmit = async (e) => {

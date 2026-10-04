@@ -19,7 +19,8 @@ import {
   Bot,
   Calendar,
   UserCheck,
-  GraduationCap
+  GraduationCap,
+  Layers
 } from 'lucide-react';
 import { APP_NAME } from '../lib/constants';
 
@@ -31,8 +32,9 @@ export default function Sidebar({ isOpen, onClose }) {
     { label: 'LEARN', items: [
       { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       { label: 'Practice Arena', href: '/practice', icon: BookOpen },
+      { label: 'Question Bank', href: '/question-bank', icon: Layers },
       { label: 'Resource Library', href: '/resources', icon: Library },
-      { label: 'Mentor', href: '/mentor', icon: Bot },
+      { label: 'PLACE Assistant', href: '/assistant', icon: Bot },
       { label: 'Personal Studio', href: '/personal', icon: UserCheck },
     ]},
     { label: 'PROGRESS', items: [

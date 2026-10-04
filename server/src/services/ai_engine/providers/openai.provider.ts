@@ -52,53 +52,15 @@ export class OpenAIProvider implements IAIProvider {
             };
           }
         }
+        const errText = await res.text();
+        throw new Error(`OpenAI API returned status ${res.status}: ${errText}`);
       } catch (err: any) {
-        logger.warn('OpenAI Live API call failed, using fallback', { error: err.message });
+        logger.warn('OpenAI Live API call failed', { error: err.message });
+        throw err;
       }
     }
 
-    // High quality intelligent semantic fallback
-    let outputText = '';
-    const lower = prompt.toLowerCase();
-    if (lower.includes('resume') || lower.includes('ats')) {
-      outputText = JSON.stringify({
-        overallScore: 90,
-        atsMatch: '93%',
-        impactScore: 88,
-        formattingScore: 95,
-        templateUsed: 'modern',
-        suggestions: [
-          'Add quantifiable outcomes to project accomplishments (e.g. "Achieved 99.9% uptime").',
-          'Include Cloud (AWS/GCP), Docker, and REST API design in Skills.',
-          'Double check that LinkedIn, GitHub and portfolio URLs are live and public.'
-        ],
-        missingKeywords: ['Docker', 'Microservices', 'GraphQL', 'Jest/Testing', 'Kubernetes'],
-        strengths: ['Clean architectural overview', 'Solid academic and project grounding']
-      });
-    } else if (lower.includes('interview') || lower.includes('evaluate')) {
-      outputText = JSON.stringify({
-        score: 88,
-        track: 'Technical',
-        totalAnswered: 3,
-        summary: 'Excellent algorithmic insight and structured problem decomposition.',
-        strengths: ['Clear time/space complexity analysis', 'Structured modular thinking'],
-        areasForImprovement: ['Elaborate on multi-threading concurrency issues and memory limits'],
-        recommendedTopics: ['Concurrency', 'Database Partitioning', 'Greedy Algorithms'],
-        actionPlan: 'Solve 2 hard questions weekly and conduct peer mock interviews.'
-      });
-    } else if (lower.includes('explanation') || lower.includes('solution')) {
-      outputText = '1. Understand the core constraint boundaries.\n2. Choose optimal data structure (e.g., Min-Heap or Hash Map).\n3. Prove runtime complexity O(N log K) and space O(K).';
-    } else {
-      outputText = `OpenAI GPT: Structured analysis generated for "${prompt.substring(0, 80)}...". Accurate and placement-ready.`;
-    }
-
-    return {
-      text: outputText,
-      tokensUsed: Math.ceil(prompt.length / 4) + Math.ceil(outputText.length / 4),
-      latencyMs: Date.now() - start,
-      providerId: this.id,
-      model: 'gpt-4o-mini',
-    };
+    throw new Error('OpenAI API key is not configured in environment.');
   }
 
   async embed(text: string): Promise<number[]> {

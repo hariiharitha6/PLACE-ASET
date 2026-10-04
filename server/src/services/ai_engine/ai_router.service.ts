@@ -136,9 +136,7 @@ export class AIRouterService {
       }
 
       // 5. If all configured live providers fail or are offline, provide structured instructional guidance
-      const guidanceMessage = `[PLACE@ASET AI Engine]: Local AI is unavailable. Start Ollama or choose a configured cloud provider.
-Ollama URL: ${(process.env.OLLAMA_BASE_URL || 'http://localhost:11434')}
-Model: ${process.env.OLLAMA_MODEL || 'llama3'}`;
+      const guidanceMessage = 'AI is currently unavailable. Please check your configured AI provider or try again later.';
 
       const safeResult: AICompletionResult = {
         text: guidanceMessage,

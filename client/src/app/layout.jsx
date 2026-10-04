@@ -5,6 +5,7 @@ import { ThemeProvider } from '../context/ThemeContext';
 import { NotificationProvider } from '../context/NotificationContext';
 import { ToastProvider } from '../context/ToastContext';
 import { ConfirmProvider } from '../context/ConfirmContext';
+import { AssistantProvider } from '../context/AssistantContext';
 import SmoothScroll from '../components/SmoothScroll';
 
 export const metadata = {
@@ -25,9 +26,11 @@ export default function RootLayout({ children }) {
             <NotificationProvider>
               <ToastProvider>
                 <ConfirmProvider>
-                  <SmoothScroll>
-                    {children}
-                  </SmoothScroll>
+                  <AssistantProvider>
+                    <SmoothScroll>
+                      {children}
+                    </SmoothScroll>
+                  </AssistantProvider>
                 </ConfirmProvider>
               </ToastProvider>
             </NotificationProvider>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
+import { useAssistant } from '../../../context/AssistantContext';
 import { dashboardService } from '../../../lib/dashboardService';
 import FocusCard from '../../../components/ui/FocusCard';
 import NextStepCard from '../../../components/widgets/NextStepCard';
@@ -27,7 +28,8 @@ import {
   Trophy, 
   Flame, 
   CheckCircle2, 
-  BookOpen
+  BookOpen,
+  Bot
 } from 'lucide-react';
 import styles from './studentDashboard.module.css';
 
@@ -35,6 +37,7 @@ export default function StudentDashboardPage() {
   const { user } = useAuth();
   const router = useRouter();
   const toast = useToast();
+  const { openAssistant } = useAssistant();
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -107,6 +110,52 @@ export default function StudentDashboardPage() {
 
       {/* 2. YOUR NEXT STEP — data-driven recommendations */}
       <NextStepCard />
+
+      {/* 2.1 CONTEXTUAL AI ASSISTANT PROMPT */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 18px',
+        backgroundColor: 'var(--bg-glass)',
+        border: '1px solid var(--border-color)',
+        borderRadius: 'var(--radius-md)',
+        gap: '12px',
+        flexWrap: 'wrap',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <Bot size={18} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />
+          <div>
+            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Need targeted placement direction?</span>
+            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', marginLeft: '6px' }}>Ask PLACE Assistant for a personalized plan based on your verified performance.</span>
+          </div>
+        </div>
+        <button
+          onClick={() => openAssistant({
+            type: 'readiness',
+            solvedQuestions: completedSessions,
+            streak: streakDays,
+            readinessScore: readinessScore,
+          }, 'What should I study next to maximize my placement readiness?')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '7px 14px',
+            borderRadius: 'var(--radius-sm)',
+            backgroundColor: 'var(--bg-glass)',
+            border: '1px solid var(--border-accent)',
+            color: 'var(--text-accent)',
+            fontSize: '12px',
+            fontWeight: '600',
+            cursor: 'pointer',
+          }}
+          onMouseOver={e => { e.currentTarget.style.backgroundColor = 'var(--bg-glass-hover)'; e.currentTarget.style.borderColor = 'var(--accent-primary)'; }}
+          onMouseOut={e => { e.currentTarget.style.backgroundColor = 'var(--bg-glass)'; e.currentTarget.style.borderColor = 'var(--border-accent)'; }}
+        >
+          <Sparkles size={13} /> What should I study next?
+        </button>
+      </div>
 
       {/* 3. EXECUTIVE STUDY TELEMETRY KPIS */}
       <div className={styles.kpiGrid}>

@@ -3,13 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useToast } from '../../../../../context/ToastContext';
+import { useAssistant } from '../../../../../context/AssistantContext';
 import { practiceService } from '../../../../../lib/practiceService';
-import { ChevronLeft, CheckCircle, XCircle, Clock, Zap, BookOpen, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, CheckCircle, XCircle, Clock, Zap, BookOpen, AlertTriangle, Bot } from 'lucide-react';
 import styles from '../../practice.module.css';
 
 export default function PracticeSessionResultsPage() {
   const router = useRouter();
   const toast = useToast();
+  const { openAssistant } = useAssistant();
   const params = useParams();
   const { sessionId } = params;
 
@@ -130,6 +132,40 @@ export default function PracticeSessionResultsPage() {
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'var(--bg-primary)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
                       Time: {ans.time_spent_seconds}s
                     </span>
+                    <button
+                      onClick={() => {
+                        const selectedOpt = q.question_options?.find(o => o.id === ans.selected_option_id);
+                        const correctOpt = q.question_options?.find(o => o.is_correct);
+                        openAssistant({
+                          type: 'practice',
+                          questionId: q.id,
+                          questionStatement: q.statement,
+                          options: q.question_options?.map(o => ({ label: o.label, content: o.content })),
+                          selectedOptionLabel: selectedOpt?.label,
+                          correctOptionLabel: correctOpt?.label,
+                          explanation: q.explanation,
+                        }, isCorrect
+                          ? 'Explain the underlying algorithmic principle tested here in depth.'
+                          : `Why is my choice [${selectedOpt?.label || 'selected'}] incorrect and how should I solve this step-by-step?`);
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '3px 8px',
+                        borderRadius: '4px',
+                        background: 'var(--bg-glass)',
+                        border: '1px solid var(--border-accent)',
+                        color: 'var(--text-accent)',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                      }}
+                      title="Ask PLACE Assistant about this question"
+                    >
+                      <Bot size={13} style={{ color: 'var(--accent-primary)' }} />
+                      <span>Ask AI</span>
+                    </button>
                   </div>
                 </div>
 

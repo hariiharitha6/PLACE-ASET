@@ -44,8 +44,13 @@ export async function startPracticeSession(req: AuthenticatedRequest, res: Respo
 export async function submitPracticeAnswer(req: AuthenticatedRequest, res: Response, _next: NextFunction) {
   try {
     const sessionId = req.params.sessionId || req.body.sessionId;
-    const { question_id, selected_option_id, time_spent } = req.body;
+    const question_id = req.body.question_id || req.body.questionId;
+    const selected_option_id = req.body.selected_option_id || req.body.selectedOptionId;
+    const time_spent = req.body.time_spent !== undefined ? req.body.time_spent : req.body.timeSpent;
+
     if (!sessionId) return errorResponse(res, 'Session ID is required', 400);
+    if (!question_id) return errorResponse(res, 'Question ID is required', 400);
+
     const result = await PracticeService.submitAnswer(sessionId, question_id, selected_option_id, time_spent || 0);
     return successResponse(res, result, 200);
   } catch (error: any) {

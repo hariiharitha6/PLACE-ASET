@@ -6,24 +6,78 @@ import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 import { practiceService } from '../../../lib/practiceService';
 import { supabase } from '../../../lib/supabase';
-import { getDepartmentsForCollege } from '../../../constants/departments';
 import { 
   Brain, Cpu, BarChart3, BookOpen, Shuffle, Zap, Trophy, Target, 
   Flame, Clock, ChevronRight, Bookmark, AlertTriangle, Sparkles, 
-  Settings, History, Award, CheckCircle, RefreshCw 
+  History, Award, CheckCircle, RefreshCw, PlayCircle, Layers, CheckCircle2
 } from 'lucide-react';
-import EmptyState from '../../../components/ui/EmptyState';
+import Link from 'next/link';
 import styles from './practice.module.css';
 
-const PRACTICE_MODES = [
-  { id: 'technical', label: 'Technical Practice', desc: 'Data structures, algorithms, OS, networking, DBMS.', icon: <Cpu size={20} />, color: 'rgba(99,102,241,0.12)', border: 'rgba(99,102,241,0.25)' },
-  { id: 'logical', label: 'Logical Reasoning', desc: 'Puzzles, patterns, sequences, and syllogisms.', icon: <Brain size={20} />, color: 'rgba(168,85,247,0.12)', border: 'rgba(168,85,247,0.25)' },
-  { id: 'quantitative', label: 'Quantitative Aptitude', desc: 'Arithmetic, algebra, and data interpretation.', icon: <BarChart3 size={20} />, color: 'rgba(14,165,233,0.12)', border: 'rgba(14,165,233,0.25)' },
-  { id: 'verbal', label: 'Verbal Ability', desc: 'Grammar, vocabulary, reading comprehension.', icon: <BookOpen size={20} />, color: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.25)' },
-  { id: 'mixed', label: 'Mixed Practice', desc: 'Random mix from all categories.', icon: <Shuffle size={20} />, color: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.25)' },
-  { id: 'company', label: 'Company Specific', desc: 'Custom practice tailored for specific recruiter tests.', icon: <Trophy size={20} />, color: 'rgba(236,72,153,0.12)', border: 'rgba(236,72,153,0.25)' },
-  { id: 'department', label: 'Department Specific', desc: 'Questions linked to academic curriculums.', icon: <Award size={20} />, color: 'rgba(20,184,166,0.12)', border: 'rgba(20,184,166,0.25)' },
-  { id: 'adaptive', label: 'Adaptive Practice', desc: 'Foundation testing targeting weak and medium areas.', icon: <Sparkles size={20} />, color: 'rgba(244,63,94,0.12)', border: 'rgba(244,63,94,0.25)' },
+// India-BIX-Style Hierarchical Taxonomy Definition
+const TOPIC_DIRECTORY = [
+  {
+    group: 'Quantitative Aptitude',
+    icon: '🔢',
+    color: '#0284c7',
+    topics: [
+      { name: 'Time and Work', slug: 'time-and-work', estimatedQuestions: 35 },
+      { name: 'Percentages', slug: 'percentages', estimatedQuestions: 40 },
+      { name: 'Profit and Loss', slug: 'profit-and-loss', estimatedQuestions: 35 },
+      { name: 'Ratio and Proportion', slug: 'ratio-and-proportion', estimatedQuestions: 30 },
+      { name: 'Averages', slug: 'averages', estimatedQuestions: 25 },
+      { name: 'Time Speed Distance', slug: 'time-speed-distance', estimatedQuestions: 30 },
+      { name: 'Simple Interest', slug: 'simple-interest', estimatedQuestions: 20 },
+      { name: 'Compound Interest', slug: 'compound-interest', estimatedQuestions: 20 },
+      { name: 'Number Systems', slug: 'number-systems', estimatedQuestions: 35 },
+      { name: 'Probability', slug: 'probability', estimatedQuestions: 20 },
+      { name: 'Permutation and Combination', slug: 'permutation-and-combination', estimatedQuestions: 20 },
+    ]
+  },
+  {
+    group: 'Logical Reasoning',
+    icon: '🧩',
+    color: '#9333ea',
+    topics: [
+      { name: 'Series', slug: 'series', estimatedQuestions: 30 },
+      { name: 'Coding Decoding', slug: 'coding-decoding', estimatedQuestions: 35 },
+      { name: 'Blood Relations', slug: 'blood-relations', estimatedQuestions: 25 },
+      { name: 'Direction Sense', slug: 'direction-sense', estimatedQuestions: 20 },
+      { name: 'Syllogism', slug: 'syllogism', estimatedQuestions: 25 },
+      { name: 'Seating Arrangement', slug: 'seating-arrangement', estimatedQuestions: 25 },
+      { name: 'Puzzles', slug: 'puzzles', estimatedQuestions: 30 },
+      { name: 'Data Sufficiency', slug: 'data-sufficiency', estimatedQuestions: 20 },
+    ]
+  },
+  {
+    group: 'Verbal Ability',
+    icon: '📝',
+    color: '#16a34a',
+    topics: [
+      { name: 'Grammar', slug: 'grammar', estimatedQuestions: 30 },
+      { name: 'Vocabulary', slug: 'vocabulary', estimatedQuestions: 35 },
+      { name: 'Synonyms', slug: 'synonyms', estimatedQuestions: 25 },
+      { name: 'Antonyms', slug: 'antonyms', estimatedQuestions: 25 },
+      { name: 'Reading Comprehension', slug: 'reading-comprehension', estimatedQuestions: 20 },
+      { name: 'Sentence Correction', slug: 'sentence-correction', estimatedQuestions: 25 },
+    ]
+  },
+  {
+    group: 'Technical Aptitude',
+    icon: '💻',
+    color: '#4f46e5',
+    topics: [
+      { name: 'Data Structures & Algorithms', slug: 'dsa', estimatedQuestions: 60 },
+      { name: 'C Programming', slug: 'c-programming', estimatedQuestions: 40 },
+      { name: 'C++ Programming', slug: 'cpp-programming', estimatedQuestions: 40 },
+      { name: 'Java', slug: 'java', estimatedQuestions: 45 },
+      { name: 'Python', slug: 'python', estimatedQuestions: 40 },
+      { name: 'DBMS', slug: 'dbms', estimatedQuestions: 45 },
+      { name: 'Operating Systems', slug: 'operating-systems', estimatedQuestions: 40 },
+      { name: 'Computer Networks', slug: 'computer-networks', estimatedQuestions: 35 },
+      { name: 'OOP Concepts', slug: 'oop-concepts', estimatedQuestions: 35 },
+    ]
+  }
 ];
 
 export default function PracticeArenaPage() {
@@ -33,23 +87,18 @@ export default function PracticeArenaPage() {
 
   const [stats, setStats] = useState(null);
   const [categories, setCategories] = useState([]);
-  const [departments, setDepartments] = useState([]);
-  const [companies, setCompanies] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [history, setHistory] = useState([]);
 
-  // Configuration state
-  const [selectedMode, setSelectedMode] = useState(null);
-  const [difficulty, setDifficulty] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const [departmentId, setDepartmentId] = useState('');
-  const [companyId, setCompanyId] = useState('');
-  const [questionCount, setQuestionCount] = useState(10);
-  const [solvedStatus, setSolvedStatus] = useState('all');
-  const [timedMode, setTimedMode] = useState(false);
-  const [durationMinutes, setDurationMinutes] = useState(15);
-  const [recentlyAdded, setRecentlyAdded] = useState(false);
+  // Top-Level Mode Tab: 'practice' (Normal Practice) vs 'timed' (Timed Test)
+  const [activeTab, setActiveTab] = useState('practice');
 
+  // Custom Practice Builder state
+  const [selectedSource, setSelectedSource] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [difficulty, setDifficulty] = useState('');
+  const [questionCount, setQuestionCount] = useState(10);
+  const [durationMinutes, setDurationMinutes] = useState(15);
   const [isStarting, setIsStarting] = useState(false);
 
   const loadData = async () => {
@@ -69,18 +118,8 @@ export default function PracticeArenaPage() {
     } catch (e) { console.error('Failed to load history', e); }
 
     try {
-      const { data: cats } = await supabase.from('categories').select('id, name').order('name');
+      const { data: cats } = await supabase.from('categories').select('id, name, slug').order('name');
       setCategories(cats || []);
-    } catch (e) { console.error(e); }
-
-    try {
-      const { data: depts } = await supabase.from('departments').select('id, name, code').order('name');
-      setDepartments(getDepartmentsForCollege('aset', depts || []));
-    } catch (e) { console.error(e); }
-
-    try {
-      const { data: comps } = await supabase.from('companies').select('id, name').order('name');
-      setCompanies(comps || []);
     } catch (e) { console.error(e); }
   };
 
@@ -88,74 +127,48 @@ export default function PracticeArenaPage() {
     loadData();
   }, []);
 
-  const handleStart = async (overrideParams = null) => {
+  const handleStartSession = async (options = {}) => {
     if (isStarting) return;
     setIsStarting(true);
 
-    try {
-      const payload = overrideParams || {
-        mode: selectedMode,
-        category_id: categoryId || undefined,
-        difficulty: difficulty || undefined,
-        questionCount,
-        department_id: selectedMode === 'department' ? departmentId || undefined : undefined,
-        company_id: selectedMode === 'company' ? companyId || undefined : undefined,
-        solved_status: solvedStatus,
-        recently_added_only: recentlyAdded || undefined,
-      };
+    const isTimedMode = options.isTimed !== undefined ? options.isTimed : activeTab === 'timed';
+    const timerMinutes = options.durationMinutes || durationMinutes;
 
-      // Add category_id maps if target modes are picked
-      if (selectedMode === 'technical' && !payload.category_id) {
-        // default to technical subcategories or technical category id
-        const techCat = categories.find(c => c.name.toLowerCase().includes('technical'));
-        if (techCat) payload.category_id = techCat.id;
-      } else if (selectedMode === 'logical' && !payload.category_id) {
-        const logCat = categories.find(c => c.name.toLowerCase().includes('logical'));
-        if (logCat) payload.category_id = logCat.id;
-      } else if (selectedMode === 'quantitative' && !payload.category_id) {
-        const quantCat = categories.find(c => c.name.toLowerCase().includes('quant'));
-        if (quantCat) payload.category_id = quantCat.id;
-      } else if (selectedMode === 'verbal' && !payload.category_id) {
-        const verbCat = categories.find(c => c.name.toLowerCase().includes('verbal'));
-        if (verbCat) payload.category_id = verbCat.id;
+    try {
+      // Find matching category ID from name or slug if passed
+      let catId = options.categoryId;
+      if (!catId && options.topicSlug) {
+        const matched = categories.find(c => c.slug === options.topicSlug || c.name.toLowerCase() === options.topicSlug.toLowerCase());
+        if (matched) catId = matched.id;
       }
+      if (!catId && selectedCategory) {
+        catId = selectedCategory;
+      }
+
+      const payload = {
+        mode: options.mode || 'mixed',
+        category_id: catId || undefined,
+        difficulty: options.difficulty || difficulty || undefined,
+        questionCount: options.questionCount || questionCount || 10,
+        solved_status: options.solvedStatus || 'all',
+        weak_topics_only: options.weakTopicsOnly || false,
+        bookmarked_only: options.bookmarkedOnly || false
+      };
 
       const res = await practiceService.startSession(payload);
       
-      // Pass timed config parameters to session storage
+      // Store timed test configuration
       res.timedConfig = {
-        isTimed: timedMode,
-        durationMinutes: durationMinutes
+        isTimed: isTimedMode,
+        durationMinutes: timerMinutes
       };
 
       sessionStorage.setItem('practiceSession', JSON.stringify(res));
-      toast.success('Practice session started!');
-      router.push(`/practice/arena`);
+      toast.success(`${isTimedMode ? 'Timed Test' : 'Practice Session'} started with ${res.questions?.length || payload.questionCount} questions!`);
+      router.push('/practice/arena');
     } catch (err) {
-      toast.error('Failed to start: ' + err.message);
+      toast.error('Could not start practice session: ' + err.message);
       setIsStarting(false);
-    }
-  };
-
-  const startShortcutPractice = (type) => {
-    if (type === 'bookmarks') {
-      handleStart({
-        mode: 'mixed',
-        questionCount: 10,
-        bookmarked_only: true
-      });
-    } else if (type === 'incorrect') {
-      handleStart({
-        mode: 'mixed',
-        questionCount: 10,
-        solved_status: 'incorrect'
-      });
-    } else if (type === 'weak') {
-      handleStart({
-        mode: 'adaptive',
-        questionCount: 10,
-        weak_topics_only: true
-      });
     }
   };
 
@@ -164,394 +177,357 @@ export default function PracticeArenaPage() {
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.titleSection}>
-          <h1>Placement Practice Arena</h1>
-          <p>Choose a category and difficulty below to begin answering questions with instant evaluation, or target weak areas with adaptive practice.</p>
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <BookOpen size={28} style={{ color: 'var(--accent-primary, #6366f1)' }} />
+            Placement Practice Arena
+          </h1>
+          <p>
+            Master placement aptitude, reasoning, and technical concepts. Select from the hierarchical topic directory or configure a custom practice session.
+          </p>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
+
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <Link 
+            href="/question-bank"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 16px', background: 'var(--bg-glass)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', textDecoration: 'none', fontSize: '13px', fontWeight: '600' }}
+          >
+            <Layers size={15} /> Browse Question Bank
+          </Link>
           <button 
-            className={styles.btnSecondary}
             onClick={() => router.push('/practice/bookmarks')}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: 'var(--bg-glass)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 16px', background: 'var(--bg-glass)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}
           >
             <Bookmark size={15} /> Bookmarks
           </button>
         </div>
       </div>
 
-      {/* Stats Summary cards */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '20px'
-      }}>
-        <div style={{ background: 'var(--bg-glass)', border: '1px solid var(--border-color)', padding: '20px', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ background: 'rgba(245,158,11,0.1)', color: 'var(--accent-warning)', padding: '12px', borderRadius: '50%' }}>
-            <Flame size={24} />
+      {/* Real Performance Telemetry Strip */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '14px' }}>
+        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', padding: '16px', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b', padding: '10px', borderRadius: '50%' }}>
+            <Flame size={20} />
           </div>
           <div>
-            <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)' }}>{stats?.streak || 0} Days</div>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Current Practice Streak</div>
+            <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)' }}>{stats?.streak || 0} Days</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Daily Streak</div>
           </div>
         </div>
 
-        <div style={{ background: 'var(--bg-glass)', border: '1px solid var(--border-color)', padding: '20px', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ background: 'rgba(99,102,241,0.1)', color: 'var(--accent-primary)', padding: '12px', borderRadius: '50%' }}>
-            <Zap size={24} />
+        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', padding: '16px', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{ background: 'rgba(99,102,241,0.1)', color: 'var(--accent-primary)', padding: '10px', borderRadius: '50%' }}>
+            <Zap size={20} />
           </div>
           <div>
-            <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)' }}>{stats?.totalXP || 0} XP</div>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Level {stats?.level || 1} Progress</div>
+            <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)' }}>{stats?.totalXP || 0} XP</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Level {stats?.level || 1} Progress</div>
           </div>
         </div>
 
-        <div style={{ background: 'var(--bg-glass)', border: '1px solid var(--border-color)', padding: '20px', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--accent-success)', padding: '12px', borderRadius: '50%' }}>
-            <CheckCircle size={24} />
+        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', padding: '16px', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', padding: '10px', borderRadius: '50%' }}>
+            <CheckCircle size={20} />
           </div>
           <div>
-            <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)' }}>{stats?.accuracy || 0}%</div>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Average Accuracy Rate</div>
+            <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)' }}>{stats?.accuracy || 0}%</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Verified Accuracy</div>
           </div>
         </div>
 
-        <div style={{ background: 'var(--bg-glass)', border: '1px solid var(--border-color)', padding: '20px', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ background: 'rgba(14,165,233,0.1)', color: 'var(--accent-info)', padding: '12px', borderRadius: '50%' }}>
-            <Award size={24} />
+        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', padding: '16px', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{ background: 'rgba(14,165,233,0.1)', color: '#0284c7', padding: '10px', borderRadius: '50%' }}>
+            <Award size={20} />
           </div>
           <div>
-            <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)' }}>{stats?.totalQuestions || 0}</div>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Questions Solved</div>
+            <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)' }}>{stats?.totalQuestions || 0}</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Questions Solved</div>
           </div>
         </div>
       </div>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '2.5fr 1fr',
-        gap: '24px',
-        alignItems: 'start'
-      }}>
+      {/* Mode Switcher Tabs (Phase 14: Clear Separation of Normal Practice vs Timed Test) */}
+      <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+        <button
+          onClick={() => setActiveTab('practice')}
+          style={{
+            padding: '10px 20px',
+            borderRadius: 'var(--radius-md)',
+            background: activeTab === 'practice' ? 'var(--accent-primary, #6366f1)' : 'transparent',
+            color: activeTab === 'practice' ? '#fff' : 'var(--text-secondary)',
+            border: activeTab === 'practice' ? 'none' : '1px solid var(--border-color)',
+            fontWeight: '700',
+            fontSize: '13px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          <BookOpen size={16} /> Normal Practice
+        </button>
+
+        <button
+          onClick={() => setActiveTab('timed')}
+          style={{
+            padding: '10px 20px',
+            borderRadius: 'var(--radius-md)',
+            background: activeTab === 'timed' ? '#f59e0b' : 'transparent',
+            color: activeTab === 'timed' ? '#fff' : 'var(--text-secondary)',
+            border: activeTab === 'timed' ? 'none' : '1px solid var(--border-color)',
+            fontWeight: '700',
+            fontSize: '13px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          <Clock size={16} /> Timed Test Mode
+        </button>
+      </div>
+
+      {/* Target Focus Shortcuts Strip (Phase 17: Practice My Mistakes & Weak Topics) */}
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', background: 'var(--bg-surface)', padding: '12px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+        <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>Target Practice:</span>
+
+        <button
+          onClick={() => handleStartSession({ solvedStatus: 'incorrect', questionCount: 10 })}
+          disabled={isStarting}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: 'var(--radius-sm)', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+        >
+          <AlertTriangle size={14} /> Practice My Mistakes
+        </button>
+
+        <button
+          onClick={() => handleStartSession({ weakTopicsOnly: true, questionCount: 10 })}
+          disabled={isStarting}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: 'var(--radius-sm)', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', color: '#f59e0b', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+        >
+          <Target size={14} /> Practice Weak Topics
+        </button>
+
+        <button
+          onClick={() => handleStartSession({ bookmarkedOnly: true, questionCount: 10 })}
+          disabled={isStarting}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: 'var(--radius-sm)', background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.3)', color: 'var(--accent-primary)', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+        >
+          <Bookmark size={14} /> Practice Bookmarked
+        </button>
+      </div>
+
+      {/* Main Grid: Topic Directory on Left, Practice Builder on Right */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2.5fr 1fr', gap: '24px', alignItems: 'start' }}>
         
-        {/* Left Side: Setup Practice */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          
-          {/* Practice Recommendations */}
-          {recommendations.length > 0 && (
-            <div style={{
-              background: 'rgba(245, 158, 11, 0.05)',
-              border: '1px dashed rgba(245, 158, 11, 0.3)',
-              padding: '16px',
-              borderRadius: 'var(--radius-lg)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px'
-            }}>
-              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: '700', color: 'var(--accent-warning)' }}>
-                <Sparkles size={16} /> Recommended Practice Topics
-              </h3>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                {recommendations.slice(0, 3).map((rec) => (
-                  <button 
-                    key={rec.id}
-                    onClick={() => {
-                      setSelectedMode('adaptive');
-                      setCategoryId(rec.category_id);
-                      handleStart({
-                        mode: 'adaptive',
-                        category_id: rec.category_id,
-                        questionCount: 10
-                      });
-                    }}
-                    style={{
-                      background: 'var(--bg-glass)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: 'var(--radius-md)',
-                      padding: '8px 12px',
-                      fontSize: '12px',
-                      color: 'var(--text-primary)',
-                      cursor: 'pointer',
-                      textAlign: 'left'
+        {/* Left Column: India-BIX-Style Topic Directory (Phase 15) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Layers size={18} style={{ color: 'var(--accent-primary)' }} />
+              Placement Topics Directory
+            </h2>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Click topic to start practice immediately</span>
+          </div>
+
+          {TOPIC_DIRECTORY.map((group, gIdx) => (
+            <div 
+              key={gIdx} 
+              style={{ 
+                background: 'var(--bg-surface)', 
+                border: '1px solid var(--border-color)', 
+                borderRadius: 'var(--radius-md)', 
+                overflow: 'hidden' 
+              }}
+            >
+              {/* Group Title Header */}
+              <div style={{ padding: '12px 16px', background: 'var(--bg-primary)', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '18px' }}>{group.icon}</span>
+                <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>{group.group}</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: 'auto' }}>
+                  {group.topics.length} Sub-topics
+                </span>
+              </div>
+
+              {/* Sub-topics list */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1px', background: 'var(--border-color)' }}>
+                {group.topics.map((t, tIdx) => (
+                  <div 
+                    key={tIdx}
+                    style={{ 
+                      background: 'var(--bg-surface)', 
+                      padding: '12px 14px', 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center' 
                     }}
                   >
-                    Solve <strong>{rec.categories?.name}</strong>: low accuracy alert.
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Mode Selector */}
-          {!selectedMode ? (
-            <div>
-              <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px' }}>Pick a Target Mode</h2>
-              <div className={styles.modeGrid}>
-                {PRACTICE_MODES.map((m) => (
-                  <div key={m.id} className={styles.modeCard} onClick={() => setSelectedMode(m.id)}>
-                    <div className={styles.modeIcon} style={{ background: m.color, border: `1px solid ${m.border}` }}>
-                      {m.icon}
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{t.name}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        Approx. {t.estimatedQuestions} questions
+                      </div>
                     </div>
-                    <div className={styles.modeTitle}>{m.label}</div>
-                    <div className={styles.modeDesc}>{m.desc}</div>
+
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button 
+                        onClick={() => handleStartSession({ topicSlug: t.slug, isTimed: false, questionCount: 10 })}
+                        disabled={isStarting}
+                        style={{ padding: '5px 10px', borderRadius: 'var(--radius-sm)', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.25)', color: 'var(--accent-primary)', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}
+                        title="Start Untimed Practice"
+                      >
+                        Practice
+                      </button>
+
+                      <button 
+                        onClick={() => handleStartSession({ topicSlug: t.slug, isTimed: true, durationMinutes: 15, questionCount: 10 })}
+                        disabled={isStarting}
+                        style={{ padding: '5px 10px', borderRadius: 'var(--radius-sm)', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', color: '#f59e0b', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}
+                        title="Start 15-Minute Timed Test"
+                      >
+                        Timed Test
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
-          ) : (
-            <div className={styles.configPanel} style={{ maxWidth: '100%', margin: '0' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: '700' }}>
-                Configure Your Session
-              </h2>
-              <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                Mode: <strong>{PRACTICE_MODES.find(m => m.id === selectedMode)?.label}</strong>
-              </p>
-
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '16px'
-              }}>
-                {/* Topic Specific Option */}
-                {selectedMode !== 'mixed' && selectedMode !== 'adaptive' && selectedMode !== 'company' && selectedMode !== 'department' && (
-                  <div className={styles.configRow}>
-                    <label>Sub-Topic</label>
-                    <select value={categoryId} onChange={e => setCategoryId(e.target.value)}
-                      style={{ padding: '10px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
-                      <option value="">All Topics</option>
-                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
-                  </div>
-                )}
-
-                {/* Company filter */}
-                {selectedMode === 'company' && (
-                  <div className={styles.configRow}>
-                    <label>Target Company</label>
-                    <select value={companyId} onChange={e => setCompanyId(e.target.value)}
-                      style={{ padding: '10px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
-                      <option value="">Select Company</option>
-                      {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
-                  </div>
-                )}
-
-                {/* Department filter */}
-                {selectedMode === 'department' && (
-                  <div className={styles.configRow}>
-                    <label>Target Department</label>
-                    <select value={departmentId} onChange={e => setDepartmentId(e.target.value)}
-                      style={{ padding: '10px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
-                      <option value="">Select Department</option>
-                      {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                    </select>
-                  </div>
-                )}
-
-                <div className={styles.configRow}>
-                  <label>Difficulty Rating</label>
-                  <select value={difficulty} onChange={e => setDifficulty(e.target.value)}
-                    style={{ padding: '10px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
-                    <option value="">All Difficulties</option>
-                    <option value="easy">Easy</option>
-                    <option value="medium">Medium</option>
-                    <option value="hard">Hard</option>
-                    <option value="expert">Expert</option>
-                  </select>
-                </div>
-
-                <div className={styles.configRow}>
-                  <label>Question Quantity</label>
-                  <select value={questionCount} onChange={e => setQuestionCount(Number(e.target.value))}
-                    style={{ padding: '10px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
-                    <option value={5}>5 Questions</option>
-                    <option value={10}>10 Questions</option>
-                    <option value={15}>15 Questions</option>
-                    <option value={20}>20 Questions</option>
-                    <option value={30}>30 Questions</option>
-                  </select>
-                </div>
-
-                <div className={styles.configRow}>
-                  <label>Solvability Status</label>
-                  <select value={solvedStatus} onChange={e => setSolvedStatus(e.target.value)}
-                    style={{ padding: '10px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
-                    <option value="all">All Questions</option>
-                    <option value="unsolved">Unsolved Only</option>
-                    <option value="solved">Previously Solved Only</option>
-                    <option value="incorrect">Incorrectly Answered Only</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Timed vs Untimed Toggle */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border-color)', padding: '16px', borderRadius: 'var(--radius-md)', marginTop: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <h4 style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Enable Timed Mode</h4>
-                    <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Simulate real placement test conditions.</p>
-                  </div>
-                  <input 
-                    type="checkbox"
-                    checked={timedMode}
-                    onChange={(e) => setTimedMode(e.target.checked)}
-                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                  />
-                </div>
-                {timedMode && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '6px' }}>
-                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Session Duration:</span>
-                    <input 
-                      type="number"
-                      min="5"
-                      max="120"
-                      value={durationMinutes}
-                      onChange={(e) => setDurationMinutes(parseInt(e.target.value) || 15)}
-                      style={{ width: '60px', padding: '6px', textAlign: 'center', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '12px' }}
-                    />
-                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>minutes</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Extra Checkbox filters */}
-              <div style={{ display: 'flex', gap: '16px', marginTop: '4px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text-secondary)', cursor: 'pointer' }}>
-                  <input 
-                    type="checkbox" 
-                    checked={recentlyAdded} 
-                    onChange={e => setRecentlyAdded(e.target.checked)} 
-                    style={{ cursor: 'pointer' }}
-                  />
-                  Prioritize recently added questions
-                </label>
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
-                <button onClick={() => setSelectedMode(null)}
-                  style={{ padding: '10px 20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer' }}>
-                  Back
-                </button>
-                <button onClick={() => handleStart()} disabled={isStarting}
-                  className={styles.btnPrimary}
-                  style={{ padding: '10px 28px', borderRadius: 'var(--radius-md)', background: 'var(--gradient-primary)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {isStarting ? 'Starting...' : <>Start Arena Session <ChevronRight size={16} /></>}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Practice History Table */}
-          <div style={{ background: 'var(--bg-glass)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <History size={18} /> Recent Practice Sessions
-            </h2>
-            {history.length === 0 ? (
-              <EmptyState
-                icon={<History size={36} style={{ opacity: 0.5 }} />}
-                title="No practice history yet"
-                description="Start your first practice session to track your progress and unlock performance telemetry."
-                actionText="Select a Practice Mode"
-                onAction={() => window.scrollTo({ top: 300, behavior: 'smooth' })}
-              />
-            ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table className={styles.historyTable}>
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Category/Mode</th>
-                      <th>Solved</th>
-                      <th>XP</th>
-                      <th>Accuracy</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {history.map((h) => (
-                      <tr key={h.id}>
-                        <td>{new Date(h.ended_at).toLocaleDateString()}</td>
-                        <td>{h.categories?.name || h.mode || 'Mixed'}</td>
-                        <td>{h.total_questions} questions</td>
-                        <td>+{h.xp_earned} XP</td>
-                        <td>
-                          <span style={{ fontWeight: '700', color: h.correct_count / h.total_questions >= 0.6 ? 'var(--accent-success)' : 'var(--accent-warning)' }}>
-                            {Math.round((h.correct_count / h.total_questions) * 100)}%
-                          </span>
-                        </td>
-                        <td>
-                          <button 
-                            onClick={() => router.push(`/practice/results/${h.id}`)}
-                            style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', fontWeight: '600' }}
-                          >
-                            Review
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+          ))}
         </div>
 
-        {/* Right Side: Quick Action Short-cuts & Analytics */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          
-          {/* Quick practice triggers */}
-          <div style={{ background: 'var(--bg-glass)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Quick Solve Workspaces</h3>
-            
-            <button 
-              onClick={() => startShortcutPractice('bookmarks')}
-              style={{ width: '100%', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-primary)', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}
-            >
-              <Bookmark size={15} style={{ color: 'var(--accent-info)' }} /> Retry Bookmarked Questions
-            </button>
+        {/* Right Column: Custom Practice / Timed Test Builder */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '20px' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {activeTab === 'timed' ? <Clock size={18} style={{ color: '#f59e0b' }} /> : <Zap size={18} style={{ color: 'var(--accent-primary)' }} />}
+              {activeTab === 'timed' ? 'Timed Test Builder' : 'Custom Practice Builder'}
+            </h3>
 
-            <button 
-              onClick={() => startShortcutPractice('incorrect')}
-              style={{ width: '100%', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-primary)', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}
-            >
-              <AlertTriangle size={15} style={{ color: 'var(--accent-danger)' }} /> Retry Incorrect Answers
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {/* Category Filter */}
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>Category</label>
+                <select
+                  value={selectedCategory}
+                  onChange={e => setSelectedCategory(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 'var(--radius-md)', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '13px', outline: 'none' }}
+                >
+                  <option value="">All Categories</option>
+                  {categories.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
 
-            <button 
-              onClick={() => startShortcutPractice('weak')}
-              style={{ width: '100%', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-primary)', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}
-            >
-              <Sparkles size={15} style={{ color: 'var(--accent-warning)' }} /> Focus on Weak Topics
-            </button>
+              {/* Difficulty Filter */}
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>Difficulty</label>
+                <select
+                  value={difficulty}
+                  onChange={e => setDifficulty(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 'var(--radius-md)', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '13px', outline: 'none' }}
+                >
+                  <option value="">All Difficulties</option>
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+
+              {/* Number of Questions */}
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>Number of Questions</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                  {[5, 10, 15, 20].map(cnt => (
+                    <button
+                      key={cnt}
+                      type="button"
+                      onClick={() => setQuestionCount(cnt)}
+                      style={{
+                        padding: '8px',
+                        borderRadius: 'var(--radius-sm)',
+                        background: questionCount === cnt ? 'var(--accent-primary)' : 'var(--bg-primary)',
+                        color: questionCount === cnt ? '#fff' : 'var(--text-primary)',
+                        border: '1px solid var(--border-color)',
+                        fontSize: '12px',
+                        fontWeight: '700',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {cnt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Time Limit (if Timed Test mode) */}
+              {activeTab === 'timed' && (
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#f59e0b', display: 'block', marginBottom: '6px' }}>Time Limit (Minutes)</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                    {[10, 15, 30, 45].map(mins => (
+                      <button
+                        key={mins}
+                        type="button"
+                        onClick={() => setDurationMinutes(mins)}
+                        style={{
+                          padding: '8px',
+                          borderRadius: 'var(--radius-sm)',
+                          background: durationMinutes === mins ? '#f59e0b' : 'var(--bg-primary)',
+                          color: durationMinutes === mins ? '#fff' : 'var(--text-primary)',
+                          border: '1px solid var(--border-color)',
+                          fontSize: '12px',
+                          fontWeight: '700',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {mins}m
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Start CTA */}
+              <button
+                onClick={() => handleStartSession()}
+                disabled={isStarting}
+                style={{
+                  marginTop: '8px',
+                  padding: '12px',
+                  borderRadius: 'var(--radius-md)',
+                  background: activeTab === 'timed' ? '#f59e0b' : 'var(--accent-primary, #6366f1)',
+                  color: '#fff',
+                  border: 'none',
+                  fontWeight: '700',
+                  fontSize: '14px',
+                  cursor: isStarting ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  opacity: isStarting ? 0.7 : 1
+                }}
+              >
+                <PlayCircle size={18} />
+                {isStarting ? 'Preparing Arena...' : activeTab === 'timed' ? 'Start Timed Test' : 'Start Practice'}
+              </button>
+            </div>
           </div>
 
-          {/* Topic mastery lists */}
-          {stats?.topicAnalysis && stats.topicAnalysis.length > 0 && (
-            <div style={{ background: 'var(--bg-glass)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '20px' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '14px' }}>Topic Mastery Rates</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {stats.topicAnalysis.map((t, idx) => (
-                  <div key={idx}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
-                      <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>{t.name}</span>
-                      <span style={{ color: 'var(--text-primary)', fontWeight: '700' }}>{t.mastery}%</span>
-                    </div>
-                    <div className={styles.progressBar}>
-                      <div className={styles.progressFill} style={{ width: `${t.mastery}%` }}></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Difficulty stats overview */}
-          {stats?.difficultyAnalysis && stats.difficultyAnalysis.length > 0 && (
-            <div style={{ background: 'var(--bg-glass)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '20px' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '14px' }}>Difficulty Accuracy</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {stats.difficultyAnalysis.map((d, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', paddingBottom: '6px', borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
-                    <span style={{ textTransform: 'capitalize', color: 'var(--text-secondary)', fontWeight: '600' }}>{d.difficulty}</span>
-                    <span style={{ fontWeight: '700', color: d.accuracy >= 65 ? 'var(--accent-success)' : 'var(--text-primary)' }}>{d.accuracy}% accuracy</span>
+          {/* Recent History Widget */}
+          {history.length > 0 && (
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '16px' }}>
+              <h4 style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <History size={15} style={{ color: 'var(--text-muted)' }} /> Recent Practice Sessions
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {history.slice(0, 4).map((h, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', background: 'var(--bg-primary)', borderRadius: 'var(--radius-sm)', fontSize: '12px' }}>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>
+                      {h.total_questions} Questions ({h.mode || 'Practice'})
+                    </span>
+                    <span style={{ color: '#10b981', fontWeight: '700' }}>
+                      {h.score_pct !== null ? `${h.score_pct}%` : 'Done'}
+                    </span>
                   </div>
                 ))}
               </div>

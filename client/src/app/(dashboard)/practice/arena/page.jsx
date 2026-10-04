@@ -3,20 +3,23 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../../../context/ToastContext';
+import { useAssistant } from '../../../../context/AssistantContext';
 import { practiceService } from '../../../../lib/practiceService';
 import { 
   ChevronLeft, ChevronRight, CheckCircle2, XCircle, Clock, Zap, 
-  Play, Pause, RefreshCw, Bookmark, HelpCircle, Save, Check 
+  Play, Pause, RefreshCw, Bookmark, HelpCircle, Save, Check, Bot, Sparkles 
 } from 'lucide-react';
 import styles from '../practice.module.css';
 
 export default function PracticeArenaSessionPage() {
   const router = useRouter();
   const toast = useToast();
+  const { openAssistant } = useAssistant();
 
   const [session, setSession] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [activeIdx, setActiveIdx] = useState(0);
+  const [showAIMenu, setShowAIMenu] = useState(false);
 
   // Attempt States
   const [answers, setAnswers] = useState({}); // qId -> selectedOptionId
@@ -387,6 +390,164 @@ export default function PracticeArenaSessionPage() {
               >
                 <Bookmark size={14} fill={bookmarkedQuestions[questionData.id] ? 'currentColor' : 'none'} /> Bookmark
               </button>
+
+              {/* Contextual Ask Assistant */}
+              <div style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setShowAIMenu(prev => !prev)}
+                  style={{
+                    padding: '8px 14px',
+                    borderRadius: 'var(--radius-md)',
+                    background: 'var(--bg-glass)',
+                    border: '1px solid var(--border-accent)',
+                    color: 'var(--text-accent)',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                  title="Ask PLACE Assistant about this question"
+                >
+                  <Bot size={15} style={{ color: 'var(--accent-primary)' }} />
+                  <span>Ask Assistant</span>
+                </button>
+
+                {showAIMenu && (
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '42px',
+                    right: 0,
+                    width: '210px',
+                    backgroundColor: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: 'var(--radius-md)',
+                    boxShadow: 'var(--shadow-lg)',
+                    padding: '6px',
+                    zIndex: 200,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2px',
+                  }}>
+                    <button
+                      onClick={() => {
+                        setShowAIMenu(false);
+                        const selectedOpt = options.find(o => o.id === selectedOptionId);
+                        openAssistant({
+                          type: 'practice',
+                          questionId: questionData.id,
+                          questionStatement: questionData.statement,
+                          options: options.map(o => ({ label: o.label, content: o.content })),
+                          selectedOptionLabel: selectedOpt?.label,
+                          category: questionData.category,
+                          difficulty: questionData.difficulty,
+                          explanation: questionData.explanation,
+                        }, 'Explain how to solve this practice question step-by-step.');
+                      }}
+                      style={{
+                        padding: '8px 10px',
+                        background: 'none',
+                        border: 'none',
+                        borderRadius: '4px',
+                        textAlign: 'left',
+                        fontSize: '12px',
+                        color: 'var(--text-primary)',
+                        cursor: 'pointer',
+                      }}
+                      onMouseOver={e => e.currentTarget.style.backgroundColor = 'var(--bg-glass-hover)'}
+                      onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      💡 Explain this question
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowAIMenu(false);
+                        const selectedOpt = options.find(o => o.id === selectedOptionId);
+                        openAssistant({
+                          type: 'practice',
+                          questionId: questionData.id,
+                          questionStatement: questionData.statement,
+                          options: options.map(o => ({ label: o.label, content: o.content })),
+                          selectedOptionLabel: selectedOpt?.label,
+                          category: questionData.category,
+                          difficulty: questionData.difficulty,
+                          explanation: questionData.explanation,
+                        }, selectedOpt ? `Why is option [${selectedOpt.label}] wrong? Explain the reasoning.` : 'What are common pitfalls students make on this type of question?');
+                      }}
+                      style={{
+                        padding: '8px 10px',
+                        background: 'none',
+                        border: 'none',
+                        borderRadius: '4px',
+                        textAlign: 'left',
+                        fontSize: '12px',
+                        color: 'var(--text-primary)',
+                        cursor: 'pointer',
+                      }}
+                      onMouseOver={e => e.currentTarget.style.backgroundColor = 'var(--bg-glass-hover)'}
+                      onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      ❓ Why is this wrong?
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowAIMenu(false);
+                        openAssistant({
+                          type: 'practice',
+                          questionId: questionData.id,
+                          questionStatement: questionData.statement,
+                          category: questionData.category,
+                          difficulty: questionData.difficulty,
+                        }, 'Teach me the core theoretical concepts behind this topic from basics.');
+                      }}
+                      style={{
+                        padding: '8px 10px',
+                        background: 'none',
+                        border: 'none',
+                        borderRadius: '4px',
+                        textAlign: 'left',
+                        fontSize: '12px',
+                        color: 'var(--text-primary)',
+                        cursor: 'pointer',
+                      }}
+                      onMouseOver={e => e.currentTarget.style.backgroundColor = 'var(--bg-glass-hover)'}
+                      onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      📖 Teach me this topic
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowAIMenu(false);
+                        openAssistant({
+                          type: 'practice',
+                          questionId: questionData.id,
+                          questionStatement: questionData.statement,
+                          category: questionData.category,
+                          difficulty: questionData.difficulty,
+                        }, 'Generate a similar practice problem with multiple choice options for me to solve.');
+                      }}
+                      style={{
+                        padding: '8px 10px',
+                        background: 'none',
+                        border: 'none',
+                        borderRadius: '4px',
+                        textAlign: 'left',
+                        fontSize: '12px',
+                        color: 'var(--text-primary)',
+                        cursor: 'pointer',
+                      }}
+                      onMouseOver={e => e.currentTarget.style.backgroundColor = 'var(--bg-glass-hover)'}
+                      onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      🔄 Give similar question
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
