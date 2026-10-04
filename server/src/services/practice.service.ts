@@ -107,7 +107,6 @@ export class PracticeService {
       .from('questions')
       .select('id, statement, type, difficulty, image_url, question_options(id, label, content)')
       .eq('approval_status', 'approved')
-      .eq('is_published', true)
       .eq('is_archived', false);
 
     if (data.category_id) {
@@ -531,8 +530,9 @@ export class PracticeService {
       };
     }
 
-    // Get category names for topic accuracy
-    const catIds = Object.keys(stats.topic_accuracy || {});
+    // Get category names for topic accuracy (filter to valid UUIDs)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const catIds = Object.keys(stats.topic_accuracy || {}).filter(id => uuidRegex.test(id));
     let categoryNames: Record<string, string> = {};
     if (catIds.length > 0) {
       const { data: cats } = await supabase

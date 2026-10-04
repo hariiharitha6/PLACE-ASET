@@ -112,7 +112,6 @@ export async function seedPersonalContent() {
             explanation: q.explanation,
             difficulty: q.difficulty,
             type: q.type || 'mcq_single',
-            is_published: true,
             is_global: true,
             approval_status: 'approved',
             visibility: 'public',
@@ -121,6 +120,7 @@ export async function seedPersonalContent() {
           .eq('id', existingId);
 
         if (upErr) {
+          console.error(`  ❌ Update error on question "${q.statement.slice(0, 30)}":`, upErr.message);
           qFailed++;
           continue;
         }
@@ -142,7 +142,6 @@ export async function seedPersonalContent() {
             difficulty: q.difficulty,
             type: q.type || 'mcq_single',
             is_global: true,
-            is_published: true,
             approval_status: 'approved',
             visibility: 'public'
           })
@@ -150,6 +149,7 @@ export async function seedPersonalContent() {
           .single();
 
         if (insErr || !inserted) {
+          console.error(`  ❌ Insert error on question "${q.statement.slice(0, 30)}":`, insErr?.message);
           qFailed++;
           continue;
         }
@@ -168,7 +168,8 @@ export async function seedPersonalContent() {
       }));
 
       await db.from('question_options').insert(optPayload);
-    } catch {
+    } catch (err: any) {
+      console.error(`  ❌ Exception on question "${q.statement.slice(0, 30)}":`, err.message);
       qFailed++;
     }
   }
@@ -177,6 +178,11 @@ export async function seedPersonalContent() {
 
   // 5. Seed Starter Resources
   console.log('\n[Step 5/5] Seeding starter learning resources...');
+  
+  // Check if extended schema columns exist on resources table
+  const { error: extColErr } = await db.from('resources').select('department').limit(1);
+  const hasExtendedResourceCols = !extColErr;
+
   let resAdded = 0;
   for (const res of SEED_RESOURCES) {
     const catId = catMap.get(res.category_slug) || null;
@@ -193,25 +199,30 @@ export async function seedPersonalContent() {
         file_type: res.file_type,
         file_size: res.file_size,
         category_id: catId,
-        department: res.department,
-        subject: res.subject,
-        semester: res.semester,
-        difficulty: res.difficulty,
-        tags: res.tags,
-        author: res.author,
-        external_resource_url: res.external_resource_url,
-        is_published: true,
         is_global: true,
-        is_active: true,
-        status: 'published',
-        ai_summary: res.ai_summary,
-        ai_key_points: res.ai_key_points
+        is_active: true
       };
+
+      if (hasExtendedResourceCols) {
+        payload.department = res.department;
+        payload.subject = res.subject;
+        payload.semester = res.semester;
+        payload.difficulty = res.difficulty;
+        payload.tags = res.tags;
+        payload.author = res.author;
+        payload.external_resource_url = res.external_resource_url;
+        payload.is_published = true;
+        payload.status = 'published';
+        payload.ai_summary = res.ai_summary;
+        payload.ai_key_points = res.ai_key_points;
+      }
 
       const { error: rErr } = await db.from('resources').insert(payload);
       if (!rErr) {
         resAdded++;
         console.log(`  + Resource added: ${res.title}`);
+      } else {
+        console.error(`  ❌ Resource insert failed for "${res.title}":`, rErr.message);
       }
     }
   }

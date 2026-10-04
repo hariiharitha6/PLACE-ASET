@@ -54,8 +54,8 @@ export class QuestionsService {
     // 1. Role-based RLS enforcement in service level (supplemental to DB policies)
     const isAdminOrHost = ['super_admin', 'college_admin', 'host'].includes(role);
     if (!isAdminOrHost) {
-      // Students can only view approved and published questions
-      query = query.eq('approval_status', 'approved').eq('is_published', true);
+      // Students can only view approved questions
+      query = query.eq('approval_status', 'approved');
       // Students can view public questions OR questions scoped to their college
       if (collegeId) {
         query = query.or(`visibility.eq.public,and(visibility.eq.college,college_id.eq.${collegeId})`);
