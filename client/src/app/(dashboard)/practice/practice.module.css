@@ -57,14 +57,89 @@
   box-shadow: var(--shadow-sm);
 }
 
-.optionBtn {
-  display: flex; align-items: center; gap: 12px; padding: 14px 18px;
-  border-radius: var(--radius-md); border: 1px solid var(--border-color);
-  background: var(--bg-subtle); cursor: pointer; width: 100%; text-align: left;
-  font-size: 14px; color: var(--text-primary); transition: all var(--transition-fast);
+.concentrationShell {
+  max-width: 920px;
+  margin: 0 auto;
 }
-.optionBtn:hover { border-color: var(--accent-primary); background: var(--bg-focus); }
-.optionSelected { border-color: var(--accent-primary) !important; background: var(--bg-focus) !important; }
+
+.arenaTopBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.questionMeta {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.difficultyPill {
+  margin-left: 10px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.timerBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent-navy);
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+}
+
+.timerBadgeUrgent {
+  color: var(--accent-danger);
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.questionStatement {
+  font-size: clamp(1.05rem, 2.2vw, 1.25rem);
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+}
+
+.optionsStack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.optionBtn {
+  display: flex; align-items: center; gap: 14px; padding: 16px 18px;
+  border-radius: var(--radius-md); border: 1px solid var(--border-color);
+  background: var(--bg-secondary); cursor: pointer; width: 100%; text-align: left;
+  font-size: 15px; color: var(--text-primary); transition: all var(--transition-fast);
+  min-height: 52px;
+}
+.optionBtn:hover { border-color: var(--accent-primary); background: var(--bg-focus); box-shadow: var(--shadow-sm); }
+.optionSelected {
+  border-color: var(--accent-primary) !important;
+  background: var(--bg-focus) !important;
+  box-shadow: 0 0 0 1px var(--border-accent);
+}
+.optionReview {
+  border-color: var(--accent-warning) !important;
+  background: rgba(245, 158, 11, 0.06) !important;
+}
 .optionCorrect { border-color: var(--accent-success) !important; background: rgba(16, 185, 129, 0.08) !important; }
 .optionWrong { border-color: var(--accent-danger) !important; background: rgba(239, 68, 68, 0.06) !important; }
 

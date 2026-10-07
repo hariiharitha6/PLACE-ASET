@@ -108,3 +108,22 @@ export async function executeQuickAction(req: AuthenticatedRequest, res: Respons
     return errorResponse(res, err.message || 'Failed to execute quick action', 400);
   }
 }
+
+export async function getAssistantStatus(_req: AuthenticatedRequest, res: Response, _next: NextFunction) {
+  try {
+    const { AIRouterService } = await import('../services/ai_engine/ai_router.service');
+    const providers = await AIRouterService.getProvidersStatus();
+    const onlineProvider = providers.find(p => p.status === 'healthy');
+
+    return successResponse(res, {
+      isAvailable: Boolean(onlineProvider),
+      activeProvider: onlineProvider ? onlineProvider.id : 'none',
+      providers,
+      reason: onlineProvider
+        ? `Provider '${onlineProvider.name}' is operational.`
+        : 'No live AI provider currently reachable. Core practice questions, spaced repetition, tests, and analytics continue to operate normally without AI.',
+    }, 200);
+  } catch (err: any) {
+    return errorResponse(res, err.message || 'Failed to check assistant status', 500);
+  }
+}

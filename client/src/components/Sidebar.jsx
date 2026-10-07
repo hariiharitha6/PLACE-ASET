@@ -36,6 +36,7 @@ export default function Sidebar({ isOpen, onClose }) {
       { label: 'Resource Library', href: '/resources', icon: Library },
       { label: 'PLACE Assistant', href: '/assistant', icon: Bot },
       { label: 'Personal Studio', href: '/personal', icon: UserCheck },
+      { label: 'AI Mentor', href: '/mentor', icon: Bot },
     ]},
     { label: 'PROGRESS', items: [
       { label: 'Placement Readiness', href: '/dashboard/readiness', icon: Target },
@@ -212,7 +213,7 @@ export default function Sidebar({ isOpen, onClose }) {
         <div style={{
           padding: '16px',
           borderTop: '1px solid var(--border-color)',
-          backgroundColor: 'rgba(0, 0, 0, 0.05)',
+          backgroundColor: 'var(--bg-subtle)',
           display: 'flex',
           flexDirection: 'column',
           gap: '12px'

@@ -292,27 +292,48 @@ export default function PracticeArenaSessionPage() {
   const selectedOptionId = answers[questionData?.id];
   const answeredCount = Object.keys(answers).length;
 
+  const isMarkedForReview = !!markedForReview[questionData?.id];
+  const timerUrgent = timeLeft !== null && timeLeft <= 120;
+
   return (
-    <div className={styles.arenaLayout}>
+    <div className={`${styles.arenaLayout} ${styles.concentrationShell}`}>
       
       {/* Main Panel */}
       <div className={styles.arenaMain} style={{ filter: isPaused ? 'blur(6px)' : 'none' }}>
         
         {/* Topic Header info */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
+        <div className={styles.arenaTopBar}>
           <div>
-            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+            <span className={styles.questionMeta}>
               Question {activeIdx + 1} of {questions.length}
             </span>
-            <span style={{ marginLeft: '12px', fontSize: '11px', textTransform: 'uppercase', padding: '3px 8px', borderRadius: '4px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
+            <span className={styles.difficultyPill}>
               {questionData?.difficulty || 'Medium'}
             </span>
+            {questionData?.source_type === 'PERSONAL' ? (
+              <span className={styles.difficultyPill} style={{ marginLeft: 8, color: '#a855f7', borderColor: 'rgba(168, 85, 247, 0.3)', background: 'rgba(168, 85, 247, 0.1)' }}>
+                📄 Personal Note
+              </span>
+            ) : questionData?.source_type === 'INSTITUTIONAL' ? (
+              <span className={styles.difficultyPill} style={{ marginLeft: 8, color: '#3b82f6', borderColor: 'rgba(59, 130, 246, 0.3)', background: 'rgba(59, 130, 246, 0.1)' }}>
+                🏛 Faculty Approved
+              </span>
+            ) : (
+              <span className={styles.difficultyPill} style={{ marginLeft: 8, color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)', background: 'rgba(16, 185, 129, 0.1)' }}>
+                ✓ Official Verified
+              </span>
+            )}
+            {isMarkedForReview && (
+              <span className={styles.difficultyPill} style={{ marginLeft: 8, color: 'var(--accent-warning)' }}>
+                Marked for review
+              </span>
+            )}
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             {timeLeft !== null && (
-              <span style={{ fontSize: '13px', color: 'var(--accent-danger)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Clock size={14} /> {formatTimer(timeLeft)}
+              <span className={`${styles.timerBadge} ${timerUrgent ? styles.timerBadgeUrgent : ''}`}>
+                <Clock size={15} aria-hidden /> {formatTimer(timeLeft)}
               </span>
             )}
             <button 
@@ -328,18 +349,20 @@ export default function PracticeArenaSessionPage() {
         {/* Question Statement & Options */}
         {questionData && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1, marginTop: '12px' }}>
-            <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)', lineHeight: '1.5' }}>
+            <div className={styles.questionStatement}>
               {questionData.statement}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div className={styles.optionsStack}>
               {options.map(opt => {
                 const isSelected = selectedOptionId === opt.id;
                 return (
                   <button 
                     key={opt.id} 
+                    type="button"
                     className={`${styles.optionBtn} ${isSelected ? styles.optionSelected : ''}`}
                     onClick={() => handleSelectOption(questionData.id, opt.id)}
+                    aria-pressed={isSelected}
                   >
                     <span className={styles.optionLabel}>{opt.label}</span>
                     <span>{opt.content}</span>

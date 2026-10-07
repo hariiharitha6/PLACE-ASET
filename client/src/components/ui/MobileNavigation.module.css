@@ -5,8 +5,8 @@
   left: 0;
   right: 0;
   z-index: 99;
-  background: rgba(7, 11, 20, 0.95);
-  backdrop-filter: blur(16px);
+  background: var(--bg-secondary);
+  box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.06);
   border-top: 1px solid var(--border-color);
   padding: 8px 12px;
   justify-content: space-around;

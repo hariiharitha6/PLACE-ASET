@@ -1,3 +1,23 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  width: 100%;
+}
+
+.chatShell {
+  height: calc(100vh - 220px);
+  min-height: 520px;
+  max-height: 820px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  background: var(--bg-card);
+}
+
 .container { display: flex; flex-direction: column; gap: 24px; height: calc(100vh - 120px); }
 .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
 .titleSection h1 { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
@@ -18,7 +38,14 @@
 .messagesArea { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
 
 .userBubble { align-self: flex-end; max-width: 75%; background: var(--accent-primary); color: #fff; padding: 12px 18px; border-radius: 16px 16px 2px 16px; font-size: 13.5px; line-height: 1.5; white-space: pre-wrap; }
-.assistantBubble { align-self: flex-start; max-width: 80%; background: var(--bg-subtle); border: 1px solid var(--border-color); color: var(--text-primary); padding: 14px 18px; border-radius: 16px 16px 16px 2px; font-size: 13.5px; line-height: 1.55; white-space: pre-wrap; display: flex; flex-direction: column; gap: 8px; }
+.assistantBubble { align-self: flex-start; max-width: 80%; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 14px 18px; border-radius: 16px 16px 16px 2px; font-size: 13.5px; line-height: 1.55; white-space: pre-wrap; display: flex; flex-direction: column; gap: 8px; }
 
 .inputArea { padding: 16px 24px; border-top: 1px solid var(--border-color); display: flex; gap: 12px; align-items: center; background: var(--bg-card); }
 .inputField { flex: 1; padding: 11px 16px; border-radius: var(--radius-md); border: 1px solid var(--border-input); background: var(--bg-input); color: var(--text-primary); font-size: 13.5px; }
+
+@media (max-width: 768px) {
+  .chatShell {
+    height: calc(100vh - 200px);
+    min-height: 460px;
+  }
+}

@@ -299,7 +299,7 @@ Return strictly a valid JSON array of objects with schema: [{"question": "...", 
 
     // Resolve super admin ID to satisfy questions table RLS
     const { data: adminUser } = await admin.from('users').select('id').eq('role', 'super_admin').limit(1).maybeSingle();
-    const effectiveCreatedBy = adminUser?.id || '87dc0ed9-82ce-4ae8-bcaa-c09c58de6e86';
+    const effectiveCreatedBy = adminUser?.id || _userId;
 
     for (const q of questions) {
       const matchedCatId =
@@ -322,6 +322,10 @@ Return strictly a valid JSON array of objects with schema: [{"question": "...", 
         is_global: false,
         visibility: 'private',
         approval_status: 'approved',
+        source: q.sourceName || 'Personal Document',
+        source_type: 'PERSONAL',
+        verified: false,
+        status: 'published',
         times_answered: 0,
         times_correct: 0,
         success_rate: 0

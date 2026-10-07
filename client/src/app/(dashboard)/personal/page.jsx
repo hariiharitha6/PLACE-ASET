@@ -6,20 +6,88 @@ import { useToast } from '../../../context/ToastContext';
 import { personalDocumentService } from '../../../lib/personalDocumentService';
 import { 
   UserCheck, Upload, FileText, Sparkles, BookOpen, Layers, 
-  HelpCircle, Trash2, Plus, ArrowRight, ShieldCheck, CheckCircle2, 
-  Bot, ExternalLink, RefreshCw, X, File, AlertCircle, PlayCircle
+  Trash2, ArrowRight, ShieldCheck, CheckCircle2, 
+  Bot, ExternalLink, RefreshCw, X, AlertCircle, PlayCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import EmptyState from '../../../components/ui/EmptyState';
+import Button from '../../../components/ui/Button';
+import PageHeader from '../../../components/ui/PageHeader';
 import styles from './personal.module.css';
+
+/**
+ * Normalizes a single document object to guarantee all expected fields exist and are of correct types.
+ * Returns null if the document object is invalid or lacks a valid ID.
+ */
+export function normalizeDocument(doc) {
+  if (!doc || typeof doc !== 'object') return null;
+  const id = doc.id != null ? String(doc.id).trim() : '';
+  if (!id) return null;
+
+  return {
+    id,
+    user_id: doc.user_id != null ? String(doc.user_id) : '',
+    title: typeof doc.title === 'string' && doc.title.trim() ? doc.title.trim() : (doc.file_name || 'Untitled Document'),
+    file_name: typeof doc.file_name === 'string' ? doc.file_name : '',
+    file_type: typeof doc.file_type === 'string' ? doc.file_type : 'application/pdf',
+    file_size: typeof doc.file_size === 'number' ? doc.file_size : 0,
+    storage_path: doc.storage_path ? String(doc.storage_path) : null,
+    extracted_text: typeof doc.extracted_text === 'string' ? doc.extracted_text : '',
+    ai_summary: typeof doc.ai_summary === 'string' ? doc.ai_summary : '',
+    key_takeaways: Array.isArray(doc.key_takeaways) ? doc.key_takeaways.filter(Boolean) : [],
+    flashcards: Array.isArray(doc.flashcards)
+      ? doc.flashcards.filter(f => f && typeof f === 'object' && (f.question || f.answer))
+      : [],
+    quiz_questions: Array.isArray(doc.quiz_questions) ? doc.quiz_questions : [],
+    tags: Array.isArray(doc.tags) ? doc.tags.filter(Boolean) : [],
+    is_indexed: Boolean(doc.is_indexed),
+    extracted_questions: Array.isArray(doc.extracted_questions) ? doc.extracted_questions : [],
+    created_at: doc.created_at || new Date().toISOString(),
+    updated_at: doc.updated_at || new Date().toISOString(),
+    signed_url: doc.signed_url ? String(doc.signed_url) : null,
+  };
+}
+
+/**
+ * Single normalization boundary for document lists.
+ * Accepts raw array, { data: [...] }, { documents: [...] }, etc.
+ * Returns guaranteed array containing only valid normalized documents with IDs.
+ */
+export function normalizeDocuments(response) {
+  if (!response) return [];
+
+  let list = [];
+  if (Array.isArray(response)) {
+    list = response;
+  } else if (typeof response === 'object') {
+    if (Array.isArray(response.data)) {
+      list = response.data;
+    } else if (Array.isArray(response.documents)) {
+      list = response.documents;
+    } else if (response.data && typeof response.data === 'object' && Array.isArray(response.data.documents)) {
+      list = response.data.documents;
+    }
+  }
+
+  const result = [];
+  for (const item of list) {
+    const norm = normalizeDocument(item);
+    if (norm) {
+      result.push(norm);
+    }
+  }
+  return result;
+}
 
 export default function PersonalLearningModePage() {
   const { user } = useAuth();
   const toast = useToast();
   const fileInputRef = useRef(null);
 
+  // Core Document Library State
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [activeDoc, setActiveDoc] = useState(null);
   
   // Real File Upload State
@@ -41,14 +109,25 @@ export default function PersonalLearningModePage() {
 
   const loadDocuments = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
-      const list = await personalDocumentService.getUserDocuments();
-      setDocuments(list || []);
-      if (list && list.length > 0) {
-        setActiveDoc(list[0]);
-      }
+      const response = await personalDocumentService.getUserDocuments();
+      const validDocs = normalizeDocuments(response);
+      setDocuments(validDocs);
+      
+      setActiveDoc(prevActive => {
+        if (prevActive && prevActive.id) {
+          const match = validDocs.find(d => d.id === prevActive.id);
+          if (match) return match;
+        }
+        return validDocs.length > 0 ? validDocs[0] : null;
+      });
     } catch (err) {
-      console.error(err);
+      console.error('Failed to load personal documents:', err);
+      const errMsg = err?.response?.data?.error || err?.response?.data?.message || err?.message || 'Failed to load personal documents';
+      setLoadError(errMsg);
+      setDocuments([]);
+      setActiveDoc(null);
       toast.error('Failed to load personal documents');
     } finally {
       setLoading(false);
@@ -137,12 +216,23 @@ export default function PersonalLearningModePage() {
       formData.append('tags', tags);
 
       setUploadStatus('processing');
-      const doc = await personalDocumentService.uploadFile(formData);
+      const rawResult = await personalDocumentService.uploadFile(formData);
+
+      // Validate and normalize uploaded document
+      const doc = normalizeDocument(rawResult);
+      if (!doc || !doc.id) {
+        throw new Error('Upload succeeded on server but returned an unexpected or malformed document payload.');
+      }
 
       setUploadStatus('ready');
-      setDocuments(prev => [doc, ...prev]);
+      setDocuments(prev => {
+        const withoutUploaded = prev.filter(d => d && d.id !== doc.id);
+        return [doc, ...withoutUploaded];
+      });
       setActiveDoc(doc);
-      toast.success(`"${doc.title}" processed! Extracted ${doc.extracted_questions?.length || 0} questions.`);
+      
+      const qCount = doc.extracted_questions?.length || 0;
+      toast.success(`"${doc.title}" processed! Extracted ${qCount} questions.`);
       
       // Reset form
       setTimeout(() => {
@@ -150,8 +240,8 @@ export default function PersonalLearningModePage() {
         setShowUpload(false);
       }, 1000);
     } catch (err) {
-      console.error(err);
-      const errMsg = err.response?.data?.message || err.message || 'File upload failed. Please try again.';
+      console.error('Upload error:', err);
+      const errMsg = err.response?.data?.error || err.response?.data?.message || err.message || 'File upload failed. Please try again.';
       setUploadStatus('error');
       setUploadError(errMsg);
       toast.error(errMsg);
@@ -159,17 +249,19 @@ export default function PersonalLearningModePage() {
   };
 
   // Open secure signed URL for viewing uploaded PDF
-  const handleOpenDocument = async (docId, storagePath) => {
+  const handleOpenDocument = async (docId) => {
+    if (!docId) return;
     setOpeningDocId(docId);
     try {
       const signedUrl = await personalDocumentService.getSignedUrl(docId);
-      if (signedUrl) {
+      if (signedUrl && typeof signedUrl === 'string') {
         window.open(signedUrl, '_blank', 'noopener,noreferrer');
       } else {
         toast.info('Direct viewing URL not available for this document.');
       }
     } catch (err) {
-      toast.error('Could not open document: ' + err.message);
+      console.error('Open document error:', err);
+      toast.error('Could not open document: ' + (err.response?.data?.error || err.message));
     } finally {
       setOpeningDocId(null);
     }
@@ -177,31 +269,48 @@ export default function PersonalLearningModePage() {
 
   const handleDelete = async (docId, e) => {
     e.stopPropagation();
+    if (!docId) return;
     if (!confirm('Are you sure you want to remove this study material?')) return;
     try {
       await personalDocumentService.deleteDocument(docId);
-      const updated = documents.filter(d => d.id !== docId);
-      setDocuments(updated);
+      setDocuments(prev => {
+        const updated = prev.filter(d => d && d.id !== docId);
+        setActiveDoc(currentActive => {
+          if (currentActive?.id === docId) {
+            return updated.length > 0 ? updated[0] : null;
+          }
+          return currentActive;
+        });
+        return updated;
+      });
       if (activeDoc?.id === docId) {
-        setActiveDoc(updated[0] || null);
+        setQueryAnswer(null);
       }
       toast.success('Document removed from your private library.');
     } catch (err) {
+      console.error('Delete error:', err);
       toast.error('Failed to delete document');
     }
   };
 
   const handleAskAI = async (e) => {
     e.preventDefault();
-    if (!activeDoc || !query.trim() || querying) return;
+    if (!activeDoc || !activeDoc.id || !query.trim() || querying) return;
 
     setQuerying(true);
     try {
-      const res = await personalDocumentService.askDocumentAI(activeDoc.id, query);
-      setQueryAnswer(res);
+      const res = await personalDocumentService.askDocumentAI(activeDoc.id, query.trim());
+      if (res && typeof res === 'object' && res.answer) {
+        setQueryAnswer(res);
+      } else if (typeof res === 'string') {
+        setQueryAnswer({ answer: res });
+      } else {
+        setQueryAnswer({ answer: 'AI processed your request but returned no text.' });
+      }
       toast.success('AI answer generated from document context');
     } catch (err) {
-      toast.error('Query failed: ' + (err.response?.data?.message || err.message));
+      console.error('Ask AI error:', err);
+      toast.error('Query failed: ' + (err.response?.data?.error || err.response?.data?.message || err.message));
     } finally {
       setQuerying(false);
     }
@@ -218,57 +327,22 @@ export default function PersonalLearningModePage() {
         onChange={handleFileChange}
       />
 
-      {/* Header */}
-      <div className={styles.header}>
-        <div className={styles.titleSection}>
-          <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <UserCheck size={28} style={{ color: 'var(--accent-primary)' }} /> Personal Learning
-          </h1>
-          <p>
-            Your private study workspace. Upload your notes or PDFs. AI will extract practice questions, create chapter summaries, and interactive flashcards.
-          </p>
-        </div>
-
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <button 
-            onClick={() => { setShowUpload(true); setTimeout(() => fileInputRef.current?.click(), 100); }} 
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '8px', 
-              padding: '10px 20px', 
-              borderRadius: 'var(--radius-md)', 
-              background: 'var(--accent-primary, #6366f1)', 
-              color: '#fff', 
-              border: 'none', 
-              fontWeight: '700', 
-              fontSize: '13px', 
-              cursor: 'pointer' 
-            }}
-          >
-            <Upload size={16} /> Upload Material (PDF / Notes)
-          </button>
-          
-          <Link 
-            href="/assistant" 
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '8px', 
-              padding: '10px 18px', 
-              borderRadius: 'var(--radius-md)', 
-              background: 'var(--bg-glass)', 
-              border: '1px solid var(--border-color)', 
-              color: 'var(--text-primary)', 
-              textDecoration: 'none', 
-              fontWeight: '600', 
-              fontSize: '13px' 
-            }}
-          >
-            <Bot size={16} style={{ color: '#818cf8' }} /> PLACE Assistant
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        badge="Private workspace"
+        badgeIcon={<UserCheck size={14} />}
+        title="Personal Learning Studio"
+        subtitle="Upload notes or PDFs. Each document shows topic, question count, date, and processing status in your library below."
+      >
+        <Button
+          size="sm"
+          onClick={() => { setShowUpload(true); setTimeout(() => fileInputRef.current?.click(), 100); }}
+        >
+          <Upload size={16} /> Upload material
+        </Button>
+        <Button href="/mentor" variant="secondary" size="sm">
+          <Bot size={16} /> AI Mentor
+        </Button>
+      </PageHeader>
 
       {/* Upload Modal / Drop Area */}
       {showUpload && (
@@ -285,6 +359,7 @@ export default function PersonalLearningModePage() {
               <Upload size={18} style={{ color: 'var(--accent-primary)' }} /> Upload Study Material
             </h3>
             <button 
+              type="button"
               onClick={() => setShowUpload(false)} 
               style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
             >
@@ -299,16 +374,11 @@ export default function PersonalLearningModePage() {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
-              style={{
-                border: `2px dashed ${isDragOver ? 'var(--accent-primary)' : 'var(--border-color)'}`,
-                borderRadius: 'var(--radius-md)',
-                padding: '32px 20px',
-                textAlign: 'center',
-                cursor: 'pointer',
-                background: isDragOver ? 'rgba(99, 102, 241, 0.05)' : 'var(--bg-primary)',
-                transition: 'all 0.2s ease',
-                marginBottom: '16px'
-              }}
+              className={`${styles.uploadDropzone} ${isDragOver ? styles.uploadDropzoneActive : ''}`}
+              style={{ marginBottom: '16px' }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
             >
               {selectedFile ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px' }}>
@@ -451,6 +521,19 @@ export default function PersonalLearningModePage() {
               <Sparkles size={22} style={{ animation: 'spin 1.5s linear infinite', color: 'var(--accent-primary)' }} />
               <p style={{ fontSize: '13px', marginTop: '10px' }}>Loading private materials...</p>
             </div>
+          ) : loadError && documents.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#ef4444' }}>
+              <AlertCircle size={32} style={{ marginBottom: '10px' }} />
+              <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>Failed to load materials</p>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>{loadError}</p>
+              <button 
+                type="button"
+                onClick={loadDocuments}
+                style={{ padding: '8px 16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '12px' }}
+              >
+                Retry
+              </button>
+            </div>
           ) : documents.length === 0 ? (
             <EmptyState
               icon={<FileText size={44} style={{ opacity: 0.5 }} />}
@@ -484,13 +567,14 @@ export default function PersonalLearningModePage() {
                     </div>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                       <span style={{ color: '#10b981', fontWeight: '600' }}>● Ready</span>
-                      <span>{new Date(doc.created_at).toLocaleDateString()}</span>
-                      {doc.file_name && <span>• {doc.file_name}</span>}
+                      <span>{doc.created_at ? new Date(doc.created_at).toLocaleDateString() : 'Recent'}</span>
+                      {doc.file_name ? <span>• {doc.file_name}</span> : null}
                     </div>
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <button 
+                      type="button"
                       onClick={(e) => handleDelete(doc.id, e)} 
                       style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '6px', borderRadius: '4px' }}
                       title="Delete Material"
@@ -529,14 +613,14 @@ export default function PersonalLearningModePage() {
 
         {/* Right Column: AI Document Intelligence Studio */}
         <div className={styles.card}>
-          {activeDoc ? (
+          {activeDoc && activeDoc.id ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {/* Document Header & Actions */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
                 <div>
                   <h2 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 4px 0' }}>{activeDoc.title}</h2>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>
-                    File: {activeDoc.file_name} • {(activeDoc.extracted_text || '').length} characters indexed
+                    File: {activeDoc.file_name || 'Uploaded Document'} • {(activeDoc.extracted_text || '').length} characters indexed
                   </div>
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                     {(activeDoc.tags || []).map((t, i) => (
@@ -550,7 +634,8 @@ export default function PersonalLearningModePage() {
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   {activeDoc.storage_path && (
                     <button 
-                      onClick={() => handleOpenDocument(activeDoc.id, activeDoc.storage_path)}
+                      type="button"
+                      onClick={() => handleOpenDocument(activeDoc.id)}
                       disabled={openingDocId === activeDoc.id}
                       style={{
                         display: 'flex',
@@ -563,7 +648,7 @@ export default function PersonalLearningModePage() {
                         color: 'var(--text-primary)',
                         fontSize: '12px',
                         fontWeight: '600',
-                        cursor: 'pointer'
+                        cursor: openingDocId === activeDoc.id ? 'wait' : 'pointer'
                       }}
                     >
                       <ExternalLink size={14} /> {openingDocId === activeDoc.id ? 'Opening...' : 'Open File'}
@@ -571,7 +656,7 @@ export default function PersonalLearningModePage() {
                   )}
 
                   <Link
-                    href={`/practice?topic=${encodeURIComponent(activeDoc.title)}`}
+                    href={`/practice?topic=${encodeURIComponent(activeDoc.title || '')}`}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -617,7 +702,7 @@ export default function PersonalLearningModePage() {
               </div>
 
               {/* Key Takeaways */}
-              {activeDoc.key_takeaways?.length > 0 && (
+              {activeDoc.key_takeaways && activeDoc.key_takeaways.length > 0 && (
                 <div>
                   <h4 style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px', margin: '0 0 8px 0' }}>
                     <BookOpen size={15} style={{ color: '#f59e0b' }} /> Key Concepts
@@ -631,7 +716,7 @@ export default function PersonalLearningModePage() {
               )}
 
               {/* Generated Flashcards */}
-              {activeDoc.flashcards?.length > 0 && (
+              {activeDoc.flashcards && activeDoc.flashcards.length > 0 && (
                 <div>
                   <h4 style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 10px 0' }}>
                     Active Recall Flashcards ({activeDoc.flashcards.length})
@@ -663,7 +748,7 @@ export default function PersonalLearningModePage() {
                   <button 
                     type="submit" 
                     disabled={querying || !query.trim()} 
-                    style={{ padding: '10px 18px', borderRadius: 'var(--radius-md)', background: 'var(--accent-primary)', color: '#fff', border: 'none', fontWeight: '700', cursor: 'pointer', fontSize: '13px' }}
+                    style={{ padding: '10px 18px', borderRadius: 'var(--radius-md)', background: 'var(--accent-primary)', color: '#fff', border: 'none', fontWeight: '700', cursor: querying || !query.trim() ? 'not-allowed' : 'pointer', fontSize: '13px', opacity: querying || !query.trim() ? 0.7 : 1 }}
                   >
                     {querying ? 'Thinking...' : 'Ask AI'}
                   </button>
@@ -680,7 +765,11 @@ export default function PersonalLearningModePage() {
           ) : (
             <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
               <BookOpen size={40} style={{ opacity: 0.3, marginBottom: '12px' }} />
-              <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Select a personal material from the list to view its summary, flashcards, and quizzes.</p>
+              <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                {documents.length > 0 
+                  ? 'Select a personal material from the list to view its summary, flashcards, and quizzes.'
+                  : 'Upload your notes or PDFs to unlock AI study summaries, flashcards, and practice questions.'}
+              </p>
             </div>
           )}
         </div>

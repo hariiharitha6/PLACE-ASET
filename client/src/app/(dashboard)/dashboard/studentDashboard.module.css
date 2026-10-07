@@ -36,89 +36,35 @@
   to { transform: rotate(360deg); }
 }
 
-/* KPI Summary Grid */
-.kpiGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
-.kpiCard {
+.sectionBlock {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 18px 20px;
+  border-radius: var(--radius-lg);
+  padding: 22px 24px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  cursor: pointer;
-  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.kpiCard:hover {
-  transform: translateY(-2px);
-  border-color: var(--border-color-hover);
+  gap: 16px;
   box-shadow: var(--shadow-sm);
 }
 
-.kpiHeader {
+.sectionHeading {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-.kpiIcon {
-  font-size: 20px;
-  display: flex;
-  align-items: center;
-}
-
-.kpiTag {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-muted);
-}
-
-.kpiTagActive {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-  background: rgba(14, 165, 233, 0.12);
-  color: var(--accent-primary);
-}
-
-.kpiTagSuccess {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-  background: rgba(16, 185, 129, 0.12);
-  color: var(--accent-success);
-}
-
-.kpiTagAmber {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-  background: rgba(245, 158, 11, 0.12);
-  color: var(--accent-warning);
-}
-
-.kpiVal {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
-}
-
-.kpiLabel {
+.sectionLink {
   font-size: 12px;
-  color: var(--text-muted);
+  font-weight: 600;
+  color: var(--accent-primary);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.sectionLink:hover {
+  text-decoration: underline;
 }
 
 /* 2-Column Grid Layouts */
@@ -199,17 +145,6 @@
   border-color: var(--accent-primary);
 }
 
-/* Quick Topic Practice Hub */
-.topicCard {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 22px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
 .topicGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -254,18 +189,12 @@
 
 /* Responsive Media Queries */
 @media (max-width: 1024px) {
-  .kpiGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
   .sectionRowTwo, .sectionRowThree {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 640px) {
-  .kpiGrid {
-    grid-template-columns: 1fr;
-  }
   .topicGrid {
     grid-template-columns: 1fr;
   }

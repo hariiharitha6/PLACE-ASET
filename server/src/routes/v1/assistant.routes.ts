@@ -8,12 +8,16 @@ import {
   deleteConversation,
   clearConversation,
   executeQuickAction,
+  getAssistantStatus,
 } from '../../controllers/assistant.controller';
 import { verifyJWT } from '../../middleware/auth';
 
 const router = Router();
 
 router.use(verifyJWT as any);
+
+// Status check (health & provider availability)
+router.get('/status', getAssistantStatus as any);
 
 // Chat completion
 router.post('/chat', sendMessage as any);

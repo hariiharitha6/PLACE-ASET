@@ -74,4 +74,12 @@ export const assistantService = {
     const response = await api.post('/assistant/quick-action', { action });
     return response.data;
   },
+
+  /**
+   * Check AI provider and engine status
+   */
+  getStatus: async () => {
+    const response = await api.get('/assistant/status');
+    return response.data;
+  },
 };

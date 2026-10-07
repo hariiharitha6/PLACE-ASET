@@ -1,20 +1,23 @@
 'use client';
 
 import React from 'react';
+import { GraduationCap } from 'lucide-react';
 import PlaceAssistant from '../../../components/assistant/PlaceAssistant';
+import PageHeader from '../../../components/ui/PageHeader';
+import styles from './mentor.module.css';
 
 export default function AIMentorPage() {
   return (
-    <div style={{
-      height: 'calc(100vh - 130px)',
-      minHeight: '520px',
-      maxHeight: '850px',
-      border: '1px solid var(--border-color)',
-      borderRadius: 'var(--radius-lg)',
-      overflow: 'hidden',
-      boxShadow: 'var(--shadow-sm)',
-    }}>
-      <PlaceAssistant isDrawer={false} />
+    <div className={styles.page}>
+      <PageHeader
+        badge="Academic guidance"
+        badgeIcon={<GraduationCap size={14} />}
+        title="AI Personal Mentor"
+        subtitle="Structured tutoring for concepts, study plans, and interview preparation—grounded in your learning context."
+      />
+      <div className={styles.chatShell}>
+        <PlaceAssistant isDrawer={false} />
+      </div>
     </div>
   );
 }

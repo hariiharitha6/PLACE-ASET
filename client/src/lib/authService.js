@@ -42,11 +42,18 @@ export const authService = {
         console.log('[AUTH SERVICE TRACE] USER SAVED', { user });
       }
 
-      if (session) {
-        await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
+      if (session && accessToken) {
+        try {
+          await Promise.race([
+            supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken || '',
+            }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('setSession timeout')), 1000))
+          ]);
+        } catch {
+          // Token is already safely in localStorage
+        }
       }
       console.log('[AUTH SERVICE TRACE] LOGIN SUCCESS', { responseData: response.data });
     }

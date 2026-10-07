@@ -326,11 +326,30 @@ export class AssistantService {
       const totalCorrect = recentSessions?.reduce((acc, s) => acc + (s.correct_answers || 0), 0) || 0;
       const avgAccuracy = totalAttempted > 0 ? Math.round((totalCorrect / totalAttempted) * 100) : null;
 
+      // Recent practice mistakes
+      let mistakeTopics: string[] = [];
+      try {
+        const { data: recentMistakes } = await supabase
+          .from('practice_answers')
+          .select('questions(topic, category_slug)')
+          .eq('user_id', userId)
+          .eq('is_correct', false)
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        mistakeTopics = (recentMistakes || [])
+          .map((m: any) => m.questions?.topic || m.questions?.category_slug)
+          .filter(Boolean);
+      } catch {
+        // Fallback
+      }
+
       telemetryContext = `Student Verified Telemetry:
 - Department: ${userProfile?.department || 'Engineering'}
 - Learning Mode: ${userLearningMode.toUpperCase()}
 - Current Streak: ${userProfile?.daily_streak || 0} days | XP: ${userProfile?.xp || 0}
 - Practice Summary: ${sessionCount} recent sessions (${totalAttempted} questions attempted, avg accuracy: ${avgAccuracy !== null ? avgAccuracy + '%' : 'No practice data yet'})
+- Recent Mistakes / Review Topics: ${mistakeTopics.length > 0 ? Array.from(new Set(mistakeTopics)).join(', ') : 'None flagged'}
 - Target Companies: ${userProfile?.target_companies?.length ? userProfile.target_companies.join(', ') : 'Not configured'}`;
     } catch (e) {
       // Telemetry lookup is resilient
@@ -431,14 +450,20 @@ Student Question: "${payload.message}"`;
     // 7. Persist assistant response
     const asstMsgId = crypto.randomUUID();
     const asstNow = new Date().toISOString();
+    const isOffline = aiResult.providerId === 'unavailable';
+    const messageContent = isOffline
+      ? `🤖 **PLACE AI Engine Currently Offline**\n\nNo live AI provider could be reached to process your request.\n\n### How to activate AI:\n- **Local / Free**: Launch [Ollama](https://ollama.com) on this machine (\`ollama run llama3\` or \`ollama serve\`).\n- **Cloud**: Set \`GEMINI_API_KEY\` or \`OPENAI_API_KEY\` in \`server/.env\`.\n\n*All practice questions, timed tests, spaced repetition, scoring, and weak-topic analysis continue to work normally without AI.*`
+      : aiResult.text;
+
     const assistantMsg: MemoryMessage = {
       id: asstMsgId,
       chat_id: activeConvId,
       user_id: userId,
       sender: 'assistant',
-      message: aiResult.text,
+      message: messageContent,
       metadata: {
         provider_used: aiResult.providerId,
+        is_engine_offline: isOffline,
         tokens_used: aiResult.tokensUsed,
         latency_ms: aiResult.latencyMs,
         context_type: payload.context?.type || 'general',

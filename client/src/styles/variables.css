@@ -1,5 +1,10 @@
 :root {
   /* PLACE@ASET Educational & Productivity Design System */
+
+  /* Academic navy accent (shared across themes) */
+  --accent-navy: #1e3a5f;
+  --surface-elevated: var(--bg-secondary);
+  --content-max: 1280px;
   
   /* Background Foundations - Deep charcoal & dark neutral */
   --bg-primary: #070b14;
@@ -87,9 +92,10 @@
 }
 
 [data-theme="light"] {
-  --bg-primary: #f8fafc;
+  --accent-navy: #1e40af;
+  --bg-primary: #f4f6f9;
   --bg-secondary: #ffffff;
-  --bg-tertiary: #f1f5f9;
+  --bg-tertiary: #eef2f7;
   --bg-card: #ffffff;
   --bg-card-hover: #f8fafc;
   --bg-glass: rgba(255, 255, 255, 0.95);
@@ -101,7 +107,7 @@
   --text-muted: #64748b;
   --text-accent: #0284c7;
 
-  --accent-primary: #0284c7;
+  --accent-primary: #1d4ed8;
   --accent-secondary: #0d9488;
   --accent-teal: #0891b2;
   --accent-indigo: #4f46e5;

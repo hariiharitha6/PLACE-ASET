@@ -2,42 +2,22 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
-import { useAssistant } from '../../../context/AssistantContext';
 import { dashboardService } from '../../../lib/dashboardService';
 import FocusCard from '../../../components/ui/FocusCard';
+import LoadingState from '../../../components/ui/LoadingState';
 import NextStepCard from '../../../components/widgets/NextStepCard';
 import PlacementReadinessWidget from '../../../components/widgets/PlacementReadinessWidget';
-import PlacementDrivesWidget from '../../../components/widgets/PlacementDrivesWidget';
-import ChallengeWidget from '../../../components/widgets/ChallengeWidget';
 import ProgressWidget from '../../../components/widgets/ProgressWidget';
-import LeaderboardWidget from '../../../components/widgets/LeaderboardWidget';
 import RecentQuestionsWidget from '../../../components/widgets/RecentQuestionsWidget';
 import ResourcesWidget from '../../../components/widgets/ResourcesWidget';
 import UpcomingEventsWidget from '../../../components/widgets/UpcomingEventsWidget';
-import { 
-  Sparkles, 
-  ArrowRight, 
-  Code2, 
-  Database, 
-  Layers, 
-  Cpu, 
-  Award, 
-  Trophy, 
-  Flame, 
-  CheckCircle2, 
-  BookOpen,
-  Bot
-} from 'lucide-react';
 import styles from './studentDashboard.module.css';
 
 export default function StudentDashboardPage() {
   const { user } = useAuth();
-  const router = useRouter();
   const toast = useToast();
-  const { openAssistant } = useAssistant();
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -66,19 +46,12 @@ export default function StudentDashboardPage() {
   }, [toast]);
 
   if (isLoading) {
-    return (
-      <div className={styles.loadingContainer}>
-        <div className={styles.spinner} />
-        <span>Loading dashboard...</span>
-      </div>
-    );
+    return <LoadingState message="Preparing your study command center…" minHeight={400} />;
   }
 
   const {
     profile = {},
     practiceProgress = {},
-    weeklyChallenge = null,
-    leaderboardPreview = [],
     upcomingEvents = [],
     latestResources = [],
   } = data || {};
@@ -86,183 +59,79 @@ export default function StudentDashboardPage() {
   const streakDays = profile?.streak || 0;
   const totalSessions = practiceProgress?.totalSessions || 0;
   const completedSessions = practiceProgress?.completedSessions || 0;
-  const rank = profile?.collegeRank || 0;
   const readinessScore = profile?.readiness_score || 0;
 
   return (
-    <div className={styles.dashboardContainer}>
+    <div className={`${styles.dashboardContainer} pageStack`}>
 
-      {/* 1. GREETING + FOCUS CARD */}
       <FocusCard
         greeting="Good day"
         userName={user?.full_name || 'Candidate'}
         streak={streakDays}
-        focusTitle={totalSessions > 0 ? 'Continue Active Learning' : 'Welcome to PLACE@ASET'}
+        focusTitle={totalSessions > 0 ? 'Continue your placement preparation' : 'Welcome to PLACE@ASET'}
         focusDescription={totalSessions > 0
-          ? `You have completed ${completedSessions} practice sessions. Keep going to strengthen your preparation.`
-          : 'Start by practising a few questions. Your dashboard will fill up as you learn.'
+          ? `You have completed ${completedSessions} practice session${completedSessions === 1 ? '' : 's'}. Pick up where you left off or follow your next recommended step below.`
+          : 'Begin with a short practice set. Your dashboard will reflect real progress as you study.'
         }
-        ctaText={totalSessions > 0 ? 'Resume Practice →' : 'Start Your First Practice →'}
+        ctaText={totalSessions > 0 ? 'Continue Practice →' : 'Start Your First Practice →'}
         ctaHref="/practice"
         goalTarget={5}
         completedCount={Math.min(5, completedSessions)}
       />
 
-      {/* 2. YOUR NEXT STEP — data-driven recommendations */}
       <NextStepCard />
 
-      {/* 2.1 CONTEXTUAL AI ASSISTANT PROMPT */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '12px 18px',
-        backgroundColor: 'var(--bg-glass)',
-        border: '1px solid var(--border-color)',
-        borderRadius: 'var(--radius-md)',
-        gap: '12px',
-        flexWrap: 'wrap',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Bot size={18} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />
+      <section className={styles.sectionBlock} aria-labelledby="continue-learning-heading">
+        <div className={styles.sectionHeading}>
           <div>
-            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Need targeted placement direction?</span>
-            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', marginLeft: '6px' }}>Ask PLACE Assistant for a personalized plan based on your verified performance.</span>
+            <h2 id="continue-learning-heading" className="sectionTitle">Continue Learning</h2>
+            <p className="sectionHint">Jump into a core track aligned with campus placements.</p>
           </div>
-        </div>
-        <button
-          onClick={() => openAssistant({
-            type: 'readiness',
-            solvedQuestions: completedSessions,
-            streak: streakDays,
-            readinessScore: readinessScore,
-          }, 'What should I study next to maximize my placement readiness?')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '7px 14px',
-            borderRadius: 'var(--radius-sm)',
-            backgroundColor: 'var(--bg-glass)',
-            border: '1px solid var(--border-accent)',
-            color: 'var(--text-accent)',
-            fontSize: '12px',
-            fontWeight: '600',
-            cursor: 'pointer',
-          }}
-          onMouseOver={e => { e.currentTarget.style.backgroundColor = 'var(--bg-glass-hover)'; e.currentTarget.style.borderColor = 'var(--accent-primary)'; }}
-          onMouseOut={e => { e.currentTarget.style.backgroundColor = 'var(--bg-glass)'; e.currentTarget.style.borderColor = 'var(--border-accent)'; }}
-        >
-          <Sparkles size={13} /> What should I study next?
-        </button>
-      </div>
-
-      {/* 3. EXECUTIVE STUDY TELEMETRY KPIS */}
-      <div className={styles.kpiGrid}>
-        <div className={styles.kpiCard} onClick={() => router.push('/practice')}>
-          <div className={styles.kpiHeader}>
-            <span className={styles.kpiIcon}>⚡</span>
-            <span className={styles.kpiTagSuccess}>Active</span>
-          </div>
-          <span className={styles.kpiVal}>{totalSessions > 0 ? `${completedSessions} Sessions` : 'Not started'}</span>
-          <span className={styles.kpiLabel}>Practice Sessions Completed</span>
-        </div>
-
-        <div className={styles.kpiCard} onClick={() => router.push('/challenges')}>
-          <div className={styles.kpiHeader}>
-            <span className={styles.kpiIcon}>🏆</span>
-            <span className={styles.kpiTagActive}>Weekly</span>
-          </div>
-          <span className={styles.kpiVal}>{rank > 0 ? `Rank #${rank}` : 'Unranked'}</span>
-          <span className={styles.kpiLabel}>Campus Leaderboard</span>
-        </div>
-
-        <div className={styles.kpiCard} onClick={() => router.push('/dashboard/readiness')}>
-          <div className={styles.kpiHeader}>
-            <span className={styles.kpiIcon}>🎯</span>
-            <span className={styles.kpiTagActive}>{readinessScore > 0 ? `${readinessScore}%` : '—'}</span>
-          </div>
-          <span className={styles.kpiVal}>{readinessScore > 0 ? `${readinessScore} / 100` : 'Start practicing'}</span>
-          <span className={styles.kpiLabel}>Placement Readiness Score</span>
-        </div>
-
-        <div className={styles.kpiCard} onClick={() => router.push('/personal')}>
-          <div className={styles.kpiHeader}>
-            <span className={styles.kpiIcon}>✨</span>
-            <span className={styles.kpiTagAmber}>Studio</span>
-          </div>
-          <span className={styles.kpiVal}>Personal Hub</span>
-          <span className={styles.kpiLabel}>Notes & Private Flashcards</span>
-        </div>
-      </div>
-
-      {/* 4. TOPIC LAUNCHPAD */}
-      <div className={styles.topicCard}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>Core Learning Tracks</h3>
-          <Link href="/practice" style={{ fontSize: '12px', color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: '600' }}>
-            View All →
-          </Link>
+          <Link href="/practice" className={styles.sectionLink}>View practice hub →</Link>
         </div>
         <div className={styles.topicGrid}>
           <Link href="/practice" className={styles.topicItem}>
-            <span className={styles.topicIcon}>💻</span>
+            <span className={styles.topicIcon} aria-hidden>💻</span>
             <div>
-              <h4 className={styles.topicName}>Data Structures</h4>
-              <span className={styles.topicCount}>Trees, Graphs, DP</span>
+              <h3 className={styles.topicName}>Data Structures</h3>
+              <p className={styles.topicCount}>Trees, graphs, dynamic programming</p>
             </div>
           </Link>
-
           <Link href="/practice" className={styles.topicItem}>
-            <span className={styles.topicIcon}>🗄️</span>
+            <span className={styles.topicIcon} aria-hidden>🗄️</span>
             <div>
-              <h4 className={styles.topicName}>DBMS & SQL</h4>
-              <span className={styles.topicCount}>Queries, Indexing</span>
+              <h3 className={styles.topicName}>DBMS &amp; SQL</h3>
+              <p className={styles.topicCount}>Queries, normalization, indexing</p>
             </div>
           </Link>
-
           <Link href="/practice" className={styles.topicItem}>
-            <span className={styles.topicIcon}>⚙️</span>
+            <span className={styles.topicIcon} aria-hidden>⚙️</span>
             <div>
-              <h4 className={styles.topicName}>Operating Systems</h4>
-              <span className={styles.topicCount}>Threads, Memory</span>
+              <h3 className={styles.topicName}>Operating Systems</h3>
+              <p className={styles.topicCount}>Processes, memory, synchronization</p>
             </div>
           </Link>
-
           <Link href="/practice" className={styles.topicItem}>
-            <span className={styles.topicIcon}>🧠</span>
+            <span className={styles.topicIcon} aria-hidden>🧠</span>
             <div>
-              <h4 className={styles.topicName}>General Aptitude</h4>
-              <span className={styles.topicCount}>Quants & Reasoning</span>
+              <h3 className={styles.topicName}>General Aptitude</h3>
+              <p className={styles.topicCount}>Quantitative and logical reasoning</p>
             </div>
           </Link>
         </div>
-      </div>
+      </section>
 
-      {/* 4. PLACEMENT READINESS & PLACEMENT DRIVES */}
       <div className={styles.sectionRowTwo}>
         <PlacementReadinessWidget readinessScore={readinessScore} />
-        <PlacementDrivesWidget drives={[]} />
-      </div>
-
-      {/* 5. WEEKLY CHALLENGE & PROGRESS LEVEL */}
-      <div className={styles.sectionRowTwo}>
-        <ChallengeWidget challenge={weeklyChallenge} />
-        <ProgressWidget progress={profile} level={profile.level || 1} />
-      </div>
-
-      {/* 6. LEADERBOARD PREVIEW & RECENT QUESTIONS */}
-      <div className={styles.sectionRowTwo}>
-        <LeaderboardWidget leaderboard={leaderboardPreview} />
         <RecentQuestionsWidget />
       </div>
 
-      {/* 7. STUDY MATERIALS & UPCOMING EVENTS */}
-      <div className={styles.sectionRowThree}>
-        <ResourcesWidget resources={latestResources} />
+      <div className={styles.sectionRowTwo}>
+        <ProgressWidget progress={profile} level={profile.level || 1} />
         <UpcomingEventsWidget events={upcomingEvents} />
       </div>
 
+      <ResourcesWidget resources={latestResources} />
     </div>
   );
 }

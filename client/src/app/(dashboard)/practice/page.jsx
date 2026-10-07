@@ -152,7 +152,8 @@ export default function PracticeArenaPage() {
         questionCount: options.questionCount || questionCount || 10,
         solved_status: options.solvedStatus || 'all',
         weak_topics_only: options.weakTopicsOnly || false,
-        bookmarked_only: options.bookmarkedOnly || false
+        bookmarked_only: options.bookmarkedOnly || false,
+        source: options.source || (selectedSource === 'all' ? 'official' : selectedSource)
       };
 
       const res = await practiceService.startSession(payload);
@@ -402,6 +403,20 @@ export default function PracticeArenaPage() {
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {/* Question Source (Phase 9 & 10) */}
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>Question Source</label>
+                <select
+                  value={selectedSource}
+                  onChange={e => setSelectedSource(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 'var(--radius-md)', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '13px', outline: 'none' }}
+                >
+                  <option value="official">Official Bank (Curated + Faculty)</option>
+                  <option value="personal">My Documents (Personal Learning Mode)</option>
+                  <option value="combined">Combined (Official + My Documents)</option>
+                </select>
+              </div>
+
               {/* Category Filter */}
               <div>
                 <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>Category</label>

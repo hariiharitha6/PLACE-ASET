@@ -36,6 +36,7 @@ export default function PlaceAssistant({ isDrawer = false, onClose = null }) {
   const [editingConvId, setEditingConvId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [lastError, setLastError] = useState(null);
+  const [aiEngineStatus, setAiEngineStatus] = useState(null);
 
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
@@ -47,6 +48,19 @@ export default function PlaceAssistant({ isDrawer = false, onClose = null }) {
   useEffect(() => {
     scrollToBottom();
   }, [messages, sending]);
+
+  // Check AI Engine operational status
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const st = await assistantService.getStatus();
+        setAiEngineStatus(st);
+      } catch (e) {
+        setAiEngineStatus({ isAvailable: false, reason: 'Backend service offline' });
+      }
+    };
+    fetchStatus();
+  }, []);
 
   // Load conversations list
   const loadConversations = useCallback(async () => {
@@ -151,7 +165,17 @@ export default function PlaceAssistant({ isDrawer = false, onClose = null }) {
       }
     } catch (err) {
       setLastError(text);
-      toast.error('Assistant could not respond. Please try again.');
+      if (err?.status === 401 || err?.statusCode === 401) {
+        toast.error('Session expired. Please log in again.');
+      } else if (err?.code === 'ECONNABORTED' || err?.message?.toLowerCase?.()?.includes('timeout')) {
+        toast.error('AI provider timed out. The model may be busy.');
+      } else if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        toast.error('Network disconnected. Check your internet connection.');
+      } else if (err?.message === 'Network Error' || !err?.status) {
+        toast.error('Backend server unreachable. Ensure API is running.');
+      } else {
+        toast.error(err?.message || 'Assistant request failed.');
+      }
     } finally {
       setSending(false);
     }
@@ -264,7 +288,27 @@ export default function PlaceAssistant({ isDrawer = false, onClose = null }) {
             <Bot size={18} />
           </div>
           <div className={styles.headerText}>
-            <h2 className={styles.headerTitle}>PLACE Assistant</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h2 className={styles.headerTitle}>PLACE Assistant</h2>
+              {aiEngineStatus && (
+                <span
+                  style={{
+                    fontSize: '10px',
+                    fontWeight: '700',
+                    padding: '2px 8px',
+                    borderRadius: '10px',
+                    backgroundColor: aiEngineStatus.isAvailable ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                    color: aiEngineStatus.isAvailable ? '#10b981' : '#f59e0b',
+                    border: `1px solid ${aiEngineStatus.isAvailable ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px'
+                  }}
+                  title={aiEngineStatus.reason}
+                >
+                  {aiEngineStatus.isAvailable ? `AI: ${aiEngineStatus.activeProvider}` : 'AI Offline'}
+                </span>
+              )}
+            </div>
             <p className={styles.headerSubtitle}>Your personal study and placement assistant</p>
           </div>
         </div>

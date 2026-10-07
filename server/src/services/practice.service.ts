@@ -1,12 +1,17 @@
 import { getSupabase } from '../config/database';
 import logger from '../utils/logger';
+import { QuestionBankService, VerifiedQuestion } from './question_bank.service';
+import { RepetitionEngineService } from './repetition_engine.service';
+import { PersonalDocumentService } from './personal_document.service';
 
 export class PracticeService {
   /**
-   * Starts a new practice session for a student.
+   * Starts a new practice session for a student using the deterministic Selection Engine.
    */
   static async startSession(userId: string, collegeId: string, data: {
     category_id?: string;
+    category_slug?: string;
+    topic?: string;
     difficulty?: string;
     mode: string;
     questionCount: number;
@@ -18,8 +23,11 @@ export class PracticeService {
     bookmarked_only?: boolean;
     weak_topics_only?: boolean;
     recently_added_only?: boolean;
+    source?: 'official' | 'personal' | 'combined';
   }) {
     const supabase = getSupabase();
+    const targetSource = data.source || 'official';
+    const targetCount = Math.max(1, Math.min(data.questionCount || 10, 50));
 
     // 1. Create the session record
     const effectiveCollegeId = (collegeId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(collegeId))
@@ -34,7 +42,7 @@ export class PracticeService {
         category_id: data.category_id || null,
         difficulty: data.difficulty || null,
         mode: data.mode,
-        total_questions: data.questionCount
+        total_questions: targetCount
       })
       .select()
       .single();
@@ -44,150 +52,175 @@ export class PracticeService {
       throw new Error(sessionErr.message);
     }
 
-    // 2. Build candidate question ID lists from filters
-    let bookmarkIds: string[] | null = null;
+    // 2. Determine student's session sequence number for Spaced Repetition scheduling
+    let currentSessionNumber = 1;
+    try {
+      const { count } = await supabase
+        .from('practice_sessions')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId);
+      currentSessionNumber = Math.max(1, count || 1);
+    } catch {
+      currentSessionNumber = 1;
+    }
+
+    // 3. Load user's weak topics accuracy map from practice statistics
+    const weakTopicAccuracies: Record<string, number> = {};
+    try {
+      const { data: stats } = await supabase
+        .from('practice_statistics')
+        .select('weak_topics, topic_accuracy')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (stats?.topic_accuracy && typeof stats.topic_accuracy === 'object') {
+        for (const [k, v] of Object.entries(stats.topic_accuracy)) {
+          if (typeof v === 'object' && v !== null && (v as any).total > 0) {
+            weakTopicAccuracies[k] = Math.round(((v as any).correct / (v as any).total) * 100);
+          }
+        }
+      }
+      if (stats?.weak_topics && typeof stats.weak_topics === 'object') {
+        for (const [k, v] of Object.entries(stats.weak_topics)) {
+          weakTopicAccuracies[k] = typeof v === 'number' ? v : 40;
+        }
+      }
+    } catch {
+      // Telemetry lookup is resilient
+    }
+
+    // 4. Retrieve user's spaced repetition schedules
+    const userSchedules = await RepetitionEngineService.getUserSchedules(userId);
+
+    // 5. Gather candidate questions based on requested source
+    const candidates: VerifiedQuestion[] = [];
+
+    // 5A. OFFICIAL VERIFIED SOURCE (Core & Institutional)
+    if (targetSource === 'official' || targetSource === 'combined') {
+      const officialQuestions = await QuestionBankService.getVerifiedQuestions({
+        category_slug: data.category_slug,
+        topic: data.topic,
+        difficulty: data.difficulty,
+        source_type: 'official',
+        userId,
+      });
+      candidates.push(...officialQuestions);
+    }
+
+    // 5B. PERSONAL SOURCE (Student's private documents & uploads)
+    if (targetSource === 'personal' || targetSource === 'combined') {
+      try {
+        const userDocs = await PersonalDocumentService.listUserDocuments(userId);
+        for (const doc of userDocs) {
+          for (const q of (doc.extracted_questions || [])) {
+            const deterministicId = QuestionBankService.generateDeterministicUuid(
+              `personal-${doc.id}-${q.questionNumber}-${q.statement.substring(0, 30)}`
+            );
+            candidates.push({
+              id: deterministicId,
+              category_slug: q.categorySlug || 'personal-learning',
+              topic: q.topic || doc.title,
+              statement: q.statement,
+              explanation: q.explanation || 'Extracted from your uploaded study material.',
+              difficulty: (q.difficulty as any) || 'medium',
+              type: 'mcq_single',
+              source: doc.title,
+              source_type: 'PERSONAL',
+              verified: false,
+              status: 'published',
+              approval_status: 'approved',
+              normalized_hash: QuestionBankService.computeHash(q.statement),
+              quality_score: 85,
+              options: (q.options || []).map((opt, idx) => ({
+                id: `${deterministicId}-opt-${idx}`,
+                label: opt.label,
+                content: opt.content,
+                is_correct: opt.label.toUpperCase() === (q.correctLetter || '').toUpperCase(),
+              })),
+              created_at: doc.created_at,
+              updated_at: doc.updated_at,
+            });
+          }
+        }
+      } catch (docErr: any) {
+        logger.warn('Error reading personal questions for practice', { error: docErr.message });
+      }
+    }
+
+    // 6. Handle user filters (Bookmarks, Weak topics only, Solved status)
+    let filteredCandidates = candidates;
+
     if (data.bookmarked_only) {
       const { data: bms } = await supabase
         .from('bookmarks')
         .select('target_id')
         .eq('user_id', userId)
         .eq('bookmark_type', 'question');
-      bookmarkIds = bms?.map(b => b.target_id) || [];
+      const bmIds = new Set(bms?.map(b => b.target_id) || []);
+      filteredCandidates = filteredCandidates.filter(q => bmIds.has(q.id));
     }
 
-    let solvedIds: string[] = [];
-    let incorrectIds: string[] = [];
-    const { data: pastAnswers } = await supabase
-      .from('practice_answers')
-      .select('question_id, is_correct, practice_sessions!inner(user_id)')
-      .eq('practice_sessions.user_id', userId);
-    
-    if (pastAnswers) {
-      solvedIds = Array.from(new Set(pastAnswers.map(pa => pa.question_id)));
-      incorrectIds = Array.from(new Set(pastAnswers.filter(pa => pa.is_correct === false).map(pa => pa.question_id)));
-    }
-
-    let deptQuestionIds: string[] | null = null;
-    if (data.department_id) {
-      const { data: dq } = await supabase
-        .from('question_departments')
-        .select('question_id')
-        .eq('department_id', data.department_id);
-      deptQuestionIds = dq?.map(item => item.question_id) || [];
-    }
-
-    let companyQuestionIds: string[] | null = null;
-    if (data.company_id) {
-      const { data: cq } = await supabase
-        .from('company_questions')
-        .select('question_id')
-        .eq('company_id', data.company_id);
-      companyQuestionIds = cq?.map(item => item.question_id) || [];
-    }
-
-    let tagsQuestionIds: string[] | null = null;
-    if (data.tags && data.tags.length > 0) {
-      const { data: tqs } = await supabase
-        .from('question_tags')
-        .select('question_id')
-        .in('tag_id', data.tags);
-      tagsQuestionIds = tqs?.map(item => item.question_id) || [];
-    }
-
-    let weakCategoryIds: string[] = [];
     if (data.weak_topics_only) {
-      const { data: stats } = await supabase
-        .from('practice_statistics')
-        .select('weak_topics')
-        .eq('user_id', userId)
-        .maybeSingle();
-      if (stats && stats.weak_topics) {
-        weakCategoryIds = Object.keys(stats.weak_topics);
-      }
+      filteredCandidates = filteredCandidates.filter(q => {
+        const acc = weakTopicAccuracies[q.topic] ?? weakTopicAccuracies[q.category_slug];
+        return typeof acc === 'number' && acc < 60;
+      });
     }
 
-    // 3. Fetch questions matching criteria
-    let query = supabase
-      .from('questions')
-      .select('id, statement, type, difficulty, image_url, question_options(id, label, content)')
-      .eq('approval_status', 'approved')
-      .eq('is_archived', false);
-
-    if (data.category_id) {
-      query = query.eq('category_id', data.category_id);
-    }
-    if (data.difficulty) {
-      query = query.eq('difficulty', data.difficulty);
-    }
-    if (data.question_type) {
-      query = query.eq('type', data.question_type);
-    }
-
-    // Filter by bookmarks
-    if (bookmarkIds !== null) {
-      if (bookmarkIds.length === 0) return { session, questions: [] };
-      query = query.in('id', bookmarkIds);
-    }
-
-    // Filter by department
-    if (deptQuestionIds !== null) {
-      if (deptQuestionIds.length === 0) return { session, questions: [] };
-      query = query.in('id', deptQuestionIds);
-    }
-
-    // Filter by company
-    if (companyQuestionIds !== null) {
-      if (companyQuestionIds.length === 0) return { session, questions: [] };
-      query = query.in('id', companyQuestionIds);
-    }
-
-    // Filter by tags
-    if (tagsQuestionIds !== null) {
-      if (tagsQuestionIds.length === 0) return { session, questions: [] };
-      query = query.in('id', tagsQuestionIds);
-    }
-
-    // Filter by weak topics
-    if (data.weak_topics_only) {
-      if (weakCategoryIds.length === 0) return { session, questions: [] };
-      query = query.in('category_id', weakCategoryIds);
-    }
-
-    // Solved status filters
     if (data.solved_status === 'solved') {
-      if (solvedIds.length === 0) return { session, questions: [] };
-      query = query.in('id', solvedIds);
+      filteredCandidates = filteredCandidates.filter(q => {
+        const sch = userSchedules.get(q.id);
+        return sch && sch.attempt_count > 0;
+      });
     } else if (data.solved_status === 'unsolved') {
-      if (solvedIds.length > 0) {
-        // filter out solved IDs
-        query = query.not('id', 'in', `(${solvedIds.join(',')})`);
-      }
+      filteredCandidates = filteredCandidates.filter(q => {
+        const sch = userSchedules.get(q.id);
+        return !sch || sch.attempt_count === 0;
+      });
     } else if (data.solved_status === 'incorrect') {
-      if (incorrectIds.length === 0) return { session, questions: [] };
-      query = query.in('id', incorrectIds);
+      filteredCandidates = filteredCandidates.filter(q => {
+        const sch = userSchedules.get(q.id);
+        return sch && sch.last_result === false;
+      });
     }
 
-    // Order by recently added if specified
-    if (data.recently_added_only) {
-      query = query.order('created_at', { ascending: false });
+    // If filter produced no questions, fall back to full verified candidate pool
+    if (filteredCandidates.length === 0 && candidates.length > 0) {
+      filteredCandidates = candidates;
     }
 
-    // For random mode, use a larger pool and shuffle client-side
-    const fetchLimit = Math.min(data.questionCount * 5, 200);
-    query = query.limit(fetchLimit);
+    // 7. Deterministic Selection Engine Execution
+    const selected = RepetitionEngineService.selectQuestions(
+      filteredCandidates,
+      userSchedules,
+      weakTopicAccuracies,
+      currentSessionNumber,
+      targetCount,
+      data.difficulty
+    );
 
-    const { data: questionPool, error: qErr } = await query;
-    if (qErr) throw new Error(qErr.message);
+    // 8. Format questions with options for client practice interface
+    const formattedQuestions = selected.map(q => ({
+      id: q.id,
+      statement: q.statement,
+      type: q.type || 'mcq_single',
+      difficulty: q.difficulty || 'medium',
+      topic: q.topic || 'General Practice',
+      source: q.source || 'ASET Question Bank',
+      source_type: q.source_type,
+      verified: q.verified,
+      question_options: q.options.map(opt => ({
+        id: opt.id || `${q.id}-${opt.label}`,
+        label: opt.label,
+        content: opt.content,
+      })),
+    }));
 
-    // Shuffle and pick the requested count
-    const shuffled = (questionPool || []).sort(() => Math.random() - 0.5);
-    const questions = shuffled.slice(0, data.questionCount);
-
-    return { session, questions };
+    return { session, questions: formattedQuestions };
   }
 
   /**
-   * Submits an answer for a practice question.
+   * Submits an answer for a practice question and records Spaced Repetition progress.
    */
   static async submitAnswer(sessionId: string, questionId: string, selectedOptionId: string, timeSpent: number) {
     const supabase = getSupabase();
@@ -195,12 +228,27 @@ export class PracticeService {
     // Check if the selected option is correct
     let isCorrect = false;
     if (selectedOptionId) {
+      // 1. Check in database question_options
       const { data: opt } = await supabase
         .from('question_options')
         .select('is_correct')
         .eq('id', selectedOptionId)
-        .single();
-      isCorrect = opt?.is_correct || false;
+        .maybeSingle();
+
+      if (opt) {
+        isCorrect = opt.is_correct || false;
+      } else {
+        // 2. Check in verified core questions bank
+        QuestionBankService.init();
+        const coreStats = await QuestionBankService.getVerifiedQuestions({ limit: 1000 });
+        for (const q of coreStats) {
+          const matchOpt = q.options.find(o => o.id === selectedOptionId || o.label === selectedOptionId);
+          if (matchOpt) {
+            isCorrect = Boolean(matchOpt.is_correct);
+            break;
+          }
+        }
+      }
     }
 
     // Upsert answer to support resume/overwriting
@@ -239,6 +287,31 @@ export class PracticeService {
         .single();
       if (error) throw new Error(error.message);
       result = inserted;
+    }
+
+    // Record into Repetition & Spaced Repetition Engine
+    try {
+      const { data: session } = await supabase
+        .from('practice_sessions')
+        .select('user_id')
+        .eq('id', sessionId)
+        .maybeSingle();
+
+      if (session?.user_id) {
+        const { count: sessionCount } = await supabase
+          .from('practice_sessions')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', session.user_id);
+
+        await RepetitionEngineService.recordAttempt(
+          session.user_id,
+          questionId,
+          isCorrect,
+          sessionCount || 1
+        );
+      }
+    } catch (repErr: any) {
+      logger.warn('Failed to record repetition attempt', { error: repErr.message });
     }
 
     return { answer: result, isCorrect };

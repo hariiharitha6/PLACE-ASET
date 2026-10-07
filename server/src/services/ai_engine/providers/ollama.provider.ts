@@ -68,7 +68,7 @@ export class OllamaProvider implements IAIProvider {
 
     try {
       const controller = new AbortController();
-      const timeoutMs = options?.timeoutMs || 45000;
+      const timeoutMs = options?.timeoutMs || 4000;
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
       const response = await fetch(`${baseUrl}/api/generate`, {
