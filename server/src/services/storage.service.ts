@@ -26,23 +26,11 @@ export class StorageService {
   ): Promise<{ path: string; fullPath: string; url?: string }> {
     const admin = getSupabaseAdmin();
 
-    let targetBucket = bucket;
-    let uploadRes = await admin.storage.from(targetBucket).upload(filePath, fileBuffer, {
+    const targetBucket = bucket;
+    const uploadRes = await admin.storage.from(targetBucket).upload(filePath, fileBuffer, {
       contentType,
       upsert: true
     });
-
-    if (uploadRes.error && (uploadRes.error.message.includes('row-level security') || uploadRes.error.message.includes('policy'))) {
-      logger.warn('Storage upload encountered RLS policy, utilizing resilient institutional storage', {
-        originalBucket: bucket,
-        filePath
-      });
-      targetBucket = 'institutional-materials';
-      uploadRes = await admin.storage.from(targetBucket).upload(filePath, fileBuffer, {
-        contentType,
-        upsert: true
-      });
-    }
 
     if (uploadRes.error) {
       logger.error('Supabase storage upload failed', { bucket: targetBucket, filePath, error: uploadRes.error.message });
@@ -78,19 +66,23 @@ export class StorageService {
       if (pubData?.publicUrl) return pubData.publicUrl;
     }
 
-    // 2. Try signed URL from requested bucket
+    // 2. Personal documents and private imports MUST use signed URL from their own bucket
     try {
       const { data, error } = await admin.storage.from(bucket).createSignedUrl(filePath, expiresInSeconds);
       if (!error && data?.signedUrl) {
         return data.signedUrl;
       }
-    } catch (_) {}
+      if (error) {
+        logger.warn('Signed URL generation error', { bucket, filePath, error: error.message });
+      }
+    } catch (err: any) {
+      logger.warn('Signed URL generation exception', { bucket, filePath, error: err.message });
+    }
 
-    // 3. Resilient fallback to institutional-materials public URL
-    try {
-      const { data: fallbackData } = admin.storage.from('institutional-materials').getPublicUrl(filePath);
-      if (fallbackData?.publicUrl) return fallbackData.publicUrl;
-    } catch (_) {}
+    // CRITICAL PRIVACY: Never fallback to institutional-materials for personal-materials
+    if (bucket === 'personal-materials') {
+      throw new Error(`Failed to generate secure signed URL for personal document: ${filePath}`);
+    }
 
     throw new Error(`Failed to generate signed URL for path: ${filePath}`);
   }
